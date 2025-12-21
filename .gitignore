@@ -1,19 +1,35 @@
-# Unity folders
+# Unity generated
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
 [Ll]ogs/
-UserSettings/
+[Mm]emoryCaptures/
+il2cppOutput/
 
-# Packages cache
-Library/PackageCache/
-
-# IDE
-.idea/
+# IDE / editor
+.vs/
 .vscode/
+.idea/
+*.iml
+
+# Visual Studio / Rider / MonoDevelop generated
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.DotSettings.user
+*.sln.docstates
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Plastic / Unity Cloud
+.plastic/
