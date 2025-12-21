@@ -1,27 +1,36 @@
 ﻿using CodeBase.CameraLogic;
-using CodeBase.Hero;
+using CodeBase.Infrastructure.Factory;
+using CodeBase.Logic;
 using UnityEngine;
 
-namespace CodeBase.Infrastructure.AssetManagement
+namespace CodeBase.Infrastructure
 {
     public class LoadLevelState : IPayLoadedState<string>
     {
-        private const string HeroPath = "Hero/hero";
-        private const string PathHud = "Hud/Hud";
-        private readonly GameStateMachine _gameStateMachine;
-        private readonly SceneLoader _sceneLoader;
 
-        public LoadLevelState(GameStateMachine gameStateMachine, SceneLoader sceneLoader)
+        private const string InitialPointTag = "InitialPoint";
+        private readonly GameStateMachine _stateMachine;
+        private readonly SceneLoader _sceneLoader;
+        private readonly LoadingCurtain _curtain;
+        private readonly IGameFactory _gameFactory;
+
+        public LoadLevelState(GameStateMachine stateMachine, SceneLoader sceneLoader, LoadingCurtain curtain)
         {
-            _gameStateMachine = gameStateMachine;
+            _stateMachine = stateMachine;
             _sceneLoader = sceneLoader;
+            _curtain = curtain;
         }
+
+        public void Exit() => 
+            _curtain.Hide();
 
         public void Enter(string sceneName)
         {
+            _curtain.Show();
           _sceneLoader.Load(sceneName, OnLoaded);
           
         }
+
         private void CameraFollow(GameObject hero)
         {
             Transform target = hero.GetComponentInChildren<CharacterController>().transform;
@@ -31,25 +40,13 @@ namespace CodeBase.Infrastructure.AssetManagement
 
         private void OnLoaded()
         {
-            GameObject hero = Instantiate(HeroPath);
-            Instantiate(PathHud);
+            GameObject hero = _gameFactory.CreateHero(at: GameObject.FindGameObjectWithTag(InitialPointTag));
+            _gameFactory.CreateHud();
             
             CameraFollow(hero);
             Debug.Log($"[LoadLevelState] heroRoot={hero.name} pos={hero.transform.position}");
 
+            _stateMachine.Enter<GameLoopState>();
         }
-
-        private static GameObject Instantiate(string pathHero)
-        {
-            var heroPrefab = Resources.Load<GameObject>(pathHero);
-            return Object.Instantiate(heroPrefab);
-        }
-
-        public void Exit()
-        {
-           
-        }
-
-     
     }
 }

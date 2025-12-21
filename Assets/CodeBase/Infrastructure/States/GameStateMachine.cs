@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.Logic;
 
-namespace CodeBase.Infrastructure.AssetManagement
+namespace CodeBase.Infrastructure
 {
     public class GameStateMachine
     {
@@ -9,13 +10,14 @@ namespace CodeBase.Infrastructure.AssetManagement
         private IExitableState _activeState;
         private SceneLoader _sceneLoader;
 
-        public  GameStateMachine(SceneLoader sceneLoader)
+        public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain curtain)
         {
             _sceneLoader = sceneLoader;
             _states = new Dictionary<Type, IExitableState>()
             {
                 [typeof(BootstrapState)] =  new BootstrapState(this, _sceneLoader),
-                [typeof(LoadLevelState)] =  new LoadLevelState(this, _sceneLoader),
+                [typeof(LoadLevelState)] =  new LoadLevelState(this, _sceneLoader,  curtain),
+                [typeof(GameLoopState)] =  new GameLoopState(this),
                 
             };
         }

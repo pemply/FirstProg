@@ -1,7 +1,7 @@
 ﻿using CodeBase.Services.Input;
 using UnityEngine;
 
-namespace CodeBase.Infrastructure.AssetManagement
+namespace CodeBase.Infrastructure
 {
     public class BootstrapState : IState
     {
