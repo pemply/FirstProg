@@ -1,10 +1,20 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using CodeBase.Infrastructure.Services;
+using CodeBase.Infrastructure.Services.PersistentProgress;
+using UnityEngine;
 
 namespace CodeBase.Infrastructure.Factory
 {
-    public interface IGameFactory
+    public interface IGameFactory : IService
     {
         GameObject CreateHero(GameObject at);
-        void CreateHud();
+        GameObject CreateHud();
+        List<ISavedProgressReader> ProgressReaders { get; }
+        List<ISavedProgress> ProgressWriters { get; }
+        public Transform HeroTransform { get; set; }
+        event Action HeroCreated;
+        GameObject HeroGameObject  { get; }
+        void Cleanup();
     }
 }

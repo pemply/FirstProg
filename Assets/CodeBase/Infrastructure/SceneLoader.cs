@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace CodeBase.Infrastructure.AssetManagement
+namespace CodeBase.Infrastructure
 {
     public class SceneLoader
     {

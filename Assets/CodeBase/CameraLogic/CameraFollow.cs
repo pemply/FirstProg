@@ -20,7 +20,7 @@ namespace CodeBase.CameraLogic
             
             transform.rotation  = rotation;
             transform.position  = position;
-            Debug.Log($"camPos={transform.position} follow={_following.position}");
+          
 
         }
 
