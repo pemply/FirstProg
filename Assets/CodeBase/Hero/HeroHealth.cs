@@ -8,24 +8,26 @@ namespace CodeBase.Hero
 {
     public class HeroHealth : MonoBehaviour, ISavedProgress, IHealth
     {
-        private State _state;
+        private Stats _stats;
 
         public event Action HealthChanged;
+        public event Action DeathEvent ;
         [SerializeField]
         private float _maxHealth;
         [SerializeField] private float _currentHealth;
+        private bool _isDead;
 
-     
+
         public float maxHealth
         {
-            get => _state.MaxHP;
+            get => _stats.MaxHP;
             set
             {
-                if (Math.Abs(_state.MaxHP - value) > 0.001f)
+                if (Math.Abs(_stats.MaxHP - value) > 0.001f)
                 {
-                    _state.MaxHP = value;
-                    if (_state.CurrentHP > _state.MaxHP)
-                        _state.CurrentHP = _state.MaxHP;
+                    _stats.MaxHP = value;
+                    if (_stats.CurrentHP > _stats.MaxHP)
+                        _stats.CurrentHP = _stats.MaxHP;
 
                     HealthChanged?.Invoke();
                 }
@@ -34,13 +36,13 @@ namespace CodeBase.Hero
 
         public float currentHealth
         {
-            get => _state.CurrentHP;
+            get => _stats.CurrentHP;
             set
             {
-                float clamped = Mathf.Clamp(value, 0, _state.MaxHP);
-                if (Math.Abs(_state.CurrentHP - clamped) > 0.001f)
+                float clamped = Mathf.Clamp(value, 0, _stats.MaxHP);
+                if (Math.Abs(_stats.CurrentHP - clamped) > 0.001f)
                 {
-                    _state.CurrentHP = clamped;
+                    _stats.CurrentHP = clamped;
                     HealthChanged?.Invoke();
                 }
             }
@@ -48,25 +50,43 @@ namespace CodeBase.Hero
 
         public void TakeDamage(float damage)
         {
-            Debug.Log($"{name} took {damage}, before={currentHealth}", this);
+            if (_isDead)
+                return;
 
-            currentHealth -= damage;
+            currentHealth = currentHealth - damage; // <-- ОЦЕ ГОЛОВНЕ
+
+            if (currentHealth <= 0)
+            {
+                _isDead = true;
+                DeathEvent?.Invoke();
+            }
         }
+
 
         public void LoadProgress(PlayerProgress progress)
         {
-            _state = progress.HeroState ?? new State(); // ✅ ще один захист
+            _stats = progress.heroStats ?? new Stats(); // ✅ ще один захист
             HealthChanged?.Invoke();
         }
 
         public void UpdateProgress(PlayerProgress progress)
         {
-            progress.HeroState.CurrentHP = currentHealth;
-            progress.HeroState.MaxHP = maxHealth;
+            progress.heroStats ??= new Stats();
+            progress.heroStats.CurrentHP = currentHealth;
+            progress.heroStats.MaxHP = maxHealth;
         }
 
-      
 
-       
+        public void ApplyStats(Stats stats)
+        {
+            _maxHealth = stats.MaxHP;
+
+            // якщо поточне хп більше нового макс — кламп
+            if (_currentHealth > _maxHealth)
+               _currentHealth = _maxHealth;
+
+            HealthChanged?.Invoke();
+        }
+
     }
 }

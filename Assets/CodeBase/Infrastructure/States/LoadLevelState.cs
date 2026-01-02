@@ -1,7 +1,11 @@
 ﻿using CodeBase.CameraLogic;
+using CodeBase.Enemy;
 using CodeBase.Hero;
 using CodeBase.Infrastructure.Factory;
+using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.Progress;
+using CodeBase.Infrastructure.States.BetweenStates;
 using CodeBase.Logic;
 using CodeBase.UI;
 using UnityEngine;
@@ -43,15 +47,36 @@ namespace CodeBase.Infrastructure.States
 
         private void OnLoaded()
         {
+            InitGameWorld();
             GameObject hero = CreateHero();
             GameObject hud = CreateHud();
 
             InitProgressReaders(); // після BindHudToHero — щоб HealthChanged одразу намалював бар
             BindHudToHero(hud, hero);
             CameraFollow(hero);
+            
+            AllServices.Container.Single<IXpService>().ResetRun();
 
 
-            _stateMachine.Enter<GameLoopState>();
+            _stateMachine.Enter<GameLoopState, GameLoopPayload>(new GameLoopPayload(hero, hud));
+
+        }
+
+        private void InitGameWorld()
+        {
+        
+            InitSpawners();
+
+        }
+
+        private void InitSpawners()
+        {
+            foreach (GameObject spawnerObj in GameObject.FindGameObjectsWithTag("Spawner"))
+            {
+                var spawner = spawnerObj.GetComponent<EnemySpawner>();
+                _gameFactory.Register(spawner);
+            }
+            
         }
 
         private GameObject CreateHero()
@@ -88,5 +113,8 @@ namespace CodeBase.Infrastructure.States
             Transform target = hero.GetComponentInChildren<CharacterController>().transform;
             Camera.main.GetComponent<CameraFollow>().Follow(target.gameObject);
         }
+        
+        
+        
     }
 }

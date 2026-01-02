@@ -6,11 +6,11 @@ namespace CodeBase.Enemy
 {
     public class EnemyHealth : MonoBehaviour, IHealth
     {
-        [SerializeField]
-        private float _maxHealth;
+        [SerializeField] private float _maxHealth;
         [SerializeField] private float _currentHealth;
-        
+        private bool _isDead;
         public event Action HealthChanged;
+
 
         public float maxHealth
         {
@@ -24,15 +24,17 @@ namespace CodeBase.Enemy
             set => _currentHealth = value;
         }
 
+
         public void TakeDamage(float damage)
         {
-            Debug.Log($"{name} took {damage}, before={currentHealth}", this);
+            if (_isDead)
+                return;
 
-            currentHealth -= damage;
-            
+            _currentHealth -= damage;
             HealthChanged?.Invoke();
-        }
-        
 
+            if (_currentHealth <= 0)
+                _isDead = true;
+        }
     }
 }

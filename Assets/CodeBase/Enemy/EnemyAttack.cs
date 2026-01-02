@@ -1,4 +1,5 @@
-﻿using CodeBase.Logic;
+﻿using System.Linq;
+using CodeBase.Logic;
 using UnityEngine;
 
 namespace CodeBase.Enemy
@@ -6,44 +7,113 @@ namespace CodeBase.Enemy
     public class EnemyAttack : MonoBehaviour
     {
         [Header("Attack")]
-        public float Damage;
-        public float AttackCooldown = 1f;
 
-        private float _cooldownLeft;
+
+        public float Cleavage = 0.5f;
+
+        public float AttackColdown = 3f;
+        public float EffectiveDistance = 0.5f;
+        public float Damage = 10f;
+
+
+        private Transform _heroTransform;
+        private float _attackCooldown;
+        private bool _isAttacking;
+        private int _layerMask;
+        private Collider[] _hits = new Collider[1];
         private bool _attackIsActive;
-        private IHealth _target;
+
+        public void Construct(Transform heroTransform)
+        {
+            _heroTransform = heroTransform;
+        }
+
+        private void Awake()
+        {
+
+            _layerMask = 1 << LayerMask.NameToLayer("Player");
+         
+        }
 
         private void Update()
         {
-            if (!_attackIsActive || _target == null)
-                return;
+            UpdateCooldown();
+            if (CanAttack())
+                StartAttack();
+        }
 
-            if (_cooldownLeft > 0)
+        private bool CanAttack() =>
+           _attackIsActive && !_isAttacking && CooldownIsUp();
+
+        private bool Hit(out Collider hit)
+        {
+            var hitCount = Physics.OverlapSphereNonAlloc(StartPoint(), Cleavage, _hits, _layerMask);
+
+            hit = _hits.FirstOrDefault();
+
+            return hitCount > 0;
+        }
+
+        private Vector3 StartPoint()
+        {
+            return new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z) +
+                   transform.forward * EffectiveDistance;
+        }
+
+
+        private void UpdateCooldown()
+        {
+            if (!CooldownIsUp())
             {
-                _cooldownLeft -= Time.deltaTime;
-                return;
+                _attackCooldown -= Time.deltaTime;
             }
-
-            PerformAttack();
         }
 
-        private void PerformAttack()
+        private bool CooldownIsUp()
         {
-            _target.TakeDamage(Damage);
-            _cooldownLeft = AttackCooldown;
+            return _attackCooldown <= 0;
         }
 
-        public void SetTarget(IHealth target)
+        public void OnAttack()
         {
-            _target = target;
+            if (Hit(out Collider hit))
+            {
+ 
+                var health = hit.GetComponentInParent<IHealth>();
+                if (health != null)
+                    health.TakeDamage(Damage);
+
+            }
         }
 
-        public void ClearTarget()
+        public void OnAttackEnded()
         {
-            _target = null;
+            _attackCooldown = AttackColdown;
+            _isAttacking = false;
         }
 
-        public void EnableAttack() => _attackIsActive = true;
-        public void DisableAttack() => _attackIsActive = false;
+        private void StartAttack()
+        {
+            if (_heroTransform == null)
+                return;
+
+            transform.LookAt(_heroTransform);
+
+            _isAttacking = true;
+
+            OnAttack();      // <-- наносимо дамаг
+            OnAttackEnded(); // <-- ставимо кулдаун і дозволяємо наступну атаку
+        }
+
+        
+        public void EnableAttack()
+        {
+          _attackIsActive  = true;
+        }
+
+        public void DisableAttack()
+        {
+          _attackIsActive =  false;
+        }
     }
 }

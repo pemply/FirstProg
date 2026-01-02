@@ -26,10 +26,11 @@ namespace CodeBase.StaticData
         public float MoveSpeed = 3;
     
         public GameObject PrefabReference;
-    }
-
-    public enum MonsterTypeId
-    {
-        cilinder =0,
+        
+        [Range(0,5f)]
+        public float AttackCooldown;
+        
+        [Range(0, 100)]
+        public int XpReward = 10;
     }
 }

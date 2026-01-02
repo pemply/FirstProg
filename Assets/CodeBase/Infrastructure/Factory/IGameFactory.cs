@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.StaticData;
 using UnityEngine;
 
 namespace CodeBase.Infrastructure.Factory
@@ -13,8 +14,10 @@ namespace CodeBase.Infrastructure.Factory
         List<ISavedProgressReader> ProgressReaders { get; }
         List<ISavedProgress> ProgressWriters { get; }
         public Transform HeroTransform { get; set; }
-        event Action HeroCreated;
-        GameObject HeroGameObject  { get; }
+        GameObject HeroGameObject { get; set; }
+
         void Cleanup();
+        void Register(ISavedProgressReader progressReader);
+        GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent);
     }
 }

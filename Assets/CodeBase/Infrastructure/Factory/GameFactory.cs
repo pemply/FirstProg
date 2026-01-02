@@ -1,8 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using CodeBase.Enemy;
 using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.Progress;
+using CodeBase.Logic;
+using CodeBase.StaticData;
+using CodeBase.UI;
 using UnityEngine;
+using UnityEngine.AI;
+using Object = UnityEngine.Object;
 
 namespace CodeBase.Infrastructure.Factory
 {
@@ -11,17 +17,21 @@ namespace CodeBase.Infrastructure.Factory
         public List<ISavedProgressReader> ProgressReaders { get; } = new List<ISavedProgressReader>();
         public List<ISavedProgress> ProgressWriters { get; } = new List<ISavedProgress>();
         public Transform HeroTransform { get; set; }
-        public event Action HeroCreated;
 
         private readonly IAssets _assets;
+        private readonly IKillRewardService _killReward;
+
+        private readonly IStaticDataService _staticData;
 
         public GameObject HeroGameObject { get; set; }
     
 
 
-        public GameFactory(IAssets assets)
+        public GameFactory(IAssets assets, IStaticDataService staticData, IKillRewardService killReward)
         {
             _assets = assets;
+            _staticData = staticData;
+            _killReward = killReward;
         }
 
         public GameObject CreateHero(GameObject at)
@@ -29,14 +39,45 @@ namespace CodeBase.Infrastructure.Factory
             HeroGameObject = InstantiateRegistered(AssetsPath.HeroPath, at.transform.position);
             var cc = HeroGameObject.GetComponentInChildren<CharacterController>();
             HeroTransform = cc != null ? cc.transform : HeroGameObject.transform; 
-
-            HeroCreated?.Invoke();
+            
             return HeroGameObject;
         }
 
 
-        public GameObject CreateHud() =>
-            InstantiateRegistered(AssetsPath.PathHud);
+        public GameObject CreateHud()
+        {
+            return InstantiateRegistered(AssetsPath.PathHud);
+        }
+
+        public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent)
+        
+        {
+            MonsterStaticData monsterData = _staticData.ForMonster(monsterTypeId);
+            Vector3 spawnPos = parent != null ? parent.position : Vector3.zero;
+            Quaternion spawnRot = parent != null ? parent.rotation : Quaternion.identity;
+
+            GameObject monster = Object.Instantiate(monsterData.PrefabReference, spawnPos, spawnRot, parent);
+
+            IHealth health = monster.GetComponent<IHealth>();
+            health.currentHealth = monsterData.Hp;
+            health.maxHealth = monsterData.Hp;
+            
+            var death = monster.GetComponent<EnemyDeath>();
+            _killReward.Register(death, monsterTypeId);
+
+            monster.GetComponent<ActorUI>().Construct(health);
+            monster.GetComponent<AgentMoveToPlayer>().Construct(HeroTransform);
+            monster.GetComponent<NavMeshAgent>().speed = monsterData.MoveSpeed;
+
+            EnemyAttack attack = monster.GetComponent<EnemyAttack>();
+            attack.Construct(HeroTransform);
+            attack.Damage = monsterData.Damage;
+            attack.AttackColdown = monsterData.AttackCooldown;
+            attack.Cleavage = monsterData.Cleavage;
+            attack.EffectiveDistance = monsterData.EffectiveDistance;
+
+            return monster; 
+        }
 
 
         public void Cleanup()
@@ -51,6 +92,7 @@ namespace CodeBase.Infrastructure.Factory
             RegisterProgressWatchers(gameObject);
             return gameObject;
         }
+
         private GameObject InstantiateRegistered(string prefabPath)
         {
             GameObject gameObject = _assets.Instantiate(prefabPath);
@@ -58,7 +100,7 @@ namespace CodeBase.Infrastructure.Factory
             return gameObject;
         }
 
-        private void Register(ISavedProgressReader progressReader)
+        public void Register(ISavedProgressReader progressReader)
         {
             if (progressReader is ISavedProgress progressWriters)
                 ProgressWriters.Add(progressWriters);

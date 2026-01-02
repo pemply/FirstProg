@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db1c0c4e43724d49a933ef3da041376b, type: 3}
+  m_Name: Wave
+  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.WaveSequence
+  Waves:
+  - {fileID: 11400000, guid: 2459c9d35baa08f4e822be278f63df1c, type: 2}
+  - {fileID: 11400000, guid: 3188ed3813d9d60448ba4d1e7383cfe8, type: 2}
+  - {fileID: 11400000, guid: d5b58923e1415d74c97ccb6c405fc93e, type: 2}

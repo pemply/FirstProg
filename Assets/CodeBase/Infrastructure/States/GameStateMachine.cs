@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.Progress;
 using CodeBase.Infrastructure.Services.SaveLoad;
 using CodeBase.Logic;
+using CodeBase.StaticData;
 
 namespace CodeBase.Infrastructure.States
 {
@@ -13,16 +15,21 @@ namespace CodeBase.Infrastructure.States
         private Dictionary<Type, IExitableState> _states;
         private IExitableState _activeState;
         private SceneLoader _sceneLoader;
+        private readonly ICoroutineRunner _runner;
+      
 
-        public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain curtain, AllServices services)
+        public GameStateMachine(SceneLoader sceneLoader, LoadingCurtain curtain, AllServices services, ICoroutineRunner runner  )
         {
             _sceneLoader = sceneLoader;
+            _runner = runner;
             _states = new Dictionary<Type, IExitableState>()
             {
                 [typeof(BootstrapState)] =  new BootstrapState(this, _sceneLoader, services),
                 [typeof(LoadLevelState)] =  new LoadLevelState(this, _sceneLoader,  curtain, services.Single<IGameFactory>(), services.Single<IPersistentProgressService>()),
-                [typeof(LoadProgressState)] =  new LoadProgressState(this, services.Single<IPersistentProgressService>(), services.Single<ISavedLoadService>()),
-                [typeof(GameLoopState)] =  new GameLoopState(this),
+                [typeof(LoadProgressState)] =  new LoadProgressState(this, services.Single<IPersistentProgressService>(), services.Single<ISavedLoadService>(),services.Single<IStaticDataService>() ),
+                [typeof(GameLoopState)] =  new GameLoopState(this,services.Single<IGameFactory>(), _runner,services.Single<IXpService>() ),
+                [typeof(UpgradeState)] =  new UpgradeState(this, services.Single<IUpgradeService>(),services.Single<IStaticDataService>()),
+                [typeof(GameOverState)] =  new GameOverState(this),
                 
             };
         }

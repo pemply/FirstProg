@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7402851078998325238}
   - component: {fileID: 7702991161117403947}
   - component: {fileID: 8863597662626499433}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: AttackSensore
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,7 +106,7 @@ GameObject:
   - component: {fileID: 6951425868217885252}
   - component: {fileID: 9135244712141959781}
   - component: {fileID: 6935597722594720687}
-  m_Layer: 5
+  m_Layer: 7
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -215,6 +215,7 @@ GameObject:
   - component: {fileID: 2930409255006868525}
   - component: {fileID: 5477800365131913215}
   - component: {fileID: 4178290038881225770}
+  - component: {fileID: 4554841477117165827}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Untagged
@@ -393,7 +394,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b09c09d516074522848c6d4ce1556817, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.EnemyAttack
-  Damage: 4.77
+  Damage: 50.4
   AttackCooldown: 1
 --- !u!135 &5477800365131913215
 SphereCollider:
@@ -430,6 +431,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.CheckAttackRange
   _attack: {fileID: 2930409255006868525}
   _triggerObserver: {fileID: 7702991161117403947}
+--- !u!114 &4554841477117165827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9212566456173030763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d61bd45f8a36456aa71f76802f9d8f18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.Death
 --- !u!1001 &7106480433827138456
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -438,6 +451,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8640032237604432469}
     m_Modifications:
+    - target: {fileID: 2046514320229587721, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 3358939461028617559, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -562,9 +579,17 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4461971441116498371, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 7201434704814826491, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_Name
       value: HpBar
+      objectReference: {fileID: 0}
+    - target: {fileID: 7201434704814826491, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 8954752258089227328, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_AnchorMax.x
@@ -601,8 +626,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7201434704814826491, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4752217078583180152}
   m_SourcePrefab: {fileID: 100100000, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+--- !u!1 &103557468439685219 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7201434704814826491, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+  m_PrefabInstance: {fileID: 7106480433827138456}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4752217078583180152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 103557468439685219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62518ad2897641cea787c958bdc8dff1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Logic.LookAtCamera
 --- !u!224 &5476961989108487887 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3358939461028617559, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
@@ -613,7 +658,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1479864193930431377, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
   m_PrefabInstance: {fileID: 7106480433827138456}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 103557468439685219}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74370bc57a1042e597df303d38c2668e, type: 3}
