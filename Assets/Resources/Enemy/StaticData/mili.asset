@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: mili
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.MonsterStaticData
   MonsterTypeId: 0
-  Hp: 3
+  Hp: 9
   Damage: 1
   MaxLoot: 0
   MinLoot: 0
@@ -22,3 +22,4 @@ MonoBehaviour:
   MoveSpeed: 10
   PrefabReference: {fileID: 9212566456173030763, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
   AttackCooldown: 0.22
+  XpReward: 7

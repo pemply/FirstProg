@@ -1,4 +1,6 @@
-﻿using CodeBase.Hero;
+﻿using System;
+using System.Collections.Generic;
+using CodeBase.Data;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Logic.Upgrade;
@@ -10,69 +12,84 @@ namespace CodeBase.StaticData
     {
         private readonly IPersistentProgressService _progress;
         private readonly IGameFactory _factory;
-
+        private Dictionary<UpgradeType, Action<UpgradeConfig>> _handlers;
         public UpgradeService(IPersistentProgressService progress, IGameFactory factory)
         {
             _progress = progress;
             _factory = factory;
+
+            _handlers = new Dictionary<UpgradeType, Action<UpgradeConfig>>
+            {
+                [UpgradeType.Hp] = ApplyHp,
+                [UpgradeType.WeaponDamage] = ApplyWeaponDamage,
+                [UpgradeType.WeaponRadius] = ApplyWeaponRadius,
+                [UpgradeType.WeaponCooldown] = ApplyWeaponCooldown,
+                [UpgradeType.PickupRadius] = ApplyPickupRadius,
+            };
         }
 
         public void Apply(UpgradeConfig config)
         {
-            var p = _progress.Progress;
-
-            switch (config.Type)
+            if (!_handlers.TryGetValue(config.Type, out var handler))
             {
-                case UpgradeType.Hp:
-                    p.heroStats.MaxHP += config.IntValue;
-                    ApplyHeroHealth();
-                    break;
-
-                case UpgradeType.WeaponDamage:
-                    MutateWeapon(s => { s.Damage += config.FloatValue; return s; });
-                    break;
-
-                case UpgradeType.WeaponRadius:
-                    MutateWeapon(s => { s.DamageRadius += config.FloatValue; return s; });
-                    break;
-
-                case UpgradeType.WeaponCooldown:
-                    MutateWeapon(s =>
-                    {
-                        float pct = config.FloatValue;              // 15 = +15% attack speed
-                        float mult = 1f + pct / 100f;               // 1.15
-                        s.AttackSpeedMult *= mult;                  // множимо, а не додаємо
-                        s.AttackSpeedMult = Mathf.Min(3f, s.AttackSpeedMult); // кап (3x)
-                        return s;
-                    });
-                    break;
-
-
+                Debug.LogError($"[UpgradeService] No handler for {config.Type}");
+                return;
             }
+
+            handler.Invoke(config);
+            ApplyToHero();
         }
 
         private void MutateWeapon(System.Func<WeaponStats, WeaponStats> mutator)
         {
-            var p = _progress.Progress;
+            PlayerProgress p = _progress.Progress;
 
-            var s = p.RunProgressData.WeaponStats;
+            WeaponStats s = p.RunProgressData.WeaponStats;
             s = mutator(s);
             p.RunProgressData.WeaponStats = s;
-
-            var hero = _factory.HeroGameObject;
-            if (hero == null) return;
-
-            var attack = hero.GetComponentInChildren<HeroAttack>();
-            attack?.ApplyStats(s);
         }
 
-        private void ApplyHeroHealth()
+        private void ApplyToHero()
         {
             var hero = _factory.HeroGameObject;
             if (hero == null) return;
 
-            var hp = hero.GetComponentInChildren<HeroHealth>();
-            hp?.ApplyStats(_progress.Progress.heroStats);
+            var progress = _progress.Progress;
+
+            foreach (IStatsApplier applier in hero.GetComponentsInChildren<IStatsApplier>(true))
+                applier.Apply(progress);
+        }
+        
+        private void ApplyHp(UpgradeConfig config)
+        {
+            var stats = _progress.Progress.heroStats;
+            stats.MaxHP += config.IntValue;
+            stats.CurrentHP = Mathf.Min(stats.CurrentHP + config.IntValue, stats.MaxHP);
+        }
+
+        private void ApplyWeaponDamage(UpgradeConfig config)
+        {
+            MutateWeapon(s => { s.Damage += config.FloatValue; return s; });
+        }
+
+        private void ApplyWeaponRadius(UpgradeConfig config)
+        {
+            MutateWeapon(s => { s.DamageRadius += config.FloatValue; return s; });
+        }
+
+        private void ApplyWeaponCooldown(UpgradeConfig config)
+        {
+            MutateWeapon(s =>
+            {
+                float mult = 1f + config.FloatValue / 100f;
+                s.AttackSpeedMult = Mathf.Min(100f, s.AttackSpeedMult * mult);
+                return s;
+            });
+        }
+
+        private void ApplyPickupRadius(UpgradeConfig config)
+        {
+            _progress.Progress.heroStats.PickupRadius += config.FloatValue;
         }
     }
 }

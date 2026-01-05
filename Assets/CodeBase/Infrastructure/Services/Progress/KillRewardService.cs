@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using CodeBase.Enemy;
+using CodeBase.Infrastructure.Factory;
 using CodeBase.StaticData;
 using UnityEngine;
 
 namespace CodeBase.Infrastructure.Services.Progress
 {
     public class KillRewardService : IKillRewardService
-    {   private readonly IXpService _xp;
+    {
         private readonly IStaticDataService _staticData;
+        private readonly IGameFactory _factory;
         private readonly Dictionary<EnemyDeath, Action> _handlers = new();
 
-        public KillRewardService(IXpService xp, IStaticDataService staticData)
+        public KillRewardService(IStaticDataService staticData,  IGameFactory factory)
         {
-            _xp = xp;
             _staticData = staticData;
+            _factory = factory;
         }
 
         public void Register(EnemyDeath death, MonsterTypeId monsterTypeId)
@@ -34,7 +36,7 @@ namespace CodeBase.Infrastructure.Services.Progress
                 _handlers.Remove(death);
 
                 if (xpReward > 0)
-                    _xp.AddXp(xpReward);
+                    _factory.CreateXpPickup(death.transform.position, xpReward);
             };
 
             _handlers[death] = handler;
@@ -58,5 +60,5 @@ namespace CodeBase.Infrastructure.Services.Progress
 
             _handlers.Clear();
         }
-        }
     }
+}

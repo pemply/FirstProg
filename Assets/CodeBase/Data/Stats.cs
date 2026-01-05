@@ -7,7 +7,7 @@ namespace CodeBase.Data
     {
         public  float CurrentHP =100;
         public  float MaxHP = 100;
-        
+        public float PickupRadius = 2.5f;
 
         public void ResetHP() => 
             CurrentHP = MaxHP;

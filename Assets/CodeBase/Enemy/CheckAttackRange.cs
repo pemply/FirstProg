@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CodeBase.Enemy
 {
-    [RequireComponent(typeof(EnemyAttack))]
+
     public class CheckAttackRange : MonoBehaviour
     {
         [SerializeField] private EnemyAttack _attack;

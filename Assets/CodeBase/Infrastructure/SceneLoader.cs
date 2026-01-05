@@ -19,19 +19,14 @@ namespace CodeBase.Infrastructure
 
         private IEnumerator LoadScene(string nextScene, Action onLoaded = null)
         {
-            if (SceneManager.GetActiveScene().name == nextScene)
-            {
-                onLoaded?.Invoke();
-                yield break;
-            }
-            AsyncOperation waitNextScene = SceneManager.LoadSceneAsync(nextScene);
+            // ✅ Завжди перезавантажуємо сцену, навіть якщо це та сама
+            AsyncOperation waitNextScene = SceneManager.LoadSceneAsync(nextScene, LoadSceneMode.Single);
 
             while (!waitNextScene.isDone)
-            {
                 yield return null;
-            }
 
             onLoaded?.Invoke();
         }
+
     }
 }

@@ -19,5 +19,8 @@ namespace CodeBase.Infrastructure.Factory
         void Cleanup();
         void Register(ISavedProgressReader progressReader);
         GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent);
+        GameObject CreateGameOverWindow();
+        GameObject CreateXpPickup(Vector3 at, int amount);
+
     }
 }

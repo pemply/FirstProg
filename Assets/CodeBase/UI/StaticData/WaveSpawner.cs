@@ -3,6 +3,7 @@ using UnityEngine.AI;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.StaticData;
 using CodeBase.Enemy;
+using CodeBase.Infrastructure.Services.Progress;
 
 public class WaveSpawner : IWaveSpawner
 {
@@ -12,15 +13,15 @@ public class WaveSpawner : IWaveSpawner
     private readonly IGameFactory _factory;
     private readonly Transform _player;
     private readonly Transform _enemiesRoot;
-
+    private readonly IKillRewardService _killReward;
     private readonly float _minRadius;
     private readonly float _maxRadius;
 
     private const int MaxSpawnAttempts = 12;
 
-    public WaveSpawner(
-        IGameFactory factory,
+    public WaveSpawner(IGameFactory factory,
         Transform player,
+        IKillRewardService killReward,
         Transform enemiesRoot = null,
         float minRadius = 8f,
         float maxRadius = 14f)
@@ -30,6 +31,7 @@ public class WaveSpawner : IWaveSpawner
         _enemiesRoot = enemiesRoot;
         _minRadius = minRadius;
         _maxRadius = maxRadius;
+        _killReward = killReward;
     }
 
     public void ResetAlive() => _alive = 0;
@@ -41,7 +43,9 @@ public class WaveSpawner : IWaveSpawner
         GameObject enemy = _factory.CreateMonster(typeId, _enemiesRoot);
         if (enemy == null)
             return false;
-
+// ✅ реєструємо винагороду тут, де є typeId
+        var death = enemy.GetComponent<EnemyDeath>();
+        _killReward.Register(death, typeId);
         PlaceEnemy(enemy, spawnPos);
 
         _alive++;

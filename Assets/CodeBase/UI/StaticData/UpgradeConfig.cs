@@ -24,6 +24,7 @@ namespace CodeBase.StaticData
                     UpgradeType.WeaponDamage => "Damage",
                     UpgradeType.WeaponRadius => "Radius",
                     UpgradeType.WeaponCooldown => "Cooldown",
+                    UpgradeType.PickupRadius => "Pickup Radius",
                     _ => Type.ToString()
                 };
             }
@@ -36,7 +37,7 @@ namespace CodeBase.StaticData
                     UpgradeType.WeaponDamage => $"+{FloatValue:0.##}",
                     UpgradeType.WeaponRadius => $"+{FloatValue:0.##}",
                     UpgradeType.WeaponCooldown => $"+{FloatValue:0.#}% AS",
-
+                    UpgradeType.PickupRadius => $"+{FloatValue:0.##}",
                     _ => ""
                 };
             }

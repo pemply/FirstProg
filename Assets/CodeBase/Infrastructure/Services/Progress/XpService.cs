@@ -10,7 +10,7 @@ namespace CodeBase.Infrastructure.Services.Progress
     {
         private readonly IPersistentProgressService _progress;
 
-        private const int MaxLevel = 10;
+        private const int MaxLevel = 50;
         private const int BaseRequiredXp = 50;   // можна винести в config
         private const int StepPerLevel = 50;
 

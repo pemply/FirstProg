@@ -53,28 +53,29 @@ namespace CodeBase.Infrastructure.States
                 new XpService(_services.Single<IPersistentProgressService>())
             );
 
-            _services.RegisterSingle<IKillRewardService>(
-                new KillRewardService(
-                    _services.Single<IXpService>(),
-                    _services.Single<IStaticDataService>()
-                )
-            );
 
-// ✅ Factory ДО upgrade, бо upgrade бере factory
             _services.RegisterSingle<IGameFactory>(
                 new GameFactory(
                     _services.Single<IAssets>(),
                     _services.Single<IStaticDataService>(),
-                    _services.Single<IKillRewardService>()
+                    _services.Single<IXpService>()
                 )
             );
-
-// ✅ Upgrade після того, як є progress + factory
+            _services.RegisterSingle<IKillRewardService>(
+                    new KillRewardService(_services.Single<IStaticDataService>(),     _services.Single<IGameFactory>())
+                );
+                
             RegisterUpgradeService();
 
             _services.RegisterSingle<ISavedLoadService>(
                 new SavedLoadService(_services.Single<IPersistentProgressService>(), _services.Single<IGameFactory>()));
 
+            AllServices.Container.RegisterSingle<IRunResetService>(
+                new RunResetService(
+                    _services.Single<IPersistentProgressService>(),
+                    _services.Single<IStaticDataService>()
+                )
+            );
         }
 
         private void RegisterUpgradeService()

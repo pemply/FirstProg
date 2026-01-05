@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1bdf20ffa394551aeb0904d1fa17434, type: 3}
   m_Name: cooldown
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.UpgradeConfig
-  Type: 4
-  FloatValue: 236.42
+  Type: 5
+  FloatValue: 340.5
   IntValue: 0
   TitleOverride: 

@@ -9,6 +9,7 @@ namespace CodeBase.StaticData
         void LoadWeapons();
         void LoadUpgrades();
 
+
         MonsterStaticData ForMonster(MonsterTypeId typeId);
 
         WeaponConfig GetDefaultWeapon();

@@ -1,15 +1,10 @@
 ﻿using System;
-using CodeBase.Hero;
-using CodeBase.StaticData;
-using UnityEngine;
-using UnityEngine.Serialization;
-
 namespace CodeBase.Data
 {
     [Serializable]
     public class PlayerProgress
     {
-        public WeaponStats WeaponStats;
+      
          public Stats heroStats; 
         public  WorldData WorldData;
         public KillData KillData;
@@ -20,7 +15,7 @@ namespace CodeBase.Data
         {
              RunProgressData = new RunProgressData();
             KillData = new  KillData();
-            WeaponStats = new WeaponStats();
+    
            
 
             WorldData =  new WorldData(initialLevel);

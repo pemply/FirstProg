@@ -19,7 +19,7 @@ namespace CodeBase.Infrastructure.Factory
         public Transform HeroTransform { get; set; }
 
         private readonly IAssets _assets;
-        private readonly IKillRewardService _killReward;
+        private readonly IXpService _xp;
 
         private readonly IStaticDataService _staticData;
 
@@ -27,11 +27,11 @@ namespace CodeBase.Infrastructure.Factory
     
 
 
-        public GameFactory(IAssets assets, IStaticDataService staticData, IKillRewardService killReward)
+        public GameFactory(IAssets assets, IStaticDataService staticData, IXpService xp)
         {
             _assets = assets;
             _staticData = staticData;
-            _killReward = killReward;
+            _xp = xp;
         }
 
         public GameObject CreateHero(GameObject at)
@@ -42,7 +42,21 @@ namespace CodeBase.Infrastructure.Factory
             
             return HeroGameObject;
         }
+        public GameObject CreateGameOverWindow()
+        {
+            return _assets.Instantiate(AssetsPath.GameOverWindowPath);
+        }
+        public GameObject CreateXpPickup(Vector3 at, int amount)
+        {
+            GameObject go = _assets.Instantiate(AssetsPath.XpPickupPath, at);
 
+            var pickup = go.GetComponent<XpPickup>();
+            if (pickup == null)
+                Debug.LogError("[GameFactory] XpPickup component missing on prefab");
+
+            pickup?.Construct(amount, _xp);
+            return go;
+        }
 
         public GameObject CreateHud()
         {
@@ -62,20 +76,31 @@ namespace CodeBase.Infrastructure.Factory
             health.currentHealth = monsterData.Hp;
             health.maxHealth = monsterData.Hp;
             
-            var death = monster.GetComponent<EnemyDeath>();
-            _killReward.Register(death, monsterTypeId);
-
             monster.GetComponent<ActorUI>().Construct(health);
             monster.GetComponent<AgentMoveToPlayer>().Construct(HeroTransform);
             monster.GetComponent<NavMeshAgent>().speed = monsterData.MoveSpeed;
 
-            EnemyAttack attack = monster.GetComponent<EnemyAttack>();
-            attack.Construct(HeroTransform);
-            attack.Damage = monsterData.Damage;
-            attack.AttackColdown = monsterData.AttackCooldown;
-            attack.Cleavage = monsterData.Cleavage;
-            attack.EffectiveDistance = monsterData.EffectiveDistance;
+            // Base / Tank (звичайна атака)
+            var baseAttack = monster.GetComponent<EnemyAttack>();
+            if (baseAttack != null)
+            {
+                baseAttack.Construct(HeroTransform);
+                baseAttack.Damage = monsterData.Damage;
+                baseAttack.AttackColdown = monsterData.AttackCooldown;
+                baseAttack.Cleavage = monsterData.Cleavage;
+                baseAttack.EffectiveDistance = monsterData.EffectiveDistance;
+            }
 
+// Kamikaze (самознищення)
+            var kamikazeAttack = monster.GetComponent<KamikazeAttack>();
+            if (kamikazeAttack != null)
+            {
+                kamikazeAttack.Construct(HeroTransform);
+                kamikazeAttack.Damage = monsterData.Damage;
+                kamikazeAttack.AttackColdown = monsterData.AttackCooldown;
+                kamikazeAttack.Cleavage = monsterData.Cleavage;
+                kamikazeAttack.EffectiveDistance = monsterData.EffectiveDistance;
+            }
             return monster; 
         }
 

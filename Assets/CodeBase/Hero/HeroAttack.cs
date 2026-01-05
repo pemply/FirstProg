@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CodeBase.Hero
 {
-    public class HeroAttack : MonoBehaviour, ISavedProgressReader
+    public class HeroAttack : MonoBehaviour, ISavedProgressReader, IStatsApplier
     {
         [SerializeField] private CharacterController _characterController;
         [SerializeField] private AttackRadiusZoneForHero _zone;
@@ -55,15 +55,15 @@ namespace CodeBase.Hero
 
         public void LoadProgress(PlayerProgress progress)
         {
+            Apply(progress);
+        }
+        public void Apply(PlayerProgress progress)
+        {
             progress.RunProgressData ??= new RunProgressData();
 
-            _weaponStats = progress.RunProgressData.WeaponStats;
-            _hasStats = true;
-
-            if (_zone != null)
-                _zone.SetRadius(_weaponStats.DamageRadius);
+            var stats = progress.RunProgressData.WeaponStats;
+            ApplyStats(stats);
         }
-
         private void AttackOnce()
         {
             int count = Physics.OverlapSphereNonAlloc(

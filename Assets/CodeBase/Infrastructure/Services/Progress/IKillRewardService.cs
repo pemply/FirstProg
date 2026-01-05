@@ -8,11 +8,9 @@ namespace CodeBase.Infrastructure.Services.Progress
 
     {
     void Register(EnemyDeath death, MonsterTypeId monsterTypeId);
-
-    /// <summary>Відписатися від конкретного ворога (якщо треба прибрати вручну).</summary>
+    
     void Unregister(EnemyDeath death);
-
-    /// <summary>Відписатися від усіх зареєстрованих ворогів.</summary>
+    
     void Cleanup();
     }
 }

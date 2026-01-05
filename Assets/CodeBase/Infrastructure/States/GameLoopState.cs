@@ -155,7 +155,8 @@ namespace CodeBase.Infrastructure.States
                 ? _gameFactory.HeroTransform
                 : hero.transform;
 
-            WaveSpawner spawner = new WaveSpawner(_gameFactory, center);
+            var killReward = AllServices.Container.Single<IKillRewardService>(); // або через DI якщо є
+            WaveSpawner spawner = new WaveSpawner(_gameFactory, center, killReward);
 
             _waveController = new WaveController(_runnerMono, spawner);
             _waveController.WaveFinished += OnWaveFinished;

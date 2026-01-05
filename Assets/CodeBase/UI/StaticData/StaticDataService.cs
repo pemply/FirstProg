@@ -10,8 +10,11 @@ namespace CodeBase.StaticData
         private Dictionary<string, WeaponConfig> _weapons;
         private List<UpgradeConfig> _upgrades;
 
+        
+     
         public IReadOnlyList<UpgradeConfig> AllUpgrades => _upgrades;
 
+      
         public void LoadMonsters()
         {
             _monsters = Resources
