@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaveConfig
   Duration: 45
   SpawnInterval: 0.63
-  MaxAlive: 89
+  MaxAlive: 1
   Mix:
   - Type: 0
     Weight: 6

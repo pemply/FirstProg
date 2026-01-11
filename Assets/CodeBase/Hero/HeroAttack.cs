@@ -1,4 +1,5 @@
 ﻿using CodeBase.Data;
+using CodeBase.Enemy;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Logic;
 using CodeBase.StaticData;
@@ -87,6 +88,17 @@ namespace CodeBase.Hero
                     continue;
 
                 health.TakeDamage(_weaponStats.Damage);
+                {
+                    var kb = col.GetComponentInParent<EnemyKnockback>();
+                    if (kb != null)
+                    {
+                        Vector3 dir = col.transform.position - transform.position;
+                        dir.y = 0f;
+                        if (dir.sqrMagnitude > 0.0001f)
+                            kb.Push(dir.normalized, _weaponStats.Knockback);
+                    }
+                }
+
             }
         }
 

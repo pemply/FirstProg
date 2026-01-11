@@ -3,7 +3,9 @@ using UnityEngine.AI;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.StaticData;
 using CodeBase.Enemy;
+using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.Progress;
+using CodeBase.UI;
 
 public class WaveSpawner : IWaveSpawner
 {
@@ -85,7 +87,7 @@ public class WaveSpawner : IWaveSpawner
 
             Vector3 rawPos = _player.position + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
 
-            bool ok = NavMesh.SamplePosition(rawPos, out NavMeshHit hit, 10f, NavMesh.AllAreas);
+            bool ok = NavMesh.SamplePosition(rawPos, out NavMeshHit hit, 50f, NavMesh.AllAreas);
             
             if (ok)
                 return hit.position;
@@ -112,6 +114,7 @@ public class WaveSpawner : IWaveSpawner
 
         void OnDeath()
         {
+           
             death.DeathEvent -= OnDeath;
             _alive = Mathf.Max(0, _alive - 1);
         }

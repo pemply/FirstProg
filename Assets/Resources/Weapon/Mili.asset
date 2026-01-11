@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.WeaponConfig
   WeaponId: default
   BaseStats:
-    AttackCooldown: 0.1
+    BaseCooldown: 1
+    AttackSpeedMult: 1
     Damage: 20
     DamageRadius: 2
+    Knockback: 1
+    KnockbackChance: 1

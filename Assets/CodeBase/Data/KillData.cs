@@ -7,5 +7,7 @@ namespace CodeBase.Data
     public class KillData
     {
         public List<string> ClearedSpawners = new List<string>();
+        public List<string> ClearedPillars = new();
+
     }
 }

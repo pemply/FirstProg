@@ -12,7 +12,10 @@ namespace CodeBase.Services.Input
 
         public bool IsAttackButtonUp() => 
             SimpleInput.GetButtonUp(Button);
-
+        
+        public virtual bool IsInteractButtonUp() =>
+            false; 
+        
         protected static Vector2 SimpleInputAxis() => 
             new(SimpleInput.GetAxis(Horizontal), SimpleInput.GetAxis(Vertical));
     }

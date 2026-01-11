@@ -217,6 +217,8 @@ GameObject:
   - component: {fileID: 4178290038881225770}
   - component: {fileID: 4554841477117165827}
   - component: {fileID: 261664605115957939}
+  - component: {fileID: 4864592470591883698}
+  - component: {fileID: -6699919114215988711}
   m_Layer: 7
   m_Name: kam
   m_TagString: Untagged
@@ -462,6 +464,32 @@ MonoBehaviour:
   AttackColdown: 0.5
   EffectiveDistance: 0.5
   Damage: 10
+--- !u!114 &4864592470591883698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9212566456173030763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b82a1de49b0744d8ba86e8b10bcd0356, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Logic.XpRewardHolder
+--- !u!114 &-6699919114215988711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9212566456173030763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18d216cab87740bab24fbd74b938fba8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.EnemyKnockback
+  _pushDuration: 0.12
+  _maxDistance: 10
 --- !u!1001 &7106480433827138456
 PrefabInstance:
   m_ObjectHideFlags: 0

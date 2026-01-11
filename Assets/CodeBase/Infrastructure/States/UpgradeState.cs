@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CodeBase.Infrastructure.States
 {
-    public class UpgradeState : IExitableState, IPayLoadedState<UpgradePayload>
+    public class UpgradeState :IPayLoadedState<UpgradePayload>
     {
         private readonly GameStateMachine _stateMachine;
         private readonly IUpgradeService _upgrades;

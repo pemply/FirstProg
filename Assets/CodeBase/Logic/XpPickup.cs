@@ -12,12 +12,10 @@ namespace CodeBase.Logic
         {
             _amount = amount;
             _xp = xp;
-            Debug.Log($"[XpPickup] Construct amount={_amount}, xpNull={_xp == null}");
         }
 
         public void Collect()
         {
-            Debug.Log($"[XpPickup] Collect amount={_amount}, xpNull={_xp == null}");
             _xp?.AddXp(_amount);
             Destroy(gameObject);
         }

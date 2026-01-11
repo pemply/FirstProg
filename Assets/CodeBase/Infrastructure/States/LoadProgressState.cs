@@ -63,7 +63,7 @@ namespace CodeBase.Infrastructure.States
         private PlayerProgress NewProgress()
         {
             var progress = new PlayerProgress(initialLevel: "Main");
-
+            
             progress.RunProgressData ??= new RunProgressData();
 
             progress.RunProgressData.Level = 1;

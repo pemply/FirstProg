@@ -6,5 +6,8 @@
         public const string PathHud = "Hud/Hud";
         public const string GameOverWindowPath = "GameOverWindow/GameOverWindow";
         public const string XpPickupPath = "SceneObjPref/XPPIC";
+        public const string DifConfigPath = "Enemy/DifficultyConfige/DifficultyConfig";
+        public const string EliteConfigPath = "Enemy/Elite/elite";
+        public const string PillarSpawnerPath = "SceneObjPref/sapwnerPilar"; 
     }
 }

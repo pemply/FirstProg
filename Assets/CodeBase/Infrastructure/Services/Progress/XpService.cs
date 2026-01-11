@@ -33,6 +33,8 @@ namespace CodeBase.Infrastructure.Services.Progress
 
         public void AddXp(int amount)
         {
+            Debug.Log($"[XP] AddXp amount={amount} before={Data.XpInLevel} level={Data.Level} req={RequiredXp}");
+            
             if (amount <= 0)
                 return;
 

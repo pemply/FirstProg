@@ -23,7 +23,7 @@ namespace CodeBase.Enemy
         }
         public void LoadProgress(PlayerProgress progress)
         {
-            if (Slain) // ✅ якщо ти вручну позначив в інспекторі
+            if (Slain) 
                 return;
 
             if (progress.KillData.ClearedSpawners.Contains(Id))

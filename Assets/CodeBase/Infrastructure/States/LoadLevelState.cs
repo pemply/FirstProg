@@ -20,7 +20,6 @@ namespace CodeBase.Infrastructure.States
         private readonly LoadingCurtain _curtain;
         private readonly IGameFactory _gameFactory;
         private readonly IPersistentProgressService _progressService;
-
         public LoadLevelState(
             GameStateMachine stateMachine,
             SceneLoader sceneLoader,
@@ -47,27 +46,32 @@ namespace CodeBase.Infrastructure.States
 
         private void OnLoaded()
         {
-            InitGameWorld();
             GameObject hero = CreateHero();
             GameObject hud = CreateHud();
 
-            InitProgressReaders(); // після BindHudToHero — щоб HealthChanged одразу намалював бар
+            InitProgressReaders();
             BindHudToHero(hud, hero);
             CameraFollow(hero);
-            
+
+            InitPillars(hero); // <-- так
+
             AllServices.Container.Single<IXpService>().ResetRun();
-
-
             _stateMachine.Enter<GameLoopState, GameLoopPayload>(new GameLoopPayload(hero, hud));
-
         }
 
-        private void InitGameWorld()
+        private Transform HeroPivot(GameObject hero) =>
+            hero.GetComponentInChildren<CharacterController>(true).transform;
+
+        private void InitPillars(GameObject hero)
         {
-        
-            InitSpawners();
+            GameObject spawnerGo = _gameFactory.CreatePillarSpawner();
+            PillarSpawner spawner = spawnerGo.GetComponent<PillarSpawner>();
 
+            Transform pivot = HeroPivot(hero);
+            spawner.Construct(pivot);
+            spawner.Spawn();
         }
+
 
         private void InitSpawners()
         {

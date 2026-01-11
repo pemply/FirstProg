@@ -25,8 +25,30 @@ namespace CodeBase.StaticData
                 [UpgradeType.WeaponRadius] = ApplyWeaponRadius,
                 [UpgradeType.WeaponCooldown] = ApplyWeaponCooldown,
                 [UpgradeType.PickupRadius] = ApplyPickupRadius,
+                [UpgradeType.Knockback] = ApplyKnockback,
+                [UpgradeType.KnockbackChance] = ApplyKnockbackChance,
             };
         }
+        private void ApplyKnockbackChance(UpgradeConfig config)
+        {
+            MutateWeapon(s =>
+            {
+                float add = config.FloatValue / 100f;  // +5 => +0.05
+                s.KnockbackChance = Mathf.Clamp01(s.KnockbackChance + add);
+                return s;
+            });
+        }
+
+
+        private void ApplyKnockback(UpgradeConfig config)
+        {
+            MutateWeapon(s =>
+            {
+                s.Knockback += config.FloatValue;
+                return s;
+            });
+        }
+
 
         public void Apply(UpgradeConfig config)
         {

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1bdf20ffa394551aeb0904d1fa17434, type: 3}
   m_Name: Damage
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.UpgradeConfig
-  Type: 3
-  FloatValue: 10.1
+  Type: 4
+  FloatValue: 10
   IntValue: 10
   TitleOverride: 

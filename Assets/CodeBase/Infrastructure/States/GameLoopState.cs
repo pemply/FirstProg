@@ -1,17 +1,21 @@
 ﻿
+using System.Collections;
 using CodeBase.Hero;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.Progress;
+using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Infrastructure.States.BetweenStates;
+using CodeBase.Logic;
 using CodeBase.StaticData;
 using CodeBase.UI;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CodeBase.Infrastructure.States
 {
     public class GameLoopState 
-        : IExitableState, IPayLoadedState<GameLoopPayload>, IPayLoadedState<ResumeWavesPayload>
+        :  IPayLoadedState<GameLoopPayload>, IPayLoadedState<ResumeWavesPayload>
     {
         private bool _isUpgradeFlow;
         private bool _upgradeOpen;
@@ -33,19 +37,26 @@ namespace CodeBase.Infrastructure.States
         private readonly IXpService _xp;
         private readonly IKillRewardService _killReward;
         private GameLoopPayload _loopPayload;
+        private RunTimerService _runTimer;
+        
+        private Coroutine _timerRoutine;
 
-
+        private readonly IDifficultyScalingService _difficulty;
         public GameLoopState(
             GameStateMachine stateMachine,
             IGameFactory gameFactory,
             ICoroutineRunner runnerMono,
-            IXpService xp)
+            IXpService xp,
+            RunTimerService runTimer, IDifficultyScalingService difficulty)
         {
             _stateMachine = stateMachine;
             _gameFactory = gameFactory;
             _runnerMono = runnerMono;
             _xp = xp;
-            
+            _runTimer = runTimer;
+            _difficulty = difficulty;
+
+
             _killReward = AllServices.Container.Single<IKillRewardService>();
         }
         public void Enter(ResumeWavesPayload payload)
@@ -66,9 +77,24 @@ namespace CodeBase.Infrastructure.States
 
             StartNextWave();
         }
-        
+        private IEnumerator TickTimer()
+        {
+            while (true)
+            {
+                _runTimer.Tick(Time.deltaTime);
+
+                // ОЦЕ “3)”: сервіс отримує загальний elapsed і вирішує, чи підняти tier
+                _difficulty.Tick(_runTimer.ElapsedSeconds);
+
+                yield return null;
+            }
+        }
         public void Enter(GameLoopPayload payload)
         {
+            _runTimer.Reset();
+            _difficulty.Reset(); // додай метод Reset в сервіс
+            _timerRoutine = _runnerMono.StartCoroutine(TickTimer());
+            
             _loopPayload = payload;
             _xp.LevelUp += OnLevelUp;
             Debug.Log("Entering GameLoopState");
@@ -85,7 +111,14 @@ namespace CodeBase.Infrastructure.States
             }
 
             _heroHealth.DeathEvent += OnHeroDied;
-
+            var pillarSpawner = Object.FindFirstObjectByType<PillarSpawner>();
+            if (pillarSpawner == null)
+                Debug.LogWarning("[GameLoopState] PillarSpawner not found in scene");
+            else
+            {
+                pillarSpawner.Construct(_gameFactory.HeroTransform);
+                pillarSpawner.Spawn();
+            }
             // ---------- HUD / LEVEL UI ----------
             var levelUi = _hud.GetComponentInChildren<HeroLevelUI>(true);
             if (levelUi == null)
@@ -101,7 +134,7 @@ namespace CodeBase.Infrastructure.States
             CreateWaveSystem(_hero);
             StartNextWave();
         }
-
+        
         public void Exit()
         {
             if (_isUpgradeFlow)
@@ -130,6 +163,9 @@ namespace CodeBase.Infrastructure.States
             _hero = null;
             _hud = null;
             _heroHealth = null;
+            
+            if (_timerRoutine != null)
+                _runnerMono.StopCoroutine(_timerRoutine);
         }
 
 

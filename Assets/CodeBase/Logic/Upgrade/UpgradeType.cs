@@ -4,7 +4,8 @@
     {
         Hp,
         PickupRadius,
-        MoveSpeed,
+        Knockback,
+        KnockbackChance,
         WeaponDamage,
         WeaponRadius,
         WeaponCooldown,

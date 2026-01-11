@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CodeBase.Enemy;
 using CodeBase.Infrastructure.Factory;
+using CodeBase.Logic;
 using CodeBase.StaticData;
 using UnityEngine;
 
@@ -24,24 +25,36 @@ namespace CodeBase.Infrastructure.Services.Progress
             if (death == null) return;
             if (_handlers.ContainsKey(death)) return;
 
-            int xpReward = 0;
-            var monsterData = _staticData.ForMonster(monsterTypeId);
-            if (monsterData != null)
-                xpReward = monsterData.XpReward;
-
             Action handler = null;
             handler = () =>
             {
                 death.DeathEvent -= handler;
                 _handlers.Remove(death);
 
+                int xpReward = 0;
+
+                // ✅ 1) беремо з інстансу (враховує difficulty + elite)
+                var holder = death.GetComponentInParent<XpRewardHolder>();
+                if (holder != null)
+                    xpReward = holder.Xp;
+                else
+                {
+                    // ✅ 2) fallback
+                    var monsterData = _staticData.ForMonster(monsterTypeId);
+                    if (monsterData != null)
+                        xpReward = monsterData.XpReward;
+                }
+
                 if (xpReward > 0)
                     _factory.CreateXpPickup(death.transform.position, xpReward);
+
+                Debug.Log($"[KillReward] Drop xp={xpReward}");
             };
 
             _handlers[death] = handler;
             death.DeathEvent += handler;
         }
+
 
         public void Unregister(EnemyDeath death)
         {

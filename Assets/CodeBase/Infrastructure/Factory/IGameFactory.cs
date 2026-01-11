@@ -21,6 +21,8 @@ namespace CodeBase.Infrastructure.Factory
         GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent);
         GameObject CreateGameOverWindow();
         GameObject CreateXpPickup(Vector3 at, int amount);
+        GameObject CreatePillarSpawner();
+        GameObject PillarSpawnerGameObject { get; set; }
 
     }
 }

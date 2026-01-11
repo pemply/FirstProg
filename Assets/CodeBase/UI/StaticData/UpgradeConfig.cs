@@ -6,7 +6,7 @@ namespace CodeBase.StaticData
     [CreateAssetMenu(menuName = "StaticData/Upgrade")]
     public class UpgradeConfig : ScriptableObject
     {
-            public UpgradeType Type;
+        public UpgradeType Type;
             public float FloatValue;
             public int IntValue;
 
@@ -25,6 +25,8 @@ namespace CodeBase.StaticData
                     UpgradeType.WeaponRadius => "Radius",
                     UpgradeType.WeaponCooldown => "Cooldown",
                     UpgradeType.PickupRadius => "Pickup Radius",
+                    UpgradeType.KnockbackChance => "Knockback Chance",
+                    UpgradeType.Knockback => "Knockback",
                     _ => Type.ToString()
                 };
             }
@@ -37,7 +39,9 @@ namespace CodeBase.StaticData
                     UpgradeType.WeaponDamage => $"+{FloatValue:0.##}",
                     UpgradeType.WeaponRadius => $"+{FloatValue:0.##}",
                     UpgradeType.WeaponCooldown => $"+{FloatValue:0.#}% AS",
+                    UpgradeType.KnockbackChance => $"+{FloatValue:0.#}%",
                     UpgradeType.PickupRadius => $"+{FloatValue:0.##}",
+                    UpgradeType.Knockback => $"+{FloatValue:0.##}",
                     _ => ""
                 };
             }

@@ -4,6 +4,7 @@ using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Infrastructure.Services.Progress;
+using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Infrastructure.Services.SaveLoad;
 using CodeBase.Services.Input;
 using CodeBase.StaticData;
@@ -41,24 +42,27 @@ namespace CodeBase.Infrastructure.States
             _stateMachine.Enter<LoadProgressState>();
         }
 
+        
         private void RegisterServices()
         {
-            RegisterStaticData(); // IStaticDataService (і LoadMonsters/LoadWeapons)
+            RegistDifficultScaling();
             _services.RegisterSingle<IInputService>(InputService());
             _services.RegisterSingle<IAssets>(new AssetProvider());
 
             _services.RegisterSingle<IPersistentProgressService>(new PersistentProgressService());
-
+_services.RegisterSingle<IPillarActivationService>(new PillarActivationService());
             _services.RegisterSingle<IXpService>(
                 new XpService(_services.Single<IPersistentProgressService>())
             );
-
-
+            RegisterStaticData(); // IStaticDataService (і LoadMonsters/LoadWeapons)
+            
             _services.RegisterSingle<IGameFactory>(
                 new GameFactory(
                     _services.Single<IAssets>(),
                     _services.Single<IStaticDataService>(),
-                    _services.Single<IXpService>()
+                    _services.Single<IXpService>(),
+                    _services.Single<IDifficultyScalingService>()
+                 
                 )
             );
             _services.RegisterSingle<IKillRewardService>(
@@ -70,13 +74,28 @@ namespace CodeBase.Infrastructure.States
             _services.RegisterSingle<ISavedLoadService>(
                 new SavedLoadService(_services.Single<IPersistentProgressService>(), _services.Single<IGameFactory>()));
 
-            AllServices.Container.RegisterSingle<IRunResetService>(
+            _services.RegisterSingle<IRunResetService>(
                 new RunResetService(
                     _services.Single<IPersistentProgressService>(),
                     _services.Single<IStaticDataService>()
                 )
             );
+           
         }
+
+        private void RegistDifficultScaling()
+        {
+            var runTimer = new RunTimerService();
+
+            DifficultyConfig cfg = Resources.Load<DifficultyConfig>(AssetsPath.DifConfigPath);
+            
+            IDifficultyScalingService difficulty = new DifficultyScalingService(cfg);
+
+            _services.RegisterSingle(runTimer);
+            _services.RegisterSingle<IDifficultyScalingService>(difficulty);  
+        }
+
+
 
         private void RegisterUpgradeService()
         {
