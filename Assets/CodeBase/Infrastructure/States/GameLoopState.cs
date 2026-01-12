@@ -1,5 +1,6 @@
 ﻿
 using System.Collections;
+using CodeBase.Enemy;
 using CodeBase.Hero;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
@@ -9,7 +10,6 @@ using CodeBase.Infrastructure.States.BetweenStates;
 using CodeBase.Logic;
 using CodeBase.StaticData;
 using CodeBase.UI;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CodeBase.Infrastructure.States
@@ -38,7 +38,7 @@ namespace CodeBase.Infrastructure.States
         private readonly IKillRewardService _killReward;
         private GameLoopPayload _loopPayload;
         private RunTimerService _runTimer;
-        
+
         private Coroutine _timerRoutine;
 
         private readonly IDifficultyScalingService _difficulty;
@@ -61,6 +61,9 @@ namespace CodeBase.Infrastructure.States
         }
         public void Enter(ResumeWavesPayload payload)
         {
+            _upgradeOpen = false;
+
+           
             _currentWaveIndex = payload.WaveIndex;
 
             Time.timeScale = 1f;
@@ -91,6 +94,7 @@ namespace CodeBase.Infrastructure.States
         }
         public void Enter(GameLoopPayload payload)
         {
+            RegisteredPillars();
             _runTimer.Reset();
             _difficulty.Reset(); // додай метод Reset в сервіс
             _timerRoutine = _runnerMono.StartCoroutine(TickTimer());
@@ -101,7 +105,7 @@ namespace CodeBase.Infrastructure.States
 
             _hero = payload.Hero;
             _hud  = payload.Hud;
-
+         
             // ---------- HERO ----------
             _heroHealth = _hero.GetComponentInChildren<HeroHealth>();
             if (_heroHealth == null)
@@ -111,14 +115,7 @@ namespace CodeBase.Infrastructure.States
             }
 
             _heroHealth.DeathEvent += OnHeroDied;
-            var pillarSpawner = Object.FindFirstObjectByType<PillarSpawner>();
-            if (pillarSpawner == null)
-                Debug.LogWarning("[GameLoopState] PillarSpawner not found in scene");
-            else
-            {
-                pillarSpawner.Construct(_gameFactory.HeroTransform);
-                pillarSpawner.Spawn();
-            }
+           
             // ---------- HUD / LEVEL UI ----------
             var levelUi = _hud.GetComponentInChildren<HeroLevelUI>(true);
             if (levelUi == null)
@@ -134,9 +131,32 @@ namespace CodeBase.Infrastructure.States
             CreateWaveSystem(_hero);
             StartNextWave();
         }
-        
+
+        private void RegisteredPillars()
+        {
+            var spawnerGo = _gameFactory.PillarSpawnerGameObject;
+            var spawner = spawnerGo != null ? spawnerGo.GetComponent<PillarSpawner>() : null;
+
+            if (spawner != null)
+            {
+                spawner.Construct(_gameFactory.HeroTransform, OnPillarCompleted);
+                spawner.Spawn();
+            }
+        }
+
+        private void OnPillarCompleted(PillarEncounterSpawner pillar)
+        {
+            _pendingUpgrades++;   
+
+            if (_upgradeOpen)
+                return;
+
+            OpenUpgrade();
+        }
+     
         public void Exit()
         {
+
             if (_isUpgradeFlow)
             {
                 _isUpgradeFlow = false;

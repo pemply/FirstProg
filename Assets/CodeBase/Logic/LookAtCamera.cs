@@ -4,17 +4,18 @@ namespace CodeBase.Logic
 {
     public class LookAtCamera : MonoBehaviour
     {
-        private Camera _camera;
+        private Camera _cam;
 
-        private void Start()
+        private void Awake()
         {
-            _camera = Camera.main;
+            _cam = Camera.main;
         }
 
-        private void Update()
+        private void LateUpdate()
         {
-            Quaternion rotation = _camera.transform.rotation;
-            transform.LookAt(transform.position +  rotation * Vector3.back, rotation * Vector3.up);
+            if (_cam == null) return;
+
+            transform.forward = _cam.transform.forward;
         }
     }
 }

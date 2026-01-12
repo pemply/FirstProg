@@ -16,10 +16,9 @@ MonoBehaviour:
   Hp: 9
   Damage: 1
   MaxLoot: 0
-  MinLoot: 0
   EffectiveDistance: 0.5
   Cleavage: 0.5
   MoveSpeed: 10
   PrefabReference: {fileID: 9212566456173030763, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
   AttackCooldown: 0.22
-  XpReward: 7
+  XpReward: 0

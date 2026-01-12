@@ -12,9 +12,11 @@ namespace CodeBase.Logic
 
         private void Awake()
         {
+            
             _input = AllServices.Container.Single<IInputService>();
             _pillars = AllServices.Container.Single<IPillarActivationService>();
         }
+
 
         private void Update()
         {

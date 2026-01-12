@@ -16,7 +16,7 @@ MonoBehaviour:
   HpMult: 2
   DmgMult: 1.5
   XpMult: 2
-  ScaleMult: 1.2
+  ScaleMult: 1.4
   MaxHpMult: 10
   MaxDmgMult: 5
   MaxXpMult: 5

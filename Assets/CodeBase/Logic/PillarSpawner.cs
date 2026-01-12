@@ -1,11 +1,16 @@
-﻿using Unity.AI.Navigation;
+﻿using System;
+using CodeBase.Enemy;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace CodeBase.Logic
 {
     public class PillarSpawner : MonoBehaviour
     {
+        private Action<PillarEncounterSpawner> _onPillarCompleted;
         [SerializeField] private GameObject _pillarPrefab;
         [SerializeField] private int _count = 3;
         [SerializeField] private float _minRadius = 12f;
@@ -17,12 +22,13 @@ namespace CodeBase.Logic
         private bool _filterReady;
         private bool _spawned;
 
-        public void Construct(Transform hero)
+        public void Construct(Transform hero, Action<PillarEncounterSpawner> onPillarCompleted)
         {
+            _onPillarCompleted = onPillarCompleted;
             _hero = hero;
 
             // беремо agentTypeID з NavMeshSurface в сцені
-            var surface = Object.FindObjectOfType<NavMeshSurface>();
+            var surface = FindObjectOfType<NavMeshSurface>();
             if (surface != null)
             {
                 _filter = new NavMeshQueryFilter
@@ -31,22 +37,19 @@ namespace CodeBase.Logic
                     areaMask = NavMesh.AllAreas
                 };
                 _filterReady = true;
-                Debug.Log($"[PILLARS] Using NavMeshSurface agentTypeID={surface.agentTypeID}");
+         
             }
             else
             {
-                Debug.LogWarning("[PILLARS] NavMeshSurface not found, will use default SamplePosition");
                 _filterReady = false;
             }
         }
 
         public void Spawn()
         {
-          
-            
-                if (_spawned) return;
-                _spawned = true;
-                
+            if (_spawned) return;
+            _spawned = true;
+
             if (_pillarPrefab == null || _hero == null) return;
 
             int spawned = 0;
@@ -55,13 +58,18 @@ namespace CodeBase.Logic
             {
                 if (TryGetPoint(_hero.position, out var pos))
                 {
-                    Instantiate(_pillarPrefab, pos, Quaternion.identity);
+                    GameObject go = Instantiate(_pillarPrefab, pos, Quaternion.identity);
+                    
+                    var encounter = go.GetComponent<PillarEncounterSpawner>();
+                    if (encounter != null)
+                        encounter.Construct(_onPillarCompleted);
+
                     spawned++;
                 }
             }
-
-            Debug.Log($"[PILLARS] Spawn done. spawned={spawned}/{_count}");
+            
         }
+
 
         private bool TryGetPoint(Vector3 center, out Vector3 point)
         {

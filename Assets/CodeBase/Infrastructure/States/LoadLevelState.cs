@@ -53,7 +53,7 @@ namespace CodeBase.Infrastructure.States
             BindHudToHero(hud, hero);
             CameraFollow(hero);
 
-            InitPillars(hero); // <-- так
+            _gameFactory.CreatePillarSpawner();
 
             AllServices.Container.Single<IXpService>().ResetRun();
             _stateMachine.Enter<GameLoopState, GameLoopPayload>(new GameLoopPayload(hero, hud));
@@ -62,15 +62,7 @@ namespace CodeBase.Infrastructure.States
         private Transform HeroPivot(GameObject hero) =>
             hero.GetComponentInChildren<CharacterController>(true).transform;
 
-        private void InitPillars(GameObject hero)
-        {
-            GameObject spawnerGo = _gameFactory.CreatePillarSpawner();
-            PillarSpawner spawner = spawnerGo.GetComponent<PillarSpawner>();
-
-            Transform pivot = HeroPivot(hero);
-            spawner.Construct(pivot);
-            spawner.Spawn();
-        }
+      
 
 
         private void InitSpawners()

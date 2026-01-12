@@ -9,10 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7460831115012418309}
-  - component: {fileID: 7524651746128080313}
   - component: {fileID: 7990803159150380944}
   - component: {fileID: 4416803406346147776}
-  m_Layer: 3
+  m_Layer: 6
   m_Name: Weapone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34,20 +33,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8647482442764066864}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7524651746128080313
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4212976043527076940}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 888883b62ce341a1904f73ee2c535232, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Hero.HeroWeapon
-  _characterController: {fileID: 0}
-  _zone: {fileID: 0}
 --- !u!135 &7990803159150380944
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -126,7 +111,7 @@ GameObject:
   - component: {fileID: 7277289130292316631}
   - component: {fileID: 3056136163263978254}
   - component: {fileID: 7687671459868996996}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: collector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
