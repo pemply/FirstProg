@@ -1,5 +1,4 @@
 ﻿using CodeBase.Data;
-using CodeBase.Hero;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Infrastructure.Services.SaveLoad;
 using CodeBase.StaticData;
@@ -12,19 +11,21 @@ namespace CodeBase.Infrastructure.States
         private readonly GameStateMachine _gameStateMachine;
         private readonly IPersistentProgressService _progressService;
         private readonly ISavedLoadService _savedLoadService;
-        private readonly IStaticDataService _staticData;
 
-        public LoadProgressState(GameStateMachine gameStateMachine, IPersistentProgressService progressService, ISavedLoadService savedLoadService, IStaticDataService staticData)
+        public LoadProgressState(
+            GameStateMachine gameStateMachine,
+            IPersistentProgressService progressService,
+            ISavedLoadService savedLoadService)
         {
             _gameStateMachine = gameStateMachine;
             _progressService = progressService;
             _savedLoadService = savedLoadService;
-            _staticData = staticData;
         }
-        
 
         public void Enter()
         {
+            Debug.Log("[FLOW] LoadProgress.Enter");
+
             LoadProgressOrInitNew();
             _gameStateMachine.Enter<LoadLevelState, string>(_progressService.Progress.WorldData.PositionOnLevel.Level);
         }
@@ -32,53 +33,19 @@ namespace CodeBase.Infrastructure.States
         private void LoadProgressOrInitNew()
         {
             _progressService.Progress = _savedLoadService.LoadProgress() ?? NewProgress();
-
-            // repair for old/invalid saves
-            if (_progressService.Progress.RunProgressData == null)
-                _progressService.Progress.RunProgressData = new RunProgressData();
-
-            if (_progressService.Progress.heroStats == null)
-                _progressService.Progress.heroStats = new Stats();
-
-            if (_progressService.Progress.WorldData == null)
-                _progressService.Progress.WorldData = new WorldData("Main");
-
-            RunProgressData run = _progressService.Progress.RunProgressData;
-            var weapon = _staticData.GetDefaultWeapon();
-
-            if (string.IsNullOrEmpty(run.WeaponId))
-                run.WeaponId = weapon.WeaponId;
-
-            if (run.WeaponStats.Damage <= 0 ||
-                run.WeaponStats.DamageRadius <= 0 ||
-                run.WeaponStats.BaseCooldown <= 0 ||
-                run.WeaponStats.AttackSpeedMult <= 0)
-            {
-                run.WeaponStats = weapon.BaseStats;
-            }
-
-
+            RepairProgress(_progressService.Progress);
         }
 
-        private PlayerProgress NewProgress()
+        private PlayerProgress NewProgress() =>
+            new PlayerProgress(initialLevel: "Main");
+
+        private void RepairProgress(PlayerProgress p)
         {
-            var progress = new PlayerProgress(initialLevel: "Main");
-            
-            progress.RunProgressData ??= new RunProgressData();
-
-            progress.RunProgressData.Level = 1;
-            progress.RunProgressData.XpInLevel = 0;
-
-            var weapon = _staticData.GetDefaultWeapon();
-            progress.RunProgressData.WeaponId = weapon.WeaponId;
-            progress.RunProgressData.WeaponStats = weapon.BaseStats;
-
-            return progress;
+            p.heroStats ??= new Stats();
+            p.WorldData ??= new WorldData("Main");
+            p.KillData ??= new KillData();
         }
 
-        public void Exit()
-        {
-            
-        }
+        public void Exit() { }
     }
 }

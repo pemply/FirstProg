@@ -147,9 +147,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.PillarEncounterSpawner
   _prompt: {fileID: 5654421134850016428}
   MonsterTypeId: 1
-  TotalToSpawn: 1
+  TotalToSpawn: 2
   MaxAlive: 10
-  SpawnInterval: 0.07
+  SpawnInterval: 0.01
   MinRadius: 2
   MaxRadius: 2
   RewardXp: 200

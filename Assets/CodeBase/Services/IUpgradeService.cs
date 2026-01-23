@@ -5,6 +5,6 @@ namespace CodeBase.StaticData
 {
     public interface IUpgradeService : IService
     {
-        void Apply(UpgradeConfig type);
+        void Apply(UpgradeRoll roll);
     }
 }

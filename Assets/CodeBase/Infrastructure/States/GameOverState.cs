@@ -1,7 +1,4 @@
 ﻿using CodeBase.Infrastructure.Factory;
-using CodeBase.Infrastructure.Services;
-using CodeBase.Infrastructure.Services.Progress;
-using CodeBase.UI;
 using CodeBase.UI.over;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -12,15 +9,13 @@ namespace CodeBase.Infrastructure.States
     {
         private readonly GameStateMachine _stateMachine;
         private readonly IGameFactory _factory;
-        private readonly IRunResetService _runReset;
 
         private GameObject _window;
 
-        public GameOverState(GameStateMachine gameStateMachine, IGameFactory factory, IRunResetService runReset)
+        public GameOverState(GameStateMachine gameStateMachine, IGameFactory factory)
         {
             _stateMachine = gameStateMachine;
             _factory = factory;
-            _runReset = runReset;
         }
 
         public void Enter()
@@ -37,31 +32,28 @@ namespace CodeBase.Infrastructure.States
             _window = _factory.CreateGameOverWindow();
             if (_window == null)
             {
-                Debug.LogError("[GameOverState] CreateGameOverWindow returned null. Check prefab path and Resources location.");
+                Debug.LogError("[GameOverState] CreateGameOverWindow returned null.");
                 return;
             }
 
             var view = _window.GetComponent<GameOverWindow>();
             if (view == null)
             {
-                Debug.LogError("[GameOverState] GameOverWindow component not found on instantiated prefab.");
+                Debug.LogError("[GameOverState] GameOverWindow component not found on prefab.");
                 return;
             }
 
             view.Construct(Restart);
         }
 
-
         private void Restart()
         {
             Time.timeScale = 1f;
 
-            _runReset.ResetRunToDefaults();
-
             if (_window != null)
                 Object.Destroy(_window);
 
-            // запускаємо run знову через твій flow
+            // Новий ран стартує через LoadLevelState (він сам зробить _run.Reset і дефолти)
             _stateMachine.Enter<LoadLevelState, string>("Main");
         }
 

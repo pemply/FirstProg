@@ -9,5 +9,7 @@
         public const string DifConfigPath = "Enemy/DifficultyConfige/DifficultyConfig";
         public const string EliteConfigPath = "Enemy/Elite/elite";
         public const string PillarSpawnerPath = "SceneObjPref/sapwnerPilar"; 
+        public const string GameStartConfig = "GameWeaponConfig/GameStartConfig"; 
+        public const string ChanceRarityUpg = "stats/ChanceRarityUpg/New Upgrade Rarity Chances"; 
     }
 }

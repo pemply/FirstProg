@@ -1,13 +1,14 @@
 ﻿using System;
 using CodeBase.Data;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Logic;
 using CodeBase.StaticData;
 using UnityEngine;
 
 namespace CodeBase.Hero
 {
-    public class HeroHealth : MonoBehaviour, ISavedProgress, IHealth, IStatsApplier
+    public class HeroHealth : MonoBehaviour, ISavedProgress, IHealth, IStatsApplier, IHeroStatsApplier
     {
         private Stats _stats;
         private bool _isDead;
@@ -55,7 +56,27 @@ namespace CodeBase.Hero
                 }
             }
         }
+        public void ApplyHeroStats(Stats stats)
+        {
+            if (stats == null) return;
 
+            // важливо: ми працюємо з тим самим об'єктом Stats, що в прогресі
+            _stats = stats;
+
+            if (_stats.MaxHP <= 0) _stats.MaxHP = 1;
+            _stats.CurrentHP = Mathf.Clamp(_stats.CurrentHP, 0, _stats.MaxHP);
+
+            _isDead = _stats.CurrentHP <= 0;
+
+            HealthChanged?.Invoke();
+        }
+
+        public void Apply(PlayerProgress progress)
+        {
+            // замість дублю логіки — викликаємо ApplyHeroStats
+            progress.heroStats ??= new Stats();
+            ApplyHeroStats(progress.heroStats);
+        }
         public void TakeDamage(float damage)
         {
             if (_isDead) return;
@@ -76,17 +97,6 @@ namespace CodeBase.Hero
             progress.heroStats.CurrentHP = _stats?.CurrentHP ?? progress.heroStats.CurrentHP;
         }
 
-        public void Apply(PlayerProgress progress)
-        {
-            _stats = progress.heroStats ??= new Stats();
-
-            // repair на випадок кривих даних
-            if (_stats.MaxHP <= 0) _stats.MaxHP = 1;
-            _stats.CurrentHP = Mathf.Clamp(_stats.CurrentHP, 0, _stats.MaxHP);
-
-            _isDead = _stats.CurrentHP <= 0;
-
-            HealthChanged?.Invoke();
-        }
+    
     }
 }

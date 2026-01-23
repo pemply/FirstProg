@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeBase.Logic.Upgrade;
 using CodeBase.StaticData;
 using TMPro;
 using UnityEngine;
@@ -18,7 +19,7 @@ namespace CodeBase.UI
 
         private Action<int> _onPick;
 
-        public void Show(UpgradeConfig[] choices, Action<int> onPick)
+        public void Show(UpgradeRoll[] choices, Action<int> onPick)
         {
             _onPick = onPick;
             gameObject.SetActive(true);
@@ -34,13 +35,13 @@ namespace CodeBase.UI
             _onPick = null;
         }
 
-        private void SetButton(Button btn, TMP_Text txt, UpgradeConfig[] choices, int index)
+        private void SetButton(Button btn, TMP_Text txt, UpgradeRoll[] choices, int index)
         {
             btn.onClick.RemoveAllListeners();
 
-            var cfg = (choices != null && index < choices.Length) ? choices[index] : null;
+            var roll = (choices != null && index < choices.Length) ? choices[index] : default;
 
-            if (cfg == null)
+            if (roll.Config == null)
             {
                 btn.interactable = false;
                 if (txt != null) txt.text = "—";
@@ -50,10 +51,27 @@ namespace CodeBase.UI
             btn.interactable = true;
 
             if (txt != null)
-                txt.text = cfg.GetButtonText();
-
+                txt.text = BuildText(roll);
 
             btn.onClick.AddListener(() => _onPick?.Invoke(index));
         }
+
+        private string BuildText(UpgradeRoll roll)
+        {
+            UpgradeConfig cfg = roll.Config;
+
+            string rarity = cfg.IgnoreRarity ? "" : $" [{roll.Rarity}]";
+
+            if (cfg.Type == UpgradeType.GetSecondaryWeapon)
+                return $"{cfg.GetTitle()}{rarity} -> {roll.WeaponPreviewId}";
+
+            if (cfg.UsesInt)
+                return $"{cfg.GetTitle()}{rarity} +{roll.IntValue}";
+
+            return $"{cfg.GetTitle()}{rarity} +{roll.FloatValue:0.##}";
+        }
+
+
+
     }
 }

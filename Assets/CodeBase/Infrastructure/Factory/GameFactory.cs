@@ -3,6 +3,7 @@ using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Infrastructure.Services.Progress;
 using CodeBase.Infrastructure.Services.RunTime;
+using CodeBase.Logic;
 using CodeBase.StaticData;
 using UnityEngine;
 
@@ -16,15 +17,26 @@ namespace CodeBase.Infrastructure.Factory
         public Transform HeroTransform { get; set; }
         public GameObject HeroGameObject { get; set; }
 
+        public GameObject PillarSpawnerGameObject { get; set; }
+
         private readonly HeroFactory _heroFactory;
         private readonly UIFactory _uiFactory;
         private readonly PickupFactory _pickupFactory;
         private readonly MonsterFactory _monsterFactory;
         private readonly PillarFactory _pillarFactory;
-        public GameFactory(IAssets assets, IStaticDataService staticData, IXpService xp, IDifficultyScalingService difficulty )
-        {
-            _pillarFactory = new PillarFactory(assets);
 
+        private readonly RunContextService _run;
+
+        public GameFactory(
+            IAssets assets,
+            IStaticDataService staticData,
+            IXpService xp,
+            IDifficultyScalingService difficulty,
+            RunContextService run)
+        {
+            _run = run;
+
+            _pillarFactory = new PillarFactory(assets);
             _heroFactory = new HeroFactory(assets);
             _uiFactory = new UIFactory(assets);
             _pickupFactory = new PickupFactory(assets, xp);
@@ -36,9 +48,24 @@ namespace CodeBase.Infrastructure.Factory
             HeroGameObject = _heroFactory.CreateHero(at, out var heroT);
             HeroTransform = heroT;
 
+            ApplyWeaponStatsToHero(HeroGameObject);
+
             RegisterProgressWatchers(HeroGameObject);
             return HeroGameObject;
         }
+
+        private void ApplyWeaponStatsToHero(GameObject hero)
+        {
+            var applier = hero.GetComponentInChildren<WeaponStatsApplier>(true);
+            if (applier == null)
+            {
+                Debug.LogWarning("[GameFactory] WeaponStatsApplier not found on Hero prefab");
+                return;
+            }
+
+            applier.Construct(_run);
+        }
+
 
         public GameObject CreateHud()
         {
@@ -53,14 +80,18 @@ namespace CodeBase.Infrastructure.Factory
         public GameObject CreateXpPickup(Vector3 at, int amount) =>
             _pickupFactory.CreateXpPickup(at, amount);
 
-        public GameObject PillarSpawnerGameObject { get; set; }
-
-
         public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent)
         {
             GameObject monster = _monsterFactory.CreateMonster(monsterTypeId, parent, HeroTransform);
             RegisterProgressWatchers(monster);
             return monster;
+        }
+
+        public GameObject CreatePillarSpawner()
+        {
+            PillarSpawnerGameObject = _pillarFactory.CreatePillarSpawner();
+            RegisterProgressWatchers(PillarSpawnerGameObject);
+            return PillarSpawnerGameObject;
         }
 
         public void Cleanup()
@@ -82,15 +113,5 @@ namespace CodeBase.Infrastructure.Factory
             foreach (ISavedProgressReader reader in gameObject.GetComponentsInChildren<ISavedProgressReader>(true))
                 Register(reader);
         }
-       
-        public GameObject CreatePillarSpawner()
-        {
-            PillarSpawnerGameObject = _pillarFactory.CreatePillarSpawner();
-            RegisterProgressWatchers(PillarSpawnerGameObject); // якщо там є ISavedProgressReader
-            return PillarSpawnerGameObject;
-        }
-
-       
-
     }
 }

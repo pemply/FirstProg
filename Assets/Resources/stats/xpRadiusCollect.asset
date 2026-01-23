@@ -12,7 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1bdf20ffa394551aeb0904d1fa17434, type: 3}
   m_Name: xpRadiusCollect
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.UpgradeConfig
+  IgnoreRarity: 0
   Type: 1
-  FloatValue: 1000
-  IntValue: 1000
+  MaxPicks: 1
   TitleOverride: 
+  UsesInt: 0
+  CommonF:
+    Min: 2
+    Max: 4
+  RareF:
+    Min: 7
+    Max: 10
+  EpicF:
+    Min: 40
+    Max: 60
+  LegendaryF:
+    Min: 100
+    Max: 150
+  CommonI:
+    Min: 0
+    Max: 0
+  RareI:
+    Min: 0
+    Max: 0
+  EpicI:
+    Min: 0
+    Max: 0
+  LegendaryI:
+    Min: 0
+    Max: 0

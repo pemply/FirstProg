@@ -1,12 +1,12 @@
 ﻿using CodeBase.Data;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Logic;
-using CodeBase.StaticData;
 using UnityEngine;
 
 namespace CodeBase.Hero
 {
-    public class PickupCollector : MonoBehaviour, ISavedProgressReader, IStatsApplier
+    public class PickupCollector : MonoBehaviour, ISavedProgressReader, IHeroStatsApplier
     {
         [SerializeField] private SphereCollider _trigger;
 
@@ -33,25 +33,23 @@ namespace CodeBase.Hero
             pickup.Collect();
         }
 
-        public void Apply(PlayerProgress progress)
+        public void LoadProgress(PlayerProgress progress)
         {
-            ApplyStats(progress.heroStats);
+            if (progress == null) return;
+            ApplyHeroStats(progress.heroStats);
         }
 
-        public void ApplyStats(Stats stats)
+        public void ApplyHeroStats(Stats stats)
         {
             if (stats == null) return;
 
             if (_trigger == null)
             {
-                Debug.LogError("[PickupCollector] _trigger is null in ApplyStats");
+                Debug.LogError("[PickupCollector] _trigger is null in ApplyHeroStats");
                 return;
             }
 
             _trigger.radius = Mathf.Max(0.5f, stats.PickupRadius);
-            Debug.Log($"[Collector] Applied radius={_trigger.radius}");
         }
-
-        public void LoadProgress(PlayerProgress progress) => Apply(progress);
     }
 }

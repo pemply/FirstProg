@@ -1,5 +1,4 @@
-﻿
-using System.Collections;
+﻿using System.Collections;
 using CodeBase.Enemy;
 using CodeBase.Hero;
 using CodeBase.Infrastructure.Factory;
@@ -14,13 +13,13 @@ using UnityEngine;
 
 namespace CodeBase.Infrastructure.States
 {
-    public class GameLoopState 
-        :  IPayLoadedState<GameLoopPayload>, IPayLoadedState<ResumeWavesPayload>
+    public class GameLoopState
+        : IPayLoadedState<GameLoopPayload>, IPayLoadedState<ResumeWavesPayload>
     {
         private bool _isUpgradeFlow;
         private bool _upgradeOpen;
         private int _pendingUpgrades;
-        
+
         private GameObject _hero;
         private GameObject _hud;
 
@@ -33,45 +32,44 @@ namespace CodeBase.Infrastructure.States
         private WaveController _waveController;
         private WaveSequence _waveSequence;
         private int _currentWaveIndex;
-        
+
         private readonly IXpService _xp;
         private readonly IKillRewardService _killReward;
         private GameLoopPayload _loopPayload;
-        private RunTimerService _runTimer;
 
+        private readonly RunContextService _run;
         private Coroutine _timerRoutine;
 
         private readonly IDifficultyScalingService _difficulty;
+
         public GameLoopState(
             GameStateMachine stateMachine,
             IGameFactory gameFactory,
             ICoroutineRunner runnerMono,
             IXpService xp,
-            RunTimerService runTimer, IDifficultyScalingService difficulty)
+            RunContextService run,
+            IDifficultyScalingService difficulty)
         {
             _stateMachine = stateMachine;
             _gameFactory = gameFactory;
             _runnerMono = runnerMono;
             _xp = xp;
-            _runTimer = runTimer;
-            _difficulty = difficulty;
 
+            _run = run;
+            _difficulty = difficulty;
 
             _killReward = AllServices.Container.Single<IKillRewardService>();
         }
+
         public void Enter(ResumeWavesPayload payload)
         {
             _upgradeOpen = false;
 
-           
             _currentWaveIndex = payload.WaveIndex;
-
             Time.timeScale = 1f;
 
-            _upgradeOpen = false;
             _pendingUpgrades--;
 
-            // якщо ще є апгрейди (бо було 2-3 level-up підряд)
             if (_pendingUpgrades > 0)
             {
                 OpenUpgrade();
@@ -80,33 +78,32 @@ namespace CodeBase.Infrastructure.States
 
             StartNextWave();
         }
+
         private IEnumerator TickTimer()
         {
             while (true)
             {
-                _runTimer.Tick(Time.deltaTime);
-
-                // ОЦЕ “3)”: сервіс отримує загальний elapsed і вирішує, чи підняти tier
-                _difficulty.Tick(_runTimer.ElapsedSeconds);
-
+                _run.Tick(Time.deltaTime);
+                _difficulty.Tick(_run.ElapsedSeconds);
                 yield return null;
             }
         }
+
         public void Enter(GameLoopPayload payload)
         {
             RegisteredPillars();
-            _runTimer.Reset();
-            _difficulty.Reset(); // додай метод Reset в сервіс
-            _timerRoutine = _runnerMono.StartCoroutine(TickTimer());
             
+            _difficulty.Reset();
+
+            _timerRoutine = _runnerMono.StartCoroutine(TickTimer());
+
             _loopPayload = payload;
             _xp.LevelUp += OnLevelUp;
-            Debug.Log("Entering GameLoopState");
 
             _hero = payload.Hero;
             _hud  = payload.Hud;
-         
-            // ---------- HERO ----------
+
+            // HERO
             _heroHealth = _hero.GetComponentInChildren<HeroHealth>();
             if (_heroHealth == null)
             {
@@ -115,8 +112,8 @@ namespace CodeBase.Infrastructure.States
             }
 
             _heroHealth.DeathEvent += OnHeroDied;
-           
-            // ---------- HUD / LEVEL UI ----------
+
+            // HUD
             var levelUi = _hud.GetComponentInChildren<HeroLevelUI>(true);
             if (levelUi == null)
             {
@@ -124,9 +121,10 @@ namespace CodeBase.Infrastructure.States
                 return;
             }
 
-            levelUi.Construct(AllServices.Container.Single<IXpService>());
+            levelUi.Construct(_xp);
+            _xp.Refresh();
 
-            // ---------- WAVES ----------
+            // WAVES
             LoadWaveData();
             CreateWaveSystem(_hero);
             StartNextWave();
@@ -146,30 +144,27 @@ namespace CodeBase.Infrastructure.States
 
         private void OnPillarCompleted(PillarEncounterSpawner pillar)
         {
-            _pendingUpgrades++;   
+            _pendingUpgrades++;
 
             if (_upgradeOpen)
                 return;
 
             OpenUpgrade();
         }
-     
+
         public void Exit()
         {
-
             if (_isUpgradeFlow)
             {
                 _isUpgradeFlow = false;
-                return; // ✅ нічого не чистимо, ми повернемося
+                return;
             }
 
             _xp.LevelUp -= OnLevelUp;
 
-            // HERO
             if (_heroHealth != null)
                 _heroHealth.DeathEvent -= OnHeroDied;
 
-            // WAVES
             if (_waveController != null)
             {
                 _waveController.WaveFinished -= OnWaveFinished;
@@ -177,18 +172,15 @@ namespace CodeBase.Infrastructure.States
                 _waveController = null;
             }
 
-            // REWARDS
             _killReward?.Cleanup();
 
             _hero = null;
             _hud = null;
             _heroHealth = null;
-            
+
             if (_timerRoutine != null)
                 _runnerMono.StopCoroutine(_timerRoutine);
         }
-
-
 
         // ---------------- WAVES ----------------
 
@@ -211,7 +203,7 @@ namespace CodeBase.Infrastructure.States
                 ? _gameFactory.HeroTransform
                 : hero.transform;
 
-            var killReward = AllServices.Container.Single<IKillRewardService>(); // або через DI якщо є
+            var killReward = AllServices.Container.Single<IKillRewardService>();
             WaveSpawner spawner = new WaveSpawner(_gameFactory, center, killReward);
 
             _waveController = new WaveController(_runnerMono, spawner);
@@ -220,7 +212,7 @@ namespace CodeBase.Infrastructure.States
 
         private void StartNextWave()
         {
-            if (_waveSequence == null|| _waveController == null)
+            if (_waveSequence == null || _waveController == null)
                 return;
 
             if (_currentWaveIndex >= _waveSequence.Waves.Count)
@@ -250,18 +242,18 @@ namespace CodeBase.Infrastructure.States
 
             OpenUpgrade();
         }
+
         private void OpenUpgrade()
         {
             _upgradeOpen = true;
             _isUpgradeFlow = true;
 
-            Time.timeScale = 0f;          // ✅ реально “вилітає вікно” і гра стопається
-            _waveController?.StopWave();  // ✅ зупиняємо спавн
+            Time.timeScale = 0f;
+            _waveController?.StopWave();
 
             _stateMachine.Enter<UpgradeState, UpgradePayload>(
-                    new UpgradePayload(_loopPayload, _currentWaveIndex)
-                );
-        }
+                new UpgradePayload(_loopPayload, _currentWaveIndex)
+            );
         }
     }
-
+}

@@ -12,7 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1bdf20ffa394551aeb0904d1fa17434, type: 3}
   m_Name: knockBack
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.UpgradeConfig
+  IgnoreRarity: 0
   Type: 2
-  FloatValue: 3
-  IntValue: 3
+  MaxPicks: 1
   TitleOverride: 
+  UsesInt: 0
+  CommonF:
+    Min: 1
+    Max: 2
+  RareF:
+    Min: 2.1
+    Max: 2.2
+  EpicF:
+    Min: 2.4
+    Max: 2.5
+  LegendaryF:
+    Min: 2.66
+    Max: 3.25
+  CommonI:
+    Min: 0
+    Max: 0
+  RareI:
+    Min: 0
+    Max: 0
+  EpicI:
+    Min: 0
+    Max: 0
+  LegendaryI:
+    Min: 0
+    Max: 0

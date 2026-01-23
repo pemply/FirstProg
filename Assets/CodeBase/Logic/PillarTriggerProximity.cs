@@ -11,7 +11,6 @@ namespace CodeBase.Logic
     [RequireComponent(typeof(Collider))]
     public class PillarTriggerProximity : MonoBehaviour
     {
-        [SerializeField] private LayerMask _interactorMask; 
         private IPillarActivationService _activation;
         private PillarEncounterSpawner _pillar;
 
@@ -30,7 +29,10 @@ namespace CodeBase.Logic
 
         private void OnTriggerEnter(Collider other)
         {
-            if (_pillar == null || _pillar.Completed || _pillar.IsRunning) 
+            if (_pillar == null || _pillar.Completed || _pillar.IsRunning)
+                return;
+
+            if (other.GetComponent<CharacterController>() == null)
                 return;
 
             IInteractor interactor = other.GetComponentInParent<IInteractor>();
@@ -42,23 +44,20 @@ namespace CodeBase.Logic
             _activation.SetCurrent(_pillar);
         }
 
-
-
         private void OnTriggerExit(Collider other)
         {
+            if (other.GetComponent<CharacterController>() == null)
+                return;
+
             IInteractor interactor = other.GetComponentInParent<IInteractor>();
             if (interactor == null) return;
 
-            if (_insideInteractor != interactor) return;
+            if (_insideInteractor != interactor)
+                return;
 
             _insideInteractor = null;
             _activation.Clear(_pillar);
         }
 
-        private void OnDisable()
-        {
-            _insideInteractor = null;
-            _activation?.Clear(_pillar);
-        }
     }
 }

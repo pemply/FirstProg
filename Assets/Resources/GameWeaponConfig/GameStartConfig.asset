@@ -9,10 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a1bdf20ffa394551aeb0904d1fa17434, type: 3}
-  m_Name: Radius
-  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.UpgradeConfig
-  Type: 5
-  FloatValue: 2
-  IntValue: 2
-  TitleOverride: 
+  m_Script: {fileID: 11500000, guid: 68e5caa17c714b569ad4535654555d81, type: 3}
+  m_Name: GameStartConfig
+  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.GameStartConfig
+  DefaultWeapon: 3
+  ForceDefaultWeapon: 0

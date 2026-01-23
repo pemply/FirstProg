@@ -9,7 +9,8 @@ namespace CodeBase.Data
     {
         public int Level;
         public int XpInLevel;
-        public string WeaponId;
+        [NonSerialized] public WeaponId WeaponId;
+
         public WeaponStats WeaponStats;
     }
 }

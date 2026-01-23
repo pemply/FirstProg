@@ -12,7 +12,7 @@ namespace CodeBase.UI.Debug
         [SerializeField] private TMP_Text _text;
         private static DebugOverlay _instance;
         private IDifficultyScalingService _difficulty;
-        private RunTimerService _runTimer;
+       // private RunTimerService _runTimer;
         private IXpService _xp;
         
 
@@ -38,7 +38,7 @@ namespace CodeBase.UI.Debug
         {
             // Беремо сервіси з контейнера (як ти вже робиш у проекті)
             _difficulty = AllServices.Container.Single<IDifficultyScalingService>();
-            _runTimer = AllServices.Container.Single<RunTimerService>();
+         //   _runTimer = AllServices.Container.Single<RunTimerService>();
             _xp = AllServices.Container.Single<IXpService>();
             
           //  _dps = FindObjectOfType<HeroDpsMeter>();
@@ -48,7 +48,7 @@ namespace CodeBase.UI.Debug
         {
             if (_text == null) return;
 
-            float t = _runTimer != null ? _runTimer.ElapsedSeconds : 0f;
+         //   float t = _runTimer != null ? _runTimer.ElapsedSeconds : 0f;
 
             string xpLine;
             try
@@ -63,7 +63,7 @@ namespace CodeBase.UI.Debug
 
             _text.text =
                 $"<b>DEBUG</b>\n" +
-                $"Time: {t:F1}s\n" +
+              //  $"Time: {t:F1}s\n" +
                 $"Tier: {_difficulty?.Tier ?? 0}\n" +
                 $"HP: {_difficulty?.HpMult ?? 1f:F2}  DMG: {_difficulty?.DmgMult ?? 1f:F2}  XP: {_difficulty?.XpMult ?? 1f:F2}\n" +
                 $"{xpLine}\n";

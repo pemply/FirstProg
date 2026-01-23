@@ -7,7 +7,12 @@
         Knockback,
         KnockbackChance,
         WeaponDamage,
-        WeaponRadius,
         WeaponCooldown,
+        WeaponRange,
+        WeaponWidth,
+        WeaponPierce,
+        Luck,
+        GetSecondaryWeapon,
+
     }
 }

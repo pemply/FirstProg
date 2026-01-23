@@ -1,12 +1,16 @@
 ﻿using CodeBase.CameraLogic;
+using CodeBase.Data;
 using CodeBase.Enemy;
 using CodeBase.Hero;
+using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Infrastructure.Services.Progress;
+using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Infrastructure.States.BetweenStates;
 using CodeBase.Logic;
+using CodeBase.StaticData;
 using CodeBase.UI;
 using UnityEngine;
 
@@ -15,74 +19,86 @@ namespace CodeBase.Infrastructure.States
     public class LoadLevelState : IPayLoadedState<string>
     {
         private const string InitialPointTag = "InitialPoint";
+
         private readonly GameStateMachine _stateMachine;
         private readonly SceneLoader _sceneLoader;
         private readonly LoadingCurtain _curtain;
         private readonly IGameFactory _gameFactory;
         private readonly IPersistentProgressService _progressService;
+
+        private readonly RunContextService _run;
+        private readonly IStaticDataService _staticData;
+        private readonly GameStartConfig _startConfig;
+
         public LoadLevelState(
             GameStateMachine stateMachine,
             SceneLoader sceneLoader,
             LoadingCurtain curtain,
             IGameFactory gameFactory,
-            IPersistentProgressService progressService)
+            IPersistentProgressService progressService,
+            RunContextService run,
+            IStaticDataService staticData)
         {
             _stateMachine = stateMachine;
             _sceneLoader = sceneLoader;
             _curtain = curtain;
             _gameFactory = gameFactory;
             _progressService = progressService;
-        }
 
-        public void Exit() =>
-            _curtain.Hide();
+            _run = run;
+            _staticData = staticData;
+
+            _startConfig = Resources.Load<GameStartConfig>(AssetsPath.GameStartConfig);
+        }
 
         public void Enter(string sceneName)
         {
+            _run.Reset();
+
+            var id = _startConfig != null ? _startConfig.DefaultWeapon : WeaponId.None;
+            var weapon = _staticData.GetWeapon(id) ?? _staticData.GetDefaultWeapon();
+            var stats = weapon != null ? weapon.BaseStats : default;
+
+            _run.Weapons.Add(new RunContextService.RunWeapon { Id = id, Stats = stats });
+
+            
             _curtain.Show();
             _gameFactory.Cleanup();
             _sceneLoader.Load(sceneName, OnLoaded);
         }
+
+
+        public void Exit() =>
+            _curtain.Hide();
 
         private void OnLoaded()
         {
             GameObject hero = CreateHero();
             GameObject hud = CreateHud();
 
-            InitProgressReaders();
+            InitProgressReaders(); // тільки мета-ридери! HeroAttack тут бути не повинен
             BindHudToHero(hud, hero);
             CameraFollow(hero);
 
             _gameFactory.CreatePillarSpawner();
-
-            AllServices.Container.Single<IXpService>().ResetRun();
-            _stateMachine.Enter<GameLoopState, GameLoopPayload>(new GameLoopPayload(hero, hud));
-        }
-
-        private Transform HeroPivot(GameObject hero) =>
-            hero.GetComponentInChildren<CharacterController>(true).transform;
-
-      
-
-
-        private void InitSpawners()
-        {
-            foreach (GameObject spawnerObj in GameObject.FindGameObjectsWithTag("Spawner"))
-            {
-                var spawner = spawnerObj.GetComponent<EnemySpawner>();
-                _gameFactory.Register(spawner);
-            }
             
+            _stateMachine.Enter<GameLoopState, GameLoopPayload>(new GameLoopPayload(hero, hud));
         }
 
         private GameObject CreateHero()
         {
             GameObject initialPoint = GameObject.FindGameObjectWithTag(InitialPointTag);
-            return _gameFactory.CreateHero(at: initialPoint);
+            return _gameFactory.CreateHero(initialPoint);
         }
 
         private GameObject CreateHud() =>
             _gameFactory.CreateHud();
+
+        private void InitProgressReaders()
+        {
+            foreach (ISavedProgressReader progressReader in _gameFactory.ProgressReaders)
+                progressReader.LoadProgress(_progressService.Progress);
+        }
 
         private void BindHudToHero(GameObject hud, GameObject hero)
         {
@@ -98,19 +114,21 @@ namespace CodeBase.Infrastructure.States
                 actorUI.Construct(heroHealth);
         }
 
-        private void InitProgressReaders()
-        {
-            foreach (ISavedProgressReader progressReader in _gameFactory.ProgressReaders)
-                progressReader.LoadProgress(_progressService.Progress);
-        }
-
         private void CameraFollow(GameObject hero)
         {
             Transform target = hero.GetComponentInChildren<CharacterController>().transform;
             Camera.main.GetComponent<CameraFollow>().Follow(target.gameObject);
         }
-        
-        
-        
+
+        private void InitSpawners()
+        {
+            foreach (GameObject spawnerObj in GameObject.FindGameObjectsWithTag("Spawner"))
+            {
+                var spawner = spawnerObj.GetComponent<EnemySpawner>();
+                _gameFactory.Register(spawner);
+            }
+
+
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace CodeBase.StaticData
     [CreateAssetMenu(menuName = "Static Data/Weapons/Weapon Config", fileName = "Weapon_")]
     public class WeaponConfig : ScriptableObject
     {
-        public string WeaponId = "default";
+        public WeaponId WeaponId;
         public WeaponStats BaseStats = WeaponStats.Default;
     }
 }

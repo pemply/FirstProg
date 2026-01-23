@@ -21,4 +21,4 @@ MonoBehaviour:
   MoveSpeed: 10
   PrefabReference: {fileID: 9212566456173030763, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
   AttackCooldown: 0.22
-  XpReward: 0
+  XpReward: 10

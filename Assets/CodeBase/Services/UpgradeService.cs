@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using CodeBase.Data;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Logic.Upgrade;
 using UnityEngine;
 
@@ -12,106 +12,187 @@ namespace CodeBase.StaticData
     {
         private readonly IPersistentProgressService _progress;
         private readonly IGameFactory _factory;
-        private Dictionary<UpgradeType, Action<UpgradeConfig>> _handlers;
-        public UpgradeService(IPersistentProgressService progress, IGameFactory factory)
+        private readonly RunContextService _run;
+        private readonly IStaticDataService _staticData;
+
+        private readonly Dictionary<UpgradeType, Action<UpgradeRoll>> _handlers;
+
+        // поки: апгрейди зброї застосовуємо до Weapons[0]
+        private const int DefaultWeaponIndex = 0;
+
+        public UpgradeService(
+            IPersistentProgressService progress,
+            IGameFactory factory,
+            RunContextService run,
+            IStaticDataService staticData)
         {
             _progress = progress;
             _factory = factory;
+            _run = run;
+            _staticData = staticData;
 
-            _handlers = new Dictionary<UpgradeType, Action<UpgradeConfig>>
+            _handlers = new Dictionary<UpgradeType, Action<UpgradeRoll>>
             {
+                // hero/meta
                 [UpgradeType.Hp] = ApplyHp,
-                [UpgradeType.WeaponDamage] = ApplyWeaponDamage,
-                [UpgradeType.WeaponRadius] = ApplyWeaponRadius,
-                [UpgradeType.WeaponCooldown] = ApplyWeaponCooldown,
                 [UpgradeType.PickupRadius] = ApplyPickupRadius,
+
+                // weapon stats (поки тільки primary index 0)
+                [UpgradeType.WeaponDamage] = ApplyWeaponDamage,
+                [UpgradeType.WeaponCooldown] = ApplyWeaponCooldown,
+                [UpgradeType.WeaponRange] = ApplyWeaponRange,
+                [UpgradeType.WeaponWidth] = ApplyWeaponWidth,
+                [UpgradeType.WeaponPierce] = ApplyWeaponPierce,
                 [UpgradeType.Knockback] = ApplyKnockback,
                 [UpgradeType.KnockbackChance] = ApplyKnockbackChance,
+                [UpgradeType.Luck] = ApplyLuck,
+
+                // get weapon
+                [UpgradeType.GetSecondaryWeapon] = ApplyGetWeapon,
             };
         }
-        private void ApplyKnockbackChance(UpgradeConfig config)
+
+        private void ApplyLuck(UpgradeRoll roll)
         {
-            MutateWeapon(s =>
-            {
-                float add = config.FloatValue / 100f;  // +5 => +0.05
-                s.KnockbackChance = Mathf.Clamp01(s.KnockbackChance + add);
-                return s;
-            });
+            var stats = _progress.Progress.heroStats;
+
+            float add = roll.Config.UsesInt ? roll.IntValue : roll.FloatValue;
+            stats.Luck += add;
+
+            // кап щоб не ламало баланс
+            stats.Luck = Mathf.Clamp(stats.Luck, 0f, 1000f);
         }
 
 
-        private void ApplyKnockback(UpgradeConfig config)
-        {
-            MutateWeapon(s =>
-            {
-                s.Knockback += config.FloatValue;
-                return s;
-            });
-        }
 
-
-        public void Apply(UpgradeConfig config)
+        public void Apply(UpgradeRoll roll)
         {
-            if (!_handlers.TryGetValue(config.Type, out var handler))
+            if (roll.Config == null)
+                return;
+
+            if (!_handlers.TryGetValue(roll.Config.Type, out var handler))
             {
-                Debug.LogError($"[UpgradeService] No handler for {config.Type}");
+                Debug.LogError($"[UpgradeService] No handler for {roll.Config.Type}");
                 return;
             }
 
-            handler.Invoke(config);
-            ApplyToHero();
+            handler.Invoke(roll);
+
+            _run.AddPick(roll.Config.Type);
+
+            ApplyWeaponToHero();
+            ApplyHeroStatsToHero();
         }
 
-        private void MutateWeapon(System.Func<WeaponStats, WeaponStats> mutator)
-        {
-            PlayerProgress p = _progress.Progress;
+        // -------------------- APPLY TO HERO --------------------
 
-            WeaponStats s = p.RunProgressData.WeaponStats;
-            s = mutator(s);
-            p.RunProgressData.WeaponStats = s;
-        }
-
-        private void ApplyToHero()
+        private void ApplyHeroStatsToHero()
         {
             var hero = _factory.HeroGameObject;
             if (hero == null) return;
 
-            var progress = _progress.Progress;
-
-            foreach (IStatsApplier applier in hero.GetComponentsInChildren<IStatsApplier>(true))
-                applier.Apply(progress);
-        }
-        
-        private void ApplyHp(UpgradeConfig config)
-        {
             var stats = _progress.Progress.heroStats;
-            stats.MaxHP += config.IntValue;
-            stats.CurrentHP = Mathf.Min(stats.CurrentHP + config.IntValue, stats.MaxHP);
+            var appliers = hero.GetComponentsInChildren<IHeroStatsApplier>(true);
+
+            for (int i = 0; i < appliers.Length; i++)
+                appliers[i].ApplyHeroStats(stats);
         }
 
-        private void ApplyWeaponDamage(UpgradeConfig config)
+        private void ApplyWeaponToHero()
         {
-            MutateWeapon(s => { s.Damage += config.FloatValue; return s; });
+            var hero = _factory.HeroGameObject;
+            if (hero == null) return;
+
+            hero.GetComponentInChildren<WeaponStatsApplier>(true)?.ApplyCurrent();
         }
 
-        private void ApplyWeaponRadius(UpgradeConfig config)
+        // -------------------- WEAPON MUTATION (Weapons[]) --------------------
+
+        private bool TryMutateWeapon(int index, Func<WeaponStats, WeaponStats> mutator)
         {
-            MutateWeapon(s => { s.DamageRadius += config.FloatValue; return s; });
+            if (index < 0 || index >= _run.Weapons.Count)
+                return false;
+
+            var w = _run.Weapons[index];
+            w.Stats = mutator(w.Stats);
+            _run.Weapons[index] = w;
+            return true;
         }
 
-        private void ApplyWeaponCooldown(UpgradeConfig config)
-        {
-            MutateWeapon(s =>
+        private void ApplyWeaponDamage(UpgradeRoll roll) =>
+            TryMutateWeapon(DefaultWeaponIndex, s => { s.Damage += roll.FloatValue; return s; });
+
+        private void ApplyWeaponCooldown(UpgradeRoll roll) =>
+            TryMutateWeapon(DefaultWeaponIndex, s =>
             {
-                float mult = 1f + config.FloatValue / 100f;
+                float mult = 1f + roll.FloatValue / 100f;
                 s.AttackSpeedMult = Mathf.Min(100f, s.AttackSpeedMult * mult);
                 return s;
             });
+
+        private void ApplyWeaponRange(UpgradeRoll roll) =>
+            TryMutateWeapon(DefaultWeaponIndex, s => { s.Range += roll.FloatValue; return s; });
+
+        private void ApplyWeaponWidth(UpgradeRoll roll) =>
+            TryMutateWeapon(DefaultWeaponIndex, s => { s.HitWidth += roll.FloatValue; return s; });
+
+        private void ApplyWeaponPierce(UpgradeRoll roll) =>
+            TryMutateWeapon(DefaultWeaponIndex, s => { s.Pierce += roll.IntValue; return s; });
+
+        private void ApplyKnockback(UpgradeRoll roll) =>
+            TryMutateWeapon(DefaultWeaponIndex, s => { s.Knockback += roll.FloatValue; return s; });
+
+        private void ApplyKnockbackChance(UpgradeRoll roll) =>
+            TryMutateWeapon(DefaultWeaponIndex, s =>
+            {
+                float add = roll.FloatValue / 100f;
+                s.KnockbackChance = Mathf.Clamp01(s.KnockbackChance + add);
+                return s;
+            });
+
+        // -------------------- META / HERO --------------------
+
+        
+        private void ApplyHp(UpgradeRoll roll)
+        {
+            var stats = _progress.Progress.heroStats;
+            stats.MaxHP += roll.IntValue;
+            stats.CurrentHP = Mathf.Min(stats.CurrentHP + roll.IntValue, stats.MaxHP);
         }
 
-        private void ApplyPickupRadius(UpgradeConfig config)
+        private void ApplyPickupRadius(UpgradeRoll roll)
         {
-            _progress.Progress.heroStats.PickupRadius += config.FloatValue;
+            _progress.Progress.heroStats.PickupRadius += roll.FloatValue;
+        }
+
+        // -------------------- GET WEAPON --------------------
+
+        private void ApplyGetWeapon(UpgradeRoll roll)
+        {
+            if (_run.Weapons.Count >= _run.MaxWeapons)
+                return;
+
+            // weapon id приходить з UpgradeState через PendingWeaponId
+            var id = _run.PendingWeaponId;
+            _run.PendingWeaponId = WeaponId.None;
+
+            if (id == WeaponId.None)
+                return;
+
+            // не додавати дубль
+            for (int i = 0; i < _run.Weapons.Count; i++)
+                if (_run.Weapons[i].Id == id)
+                    return;
+
+            var wcfg = _staticData.GetWeapon(id);
+            if (wcfg == null)
+                return;
+
+            _run.Weapons.Add(new RunContextService.RunWeapon
+            {
+                Id = id,
+                Stats = wcfg.BaseStats
+            });
         }
     }
 }

@@ -10,13 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1c21d2602b794137b273eba42cbe36ea, type: 3}
-  m_Name: Mili
+  m_Name: Weapon_Sword
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.WeaponConfig
-  WeaponId: default
+  WeaponId: 1
   BaseStats:
-    BaseCooldown: 1
+    BaseCooldown: 0.89
     AttackSpeedMult: 1
     Damage: 20
-    DamageRadius: 2
-    Knockback: 1
-    KnockbackChance: 1
+    Range: 2.72
+    HitWidth: 0.51
+    Pierce: 1
+    Knockback: 0.56
+    KnockbackChance: 0.05
+    Shape: 1

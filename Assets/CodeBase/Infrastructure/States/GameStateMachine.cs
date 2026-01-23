@@ -27,11 +27,23 @@ namespace CodeBase.Infrastructure.States
             _states = new Dictionary<Type, IExitableState>()
             {
                 [typeof(BootstrapState)] =  new BootstrapState(this, _sceneLoader, services),
-                [typeof(LoadLevelState)] =  new LoadLevelState(this, _sceneLoader,  curtain, services.Single<IGameFactory>(), services.Single<IPersistentProgressService>()),
-                [typeof(LoadProgressState)] =  new LoadProgressState(this, services.Single<IPersistentProgressService>(), services.Single<ISavedLoadService>(),services.Single<IStaticDataService>() ),
-                [typeof(GameLoopState)] =  new GameLoopState(this,services.Single<IGameFactory>(), _runner,services.Single<IXpService>(), services.Single<RunTimerService>(), services.Single<IDifficultyScalingService>() ),
-                [typeof(UpgradeState)] =  new UpgradeState(this, services.Single<IUpgradeService>(),services.Single<IStaticDataService>()),
-                [typeof(GameOverState)] =  new GameOverState(this, services.Single<IGameFactory>(), services.Single<IRunResetService>() ),
+                    [typeof(LoadProgressState)] =
+                    new LoadProgressState(
+                        this,
+                        services.Single<IPersistentProgressService>(),
+                        services.Single<ISavedLoadService>()),
+                    [typeof(LoadLevelState)] =
+                        new LoadLevelState(
+                            this,
+                            _sceneLoader,
+                            curtain,
+                            services.Single<IGameFactory>(),
+                            services.Single<IPersistentProgressService>(),
+                            services.Single<RunContextService>(),
+                            services.Single<IStaticDataService>()),
+                [typeof(GameLoopState)] =  new GameLoopState(this,services.Single<IGameFactory>(), _runner,services.Single<IXpService>(), services.Single<RunContextService>(), services.Single<IDifficultyScalingService>() ),
+                [typeof(UpgradeState)] =  new UpgradeState(this, services.Single<IUpgradeService>(),services.Single<IStaticDataService>(), services.Single<RunContextService>(), services.Single<IPersistentProgressService>()),
+                [typeof(GameOverState)] =  new GameOverState(this, services.Single<IGameFactory>()),
                 
             };
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeBase.Enemy;
+using UnityEngine;
 
 namespace CodeBase.Infrastructure.Services.RunTime
 {
@@ -18,6 +19,7 @@ namespace CodeBase.Infrastructure.Services.RunTime
 
         public void SetCurrent(PillarEncounterSpawner pillar)
         {
+            Debug.Log($"[PILLAR SERVICE] SetCurrent pillar={pillar?.name} id={pillar?.Id}", pillar);
             if (pillar == null) return;
             if (Current == pillar) return;
 

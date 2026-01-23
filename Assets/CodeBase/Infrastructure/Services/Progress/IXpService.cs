@@ -13,6 +13,6 @@ namespace CodeBase.Infrastructure.Services.Progress
         event Action<int> LevelUp;
 
         void AddXp(int amount);
-        void ResetRun();
+        public void Refresh();
     }
 }

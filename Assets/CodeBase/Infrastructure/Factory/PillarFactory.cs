@@ -14,7 +14,6 @@ namespace CodeBase.Infrastructure.Factory
         public GameObject CreatePillarSpawner()
         {
             GameObject prefab = _assets.Instantiate(AssetsPath.PillarSpawnerPath);
-            Debug.Log("[PILLARS] Instantiate PillarSpawner prefab");
             return prefab;
         }
     }

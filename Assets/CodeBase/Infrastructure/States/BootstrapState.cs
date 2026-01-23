@@ -34,6 +34,9 @@ namespace CodeBase.Infrastructure.States
         
         public void Enter()
         {
+
+            Debug.Log("[FLOW] Bootstrap.Enter");
+
             _sceneLoader.Load(Initial, onLoaded: EnterLoadLevel);
         }
 
@@ -43,56 +46,66 @@ namespace CodeBase.Infrastructure.States
         }
 
         
-        private void RegisterServices()
+   private void RegisterServices()
         {
-            RegistDifficultScaling();
             _services.RegisterSingle<IInputService>(InputService());
             _services.RegisterSingle<IAssets>(new AssetProvider());
 
+            // META прогрес (сейв)
             _services.RegisterSingle<IPersistentProgressService>(new PersistentProgressService());
-_services.RegisterSingle<IPillarActivationService>(new PillarActivationService());
+
+            // RUN контекст (зброя, weapon stats, xp/level, timer)
+            _services.RegisterSingle(new RunContextService());
+
+            // Difficulty (без RunTimerService!)
+            RegisterDifficultyScaling();
+
+            _services.RegisterSingle<IPillarActivationService>(new PillarActivationService());
+
+            RegisterStaticData(); // IStaticDataService + Load*
+
+            // XP тепер від RunContext, не від прогресу
             _services.RegisterSingle<IXpService>(
-                new XpService(_services.Single<IPersistentProgressService>())
+                new XpService(_services.Single<RunContextService>())
             );
-            RegisterStaticData(); // IStaticDataService (і LoadMonsters/LoadWeapons)
-            
+
+            // Factory тепер теж потребує RunContext (щоб аплаїти weapon stats після спавну героя)
             _services.RegisterSingle<IGameFactory>(
                 new GameFactory(
                     _services.Single<IAssets>(),
                     _services.Single<IStaticDataService>(),
                     _services.Single<IXpService>(),
-                    _services.Single<IDifficultyScalingService>()
-                 
+                    _services.Single<IDifficultyScalingService>(),
+                    _services.Single<RunContextService>()
                 )
             );
+
             _services.RegisterSingle<IKillRewardService>(
-                    new KillRewardService(_services.Single<IStaticDataService>(),     _services.Single<IGameFactory>())
-                );
-                
+                new KillRewardService(
+                    _services.Single<IStaticDataService>(),
+                    _services.Single<IGameFactory>()
+                )
+            );
+
             RegisterUpgradeService();
 
             _services.RegisterSingle<ISavedLoadService>(
-                new SavedLoadService(_services.Single<IPersistentProgressService>(), _services.Single<IGameFactory>()));
-
-            _services.RegisterSingle<IRunResetService>(
-                new RunResetService(
+                new SavedLoadService(
                     _services.Single<IPersistentProgressService>(),
-                    _services.Single<IStaticDataService>()
+                    _services.Single<IGameFactory>()
                 )
             );
-           
+
+            // ❌ IRunResetService / RunResetService більше не реєструємо (reset робиться в LoadLevelState через _run.Reset())
         }
 
-        private void RegistDifficultScaling()
-        {
-            var runTimer = new RunTimerService();
 
+        private void RegisterDifficultyScaling()
+        {
             DifficultyConfig cfg = Resources.Load<DifficultyConfig>(AssetsPath.DifConfigPath);
-            
             IDifficultyScalingService difficulty = new DifficultyScalingService(cfg);
 
-            _services.RegisterSingle(runTimer);
-            _services.RegisterSingle<IDifficultyScalingService>(difficulty);  
+            _services.RegisterSingle<IDifficultyScalingService>(difficulty);
         }
 
 
@@ -101,8 +114,11 @@ _services.RegisterSingle<IPillarActivationService>(new PillarActivationService()
         {
             _services.RegisterSingle<IUpgradeService>(
                 new UpgradeService(
-                    _services.Single<IPersistentProgressService>(),
-                    _services.Single<IGameFactory>()
+                    _services.Single<IPersistentProgressService>(), // meta (hp/pickupRadius)
+                    _services.Single<IGameFactory>(),
+                    _services.Single<RunContextService>(),
+                    _services.Single<IStaticDataService>()
+                    // run weapon stats
                 )
             );
         }
