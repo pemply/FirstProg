@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1bdf20ffa394551aeb0904d1fa17434, type: 3}
+  m_Name: AttackSpeed
+  m_EditorClassIdentifier: 
+  IgnoreRarity: 0
+  Type: 11
+  MaxPicks: 0
+  TitleOverride: 
+  UsesInt: 1
+  CommonF:
+    Min: 3.34
+    Max: 9.6
+  RareF:
+    Min: 12.88
+    Max: 32.4
+  EpicF:
+    Min: 0
+    Max: 0
+  LegendaryF:
+    Min: 0
+    Max: 0
+  CommonI:
+    Min: 368
+    Max: 868
+  RareI:
+    Min: 526
+    Max: 902
+  EpicI:
+    Min: 919
+    Max: 954
+  LegendaryI:
+    Min: 794
+    Max: 958

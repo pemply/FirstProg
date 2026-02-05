@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c21d2602b794137b273eba42cbe36ea, type: 3}
+  m_Name: Weapon_Sniper
+  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.WeaponConfig
+  WeaponId: 2
+  BaseStats:
+    BaseCooldown: 0.07
+    AttackSpeed: 74.32
+    Damage: 35.6
+    Range: 17.43
+    HitWidth: 0.74
+    Pierce: 2
+    Knockback: 1
+    KnockbackChance: 0.05
+    Shape: 3
+  ViewPrefab: {fileID: 167092, guid: 79587704daf73b149a7063da70f598cc, type: 3}
+  ProjectilePrefab: {fileID: 8806434113611817411, guid: 2c3fa41da152f3443ab33b2b55ce5a93, type: 3}
+  ProjectileSpeed: 139.9
+  PersistentFxPrefab: {fileID: 0}
+  PersistentFxOffset: {x: 0, y: 0, z: 0}
+  AttackFxPrefab: {fileID: 101130, guid: 13d4b1dc067a2604aa9b6be7401f0d5a, type: 3}
+  AttackFxOffset: {x: 0, y: 1, z: 0.8}
+  AttackFxLifetime: 0.08
+  PersistentFxBaseRange: 1
