@@ -1,6 +1,9 @@
-﻿using CodeBase.Logic;
+﻿using System;
+using CodeBase.Hero;
+using CodeBase.Logic;
 using CodeBase.StaticData;
 using CodeBase.Infrastructure.Factory;
+using CodeBase.UI;
 using UnityEngine;
 
 namespace CodeBase.Combat
@@ -13,11 +16,37 @@ namespace CodeBase.Combat
 
         private readonly int _enemyMask;
 
+        // Хук: дозволяє зовні (Runner) модифікувати дамаг (crit, buffs, debuffs)
+        public Func<float, DamageRoll> DamageModifier;
+
+        // ✅ anti-double-hit cache (на 1 атаку)
+        private readonly int[] _hitHealthIds;
+        private int _hitHealthIdsCount;
+
         public WeaponAttackPhysics(int overlapSize = 16, int raySize = 32)
         {
             _overlapHits = new Collider[overlapSize];
             _rayHits = new RaycastHit[raySize];
             _enemyMask = LayerMask.GetMask("Enemy");
+
+            // тримаємо стільки ж, скільки overlapSize — цього більш ніж достатньо
+            _hitHealthIds = new int[Mathf.Max(8, overlapSize)];
+        }
+
+        private void BeginAttackHitCache() => _hitHealthIdsCount = 0;
+
+        private bool RegisterHit(IHealth health)
+        {
+            int id = ((Component)health).GetInstanceID();
+
+            for (int i = 0; i < _hitHealthIdsCount; i++)
+                if (_hitHealthIds[i] == id)
+                    return false; // вже били цього ворога в цій атаці
+
+            if (_hitHealthIdsCount < _hitHealthIds.Length)
+                _hitHealthIds[_hitHealthIdsCount++] = id;
+
+            return true;
         }
 
         public bool HasEnemyOnLineForward(Vector3 origin, Vector3 forward, WeaponStats stats, Transform selfRoot)
@@ -49,7 +78,6 @@ namespace CodeBase.Combat
                 to.y = 0f;
                 if (to.sqrMagnitude < 0.0001f) continue;
 
-                // ворог має бути попереду
                 float dot = Vector3.Dot(fwd, to.normalized);
                 if (dot < 0.3f) continue;
 
@@ -90,22 +118,29 @@ namespace CodeBase.Combat
             int count = Physics.OverlapSphereNonAlloc(origin, stats.Range, _overlapHits, _enemyMask);
             if (count <= 0) return false;
 
+            BeginAttackHitCache();
+
+            bool hitAny = false;
+
             for (int i = 0; i < count; i++)
             {
                 var col = _overlapHits[i];
                 if (col == null) continue;
                 if (col.transform.root == selfRoot) continue;
 
-                TryHit(col, stats.Damage);
+                if (TryHit(col, stats.Damage, DamageModifier))
+                    hitAny = true;
             }
 
-            return true;
+            return hitAny;
         }
 
         public bool AttackCone(Vector3 origin, Vector3 forward, WeaponStats stats, float angleDeg, Transform selfRoot)
         {
             int count = Physics.OverlapSphereNonAlloc(origin, stats.Range, _overlapHits, _enemyMask);
             if (count <= 0) return false;
+
+            BeginAttackHitCache();
 
             Vector3 fwd = forward;
             fwd.y = 0f;
@@ -130,7 +165,7 @@ namespace CodeBase.Combat
                 if (Vector3.Dot(fwd, to.normalized) < cos)
                     continue;
 
-                if (!TryHit(col, stats.Damage))
+                if (!TryHit(col, stats.Damage, DamageModifier))
                     continue;
 
                 hitCount++;
@@ -143,8 +178,6 @@ namespace CodeBase.Combat
 
         public bool AttackAim(Vector3 origin, WeaponStats stats, ProjectileFactory projectiles, WeaponId weaponId, Transform selfRoot)
         {
-            Debug.Log($"[Physics] AttackLine origin={origin} weapon={weaponId} projFactory={(projectiles!=null)}");
-
             if (projectiles == null) return false;
             if (weaponId == WeaponId.None) return false;
 
@@ -155,7 +188,6 @@ namespace CodeBase.Combat
             dir.y = 0f;
             if (dir.sqrMagnitude < 0.0001f)
                 dir = selfRoot != null ? selfRoot.forward : Vector3.forward;
-            Debug.Log("[Physics] Spawning projectile...");
 
             projectiles.Spawn(weaponId, origin, dir.normalized, stats);
             return true;
@@ -175,12 +207,30 @@ namespace CodeBase.Combat
             return true;
         }
 
-        private static bool TryHit(Collider col, float damage)
+        private bool TryHit(Collider col, float baseDamage, Func<float, DamageRoll> damageModifier)
         {
             IHealth health = col.GetComponentInParent<IHealth>();
             if (health == null) return false;
 
-            health.TakeDamage(damage);
+            // ✅ не дамажимо того ж ворога двічі через кілька колайдерів
+            if (!RegisterHit(health))
+                return false;
+
+            float dmg = baseDamage;
+            bool isCrit = false;
+
+            if (damageModifier != null)
+            {
+                var roll = damageModifier(baseDamage);
+                dmg = roll.Damage;
+                isCrit = roll.IsCrit;
+            }
+
+            health.TakeDamage(dmg);
+
+            Vector3 pos = col.bounds.center;
+            DamagePopupSpawner.Instance?.Spawn(pos, Mathf.RoundToInt(dmg), isCrit);
+
             return true;
         }
     }

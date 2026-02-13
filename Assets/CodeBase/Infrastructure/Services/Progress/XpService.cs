@@ -34,6 +34,13 @@ namespace CodeBase.Infrastructure.Services.Progress
             if (amount <= 0)
                 return;
 
+            float mult = 1f + (_run.XpGainPercent / 100f);
+            if (mult < 0f) mult = 0f; // на всяк випадок
+            amount = Mathf.RoundToInt(amount * mult);
+
+            if (amount <= 0)
+                return;
+
             _run.XpInLevel += amount;
 
             while (_run.Level < MaxLevel && _run.XpInLevel >= RequiredXp)
@@ -46,6 +53,7 @@ namespace CodeBase.Infrastructure.Services.Progress
 
             Notify();
         }
+
 
         public void ResetRun()
         {

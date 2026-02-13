@@ -71,8 +71,6 @@ namespace CodeBase.Enemy
 
         private void OnExit(Collider other)
         {
-            Debug.Log("[Range] EXIT hero");
-
             if (!IsHero(other)) return;
             _attack.DisableAttack();
         }

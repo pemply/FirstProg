@@ -31,6 +31,7 @@ namespace CodeBase.Hero
 
         private void Update()
         {
+
             Vector3 input = Vector3.zero;
 
             Vector2 axis = _inputService.Axis;
@@ -42,7 +43,8 @@ namespace CodeBase.Hero
                 input.y = 0f;
                 input.Normalize();
 
-                transform.forward = input;
+                transform.forward = Vector3.Slerp(transform.forward, input, 12f * Time.deltaTime);
+
             }
 
             // ✅ анімація окремо
@@ -50,7 +52,7 @@ namespace CodeBase.Hero
 
             // ✅ рух
             Vector3 velocity = input * MovementSpeed;
-            velocity += Physics.gravity;
+                  velocity += Physics.gravity;
             CharacterController.Move(velocity * Time.deltaTime);
         }
 

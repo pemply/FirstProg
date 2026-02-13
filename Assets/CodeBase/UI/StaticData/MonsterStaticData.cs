@@ -32,5 +32,8 @@ namespace CodeBase.StaticData
         
         [Range(0, 100)]
         public int XpReward = 10;
+        
+        public KamikazeConfig Kamikaze; // null для не-камікадзе
+
     }
 }

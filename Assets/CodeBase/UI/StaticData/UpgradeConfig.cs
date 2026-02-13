@@ -42,6 +42,7 @@ namespace CodeBase.StaticData
                 UpgradeType.WeaponWidth => "Width",
                 UpgradeType.GetSecondaryWeapon => "Get Weapon",
                 UpgradeType.Luck => "Luck",
+                UpgradeType.RegenHp => "RegenHp",
 
                 _ => Type.ToString()
             };

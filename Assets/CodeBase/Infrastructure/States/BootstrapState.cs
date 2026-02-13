@@ -34,9 +34,6 @@ namespace CodeBase.Infrastructure.States
         
         public void Enter()
         {
-
-            Debug.Log("[FLOW] Bootstrap.Enter");
-
             _sceneLoader.Load(Initial, onLoaded: EnterLoadLevel);
         }
 
@@ -76,14 +73,16 @@ namespace CodeBase.Infrastructure.States
                     _services.Single<IStaticDataService>(),
                     _services.Single<IXpService>(),
                     _services.Single<IDifficultyScalingService>(),
-                    _services.Single<RunContextService>()
+                    _services.Single<RunContextService>(),
+                    _services.Single<IPersistentProgressService>()
                 )
             );
 
             _services.RegisterSingle<IKillRewardService>(
                 new KillRewardService(
                     _services.Single<IStaticDataService>(),
-                    _services.Single<IGameFactory>()
+                    _services.Single<IGameFactory>(),
+                    _services.Single<RunContextService>()
                 )
             );
 
@@ -126,9 +125,8 @@ namespace CodeBase.Infrastructure.States
         private void RegisterStaticData()
         {
             IStaticDataService staticData = new StaticDataService();
-            staticData.LoadMonsters();
-            staticData.LoadWeapons();
-            staticData.LoadUpgrades();
+
+            staticData.LoadAll();
             _services.RegisterSingle(staticData);
         }
 

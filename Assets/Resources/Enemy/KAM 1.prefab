@@ -107,6 +107,22 @@ PrefabInstance:
       propertyPath: _attack
       value: 
       objectReference: {fileID: 5756178098557706454}
+    - target: {fileID: 1299303464634491405, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1299303464634491405, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
+      propertyPath: EffectiveDistance
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 2980193772822501500, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
+      propertyPath: m_Radius
+      value: 0.32
+      objectReference: {fileID: 0}
+    - target: {fileID: 2980193772822501500, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
+      propertyPath: m_StoppingDistance
+      value: 0.14
+      objectReference: {fileID: 0}
     - target: {fileID: 3865590757047999600, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -163,10 +179,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: KAM 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6250795203452523830, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
+      propertyPath: m_Radius
+      value: 0.62
+      objectReference: {fileID: 0}
     - target: {fileID: 7077384207112186423, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
       propertyPath: _animator
       value: 
       objectReference: {fileID: 3393790434765565243}
+    - target: {fileID: 8936956558651061567, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
+      propertyPath: m_Radius
+      value: 0.42
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -195,9 +219,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36f0c9da047c4b3c8f753943e2a8ef89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cleavage: 0.5
+  Cleavage: 0.41
   AttackColdown: 0.5
-  EffectiveDistance: 0.5
+  EffectiveDistance: 0.2
   Damage: 10
 --- !u!4 &5652634304973845514 stripped
 Transform:
@@ -210,7 +234,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 6767222379339006683}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1310794112546573680}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b09c09d516074522848c6d4ce1556817, type: 3}
   m_Name: 

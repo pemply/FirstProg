@@ -26,7 +26,6 @@ namespace CodeBase.Enemy
         {
             _heroTransform = heroTransform;
             _heroHealth = heroTransform != null ? heroTransform.GetComponentInParent<IHealth>() : null;
-            Debug.Log($"[EnemyAttack] Construct hero={(_heroTransform ? _heroTransform.name : "NULL")} health={(_heroHealth!=null)}");
         }
 
 

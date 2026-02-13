@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 041001dcc1a648c1a8deb6e26848dfda, type: 3}
+  m_Name: KamikazeData
+  m_EditorClassIdentifier: 
+  FuseDelay: 1.24
+  BlinkSpeed: 30
+  RadiusPadding: 0.5

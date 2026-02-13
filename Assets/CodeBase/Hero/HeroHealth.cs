@@ -3,15 +3,15 @@ using CodeBase.Data;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Logic;
-using CodeBase.StaticData;
 using UnityEngine;
 
 namespace CodeBase.Hero
 {
-    public class HeroHealth : MonoBehaviour, ISavedProgress, IHealth, IStatsApplier, IHeroStatsApplier
+    public class HeroHealth : MonoBehaviour, ISavedProgressReader, ISavedProgress, IHealth, IHeroStatsApplier
     {
         private Stats _stats;
         private bool _isDead;
+        private float _regenHpPerSec;
 
         public event Action HealthChanged;
         public event Action DeathEvent;
@@ -56,49 +56,60 @@ namespace CodeBase.Hero
                 }
             }
         }
+
+        private void Update()
+        {
+            if (_isDead) return;
+
+            float perSec = _regenHpPerSec;
+            if (perSec <= 0f) return;
+
+            Heal(perSec * Time.deltaTime);
+        }
+
         public void ApplyHeroStats(Stats stats)
         {
             if (stats == null) return;
 
-            // важливо: ми працюємо з тим самим об'єктом Stats, що в прогресі
             _stats = stats;
+            _regenHpPerSec = Mathf.Max(0f, stats.RegenHpPerSec);
 
             if (_stats.MaxHP <= 0) _stats.MaxHP = 1;
             _stats.CurrentHP = Mathf.Clamp(_stats.CurrentHP, 0, _stats.MaxHP);
 
             _isDead = _stats.CurrentHP <= 0;
-
             HealthChanged?.Invoke();
         }
 
-        public void Apply(PlayerProgress progress)
+        public void Heal(float amount)
         {
-            // замість дублю логіки — викликаємо ApplyHeroStats
-            progress.heroStats ??= new Stats();
-            ApplyHeroStats(progress.heroStats);
+            if (amount <= 0f) return;
+            if (_isDead) return;
+
+            currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
         }
+
         public void TakeDamage(float damage)
         {
             if (_isDead) return;
             if (_stats == null) { Debug.Log("[HeroHealth] stats null"); return; }
             if (damage <= 0) return;
 
-          
             currentHealth -= damage;
         }
 
-
-        public void LoadProgress(PlayerProgress progress) => Apply(progress);
+        public void LoadProgress(PlayerProgress progress)
+        {
+            progress.heroStats ??= new Stats();
+            ApplyHeroStats(progress.heroStats);
+        }
 
         public void UpdateProgress(PlayerProgress progress)
         {
-            // якщо  сейвиш між сесіями — ок.
-            // якщо сейв не потрібен — можна прибрати ISavedProgress взагалі.
             progress.heroStats ??= new Stats();
-            progress.heroStats.MaxHP = _stats?.MaxHP ?? progress.heroStats.MaxHP;
-            progress.heroStats.CurrentHP = _stats?.CurrentHP ?? progress.heroStats.CurrentHP;
-        }
 
-    
+            // ✅ MaxHP можна сейвити (бо апгрейди), CurrentHP — краще НЕ сейвити для рана
+            progress.heroStats.MaxHP = _stats?.MaxHP ?? progress.heroStats.MaxHP;
+        }
     }
 }

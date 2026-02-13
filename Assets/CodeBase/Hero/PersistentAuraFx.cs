@@ -34,16 +34,12 @@ namespace CodeBase.Weapon
         {
             _stats = stats;
             _hasStats = true;
-
-            Debug.Log($"[AuraFx] ApplyStats range={_stats.Range} baseRange={_cfg?.PersistentFxBaseRange}");
-
             Ensure();
             UpdateScale();
         }
 
         public void OnEnable()
         {
-            Debug.Log($"[AuraFx] OnEnable hasStats={_hasStats} cfg={_cfg?.name}");
             if (_hasStats)
             {
                 Ensure();
@@ -91,9 +87,9 @@ namespace CodeBase.Weapon
 
         private void UpdateScale()
         {
-            if (_instance == null) { Debug.Log("[AuraFx] UpdateScale: instance null"); return; }
-            if (_cfg == null) { Debug.Log("[AuraFx] UpdateScale: cfg null"); return; }
-            if (!_hasStats) { Debug.Log("[AuraFx] UpdateScale: no stats"); return; }
+            if (_instance == null) return;
+            if (_cfg == null) return;
+            if (!_hasStats) return;
 
             float baseRange = Mathf.Max(0.001f, _cfg.PersistentFxBaseRange);
             float k = Mathf.Max(0.01f, _stats.Range) / baseRange;
@@ -105,16 +101,12 @@ namespace CodeBase.Weapon
                 _hasBaseScale = true;
             }
 
-            var before = _instance.transform.localScale;
-
-            // NEW: масштабуємо від базового префабного scale, щоб не було "вдвічі"
+            // масштабуємо від базового префабного scale
             _instance.transform.localScale = new Vector3(
                 _baseLocalScale.x * k,
                 _baseLocalScale.y,
                 _baseLocalScale.z * k
             );
-
-            Debug.Log($"[AuraFx] UpdateScale: range={_stats.Range} base={baseRange} => k={k} | before={before} after={_instance.transform.localScale}");
         }
 
         private void Clear()

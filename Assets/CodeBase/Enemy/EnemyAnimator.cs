@@ -13,6 +13,8 @@ namespace CodeBase.Enemy
         [SerializeField] private GameObject _explosionVfxPrefab;
         [SerializeField] private float _destroyDelayAfterDie = 1.2f;
         [SerializeField] private float _destroyDelayAfterExplode = 0.15f;
+        
+        [SerializeField] private float _explosionFallbackLife = 2f;
 
         private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
         private static readonly int DieHash = Animator.StringToHash("Die");
@@ -37,7 +39,8 @@ namespace CodeBase.Enemy
 
             if (!IsAgentValid())
             {
-                _animator.SetBool(IsMovingHash, false);
+                if (_animator != null)
+                    _animator.SetBool(IsMovingHash, false);
                 return;
             }
 
@@ -45,7 +48,8 @@ namespace CodeBase.Enemy
                 agent.remainingDistance > agent.stoppingDistance + 0.05f &&
                 agent.velocity.sqrMagnitude > 0.01f;
 
-            _animator.SetBool(IsMovingHash, moving);
+            if (_animator != null)
+                _animator.SetBool(IsMovingHash, moving);
         }
 
         private bool IsAgentValid()
@@ -59,6 +63,8 @@ namespace CodeBase.Enemy
         public void PlayAttack()
         {
             if (_finished) return;
+            if (_animator == null) return;
+
             _animator.SetTrigger(AttackHash);
         }
 
@@ -67,17 +73,18 @@ namespace CodeBase.Enemy
             if (_finished) return;
             _finished = true;
 
-            // щоб точно перестав “рухатись” і не було залишкових рухів
-            _animator.SetBool(IsMovingHash, false);
+            if (_animator != null)
+                _animator.SetBool(IsMovingHash, false);
 
-            // опційно: зупиняємо агент одразу
             if (agent != null && agent.isActiveAndEnabled)
             {
                 agent.isStopped = true;
-                agent.enabled = false; // щоб точно не було isOnNavMesh/remainingDistance проблем
+                agent.enabled = false;
             }
 
-            _animator.SetTrigger(DieHash);
+            if (_animator != null)
+                _animator.SetTrigger(DieHash);
+
             Destroy(transform.root.gameObject, _destroyDelayAfterDie);
         }
 
@@ -86,7 +93,8 @@ namespace CodeBase.Enemy
             if (_finished) return;
             _finished = true;
 
-            _animator.SetBool(IsMovingHash, false);
+            if (_animator != null)
+                _animator.SetBool(IsMovingHash, false);
 
             if (agent != null && agent.isActiveAndEnabled)
             {
@@ -94,12 +102,78 @@ namespace CodeBase.Enemy
                 agent.enabled = false;
             }
 
-            _animator.SetTrigger(ExplodeHash);
+            if (_animator != null)
+                _animator.SetTrigger(ExplodeHash);
 
-            if (_explosionVfxPrefab != null)
-                Instantiate(_explosionVfxPrefab, transform.position, Quaternion.identity);
+            SpawnExplosionVfx();
 
             Destroy(transform.root.gameObject, _destroyDelayAfterExplode);
+        }
+
+        private void SpawnExplosionVfx()
+        {
+            if (_explosionVfxPrefab == null)
+                return;
+
+            GameObject vfx = Instantiate(_explosionVfxPrefab, transform.position, Quaternion.identity);
+
+            // порахувати реальний лайфтайм по всіх particle системах
+            float life = GetVfxLifetime(vfx);
+
+            if (life <= 0.01f)
+                life = _explosionFallbackLife;
+
+            Destroy(vfx, life);
+        }
+
+        private static float GetVfxLifetime(GameObject vfxRoot)
+        {
+            if (vfxRoot == null) return 0f;
+
+            float maxLife = 0f;
+
+            var systems = vfxRoot.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var ps = systems[i];
+                if (ps == null) continue;
+
+                var main = ps.main;
+
+                float startDelay = GetMax(main.startDelay);
+                float startLifetime = GetMax(main.startLifetime);
+
+                // duration + delay + lifetime = приблизний час “життя”
+                float life = startDelay + main.duration + startLifetime;
+                if (life > maxLife)
+                    maxLife = life;
+            }
+
+            // safety буфер щоб не обрізало останні частинки
+            if (maxLife > 0f)
+                maxLife += 0.25f;
+
+            return maxLife;
+        }
+
+        private static float GetMax(ParticleSystem.MinMaxCurve curve)
+        {
+            switch (curve.mode)
+            {
+                case ParticleSystemCurveMode.Constant:
+                    return curve.constant;
+
+                case ParticleSystemCurveMode.TwoConstants:
+                    return curve.constantMax;
+
+                case ParticleSystemCurveMode.Curve:
+                case ParticleSystemCurveMode.TwoCurves:
+                    // приблизно, беремо constantMax як верхню оцінку
+                    return curve.constantMax;
+
+                default:
+                    return curve.constantMax;
+            }
         }
     }
 }

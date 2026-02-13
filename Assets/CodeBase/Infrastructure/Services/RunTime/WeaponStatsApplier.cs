@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using CodeBase.Data;
+using CodeBase.Hero;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.StaticData;
 using CodeBase.Weapon;
@@ -8,26 +10,27 @@ namespace CodeBase.Infrastructure.Services.RunTime
 {
     public class WeaponStatsApplier : MonoBehaviour
     {
-        [SerializeField, HideInInspector] private MonoBehaviour[] _slotAppliersMb; // size 4 в інспекторі
+        [SerializeField] private MonoBehaviour[] _slotAppliersMb; // size 4 в інспекторі
         private IWeaponStatsApplier[] _slots;
-        private Hero.WeaponVisualSpawner _weaponVisualSpawner;
-
+        private WeaponVisualSpawner _weaponVisualSpawner;
+        private Stats _heroStats;
         private RunContextService _run;
         private ProjectileFactory _projectiles;
         private IStaticDataService _staticData;
-
-        public void Construct(RunContextService run, ProjectileFactory projectiles)
+        
+        public void Construct(RunContextService run, ProjectileFactory projectiles, CodeBase.Data.Stats heroStats)
         {
-            Construct(run, projectiles, null);
+            Construct(run, projectiles, null, heroStats);
         }
 
-        public void Construct(RunContextService run, ProjectileFactory projectiles, IStaticDataService staticData)
+        public void Construct(RunContextService run, ProjectileFactory projectiles, IStaticDataService staticData, CodeBase.Data.Stats heroStats)
         {
-            Debug.Log($"[APPLIER Construct] run={(run != null)} proj={(projectiles != null)} staticData={(staticData != null)}");
+            Debug.Log($"[APPLIER Construct] run={(run != null)} proj={(projectiles != null)} staticData={(staticData != null)} heroStats={(heroStats != null)}");
 
             _run = run;
             _projectiles = projectiles;
             _staticData = staticData;
+            _heroStats = heroStats;
 
             _weaponVisualSpawner = GetComponentInChildren<Hero.WeaponVisualSpawner>(true);
 
@@ -40,6 +43,8 @@ namespace CodeBase.Infrastructure.Services.RunTime
 
         public void ApplyCurrent()
         {
+            Debug.Log($"[APPLIER ApplyCurrent] runHash={_run.GetHashCode()} cd%={_run.CooldownPercent} dmg%={_run.DamagePercent}");
+
             if (_run == null) return;
 
             if (_run.Weapons == null || _run.Weapons.Count == 0)
@@ -116,7 +121,12 @@ namespace CodeBase.Infrastructure.Services.RunTime
                     animDriver.SetAsAnimationDriver(i == animDriverIndex);
                 Debug.Log($"APPLY {id} cooldown={w.Stats.Cooldown} baseCd={w.Stats.BaseCooldown} atkSpd={w.Stats.AttackSpeed}");
 
-                _slots[i]?.ApplyStats(w.Stats);
+                var stats = w.Stats;
+                ApplyHeroGlobalPassives(ref stats);
+                Debug.Log($"[APPLIER] run cd%={_run.CooldownPercent} dmg%={_run.DamagePercent}");
+
+                _slots[i]?.ApplyStats(stats);
+
             }
 
             // ✅ 4) HARD GUARANTEE: primary WeaponAttackRunner завжди отримує ін’єкції
@@ -152,12 +162,45 @@ namespace CodeBase.Infrastructure.Services.RunTime
                 primary.SetConfig(_staticData.GetWeapon(id0));
 
             // primary повинен мати статси 0-го слота
-            primary.ApplyStats(w0.Stats);
+            var stats0 = w0.Stats;
+            ApplyHeroGlobalPassives(ref stats0);
+            primary.ApplyStats(stats0);
+
 
             // якщо ти хочеш керувати драйвером анімації через індекс — ставимо тут
             // (зазвичай primary і є драйвер)
             primary.SetAsAnimationDriver(animDriverIndex == 0 || animDriverIndex == -1);
         }
+        private void ApplyHeroGlobalPassives(ref WeaponStats stats)
+        {
+            if (_run == null) return;
+
+            if (_run.CooldownPercent != 0f)
+            {
+                float speedMult = 1f + _run.CooldownPercent / 100f;   // 100% => 2.0
+                stats.BaseCooldown = Mathf.Max(0.02f, stats.BaseCooldown / speedMult);
+            }
+
+            if (_run.DamagePercent != 0f)
+            {
+                float mult = 1f + _run.DamagePercent / 100f;
+                stats.Damage *= mult;
+            }
+
+            // ---------- HERO CRIT BONUS ----------
+            var hs = _heroStats;
+            if (hs != null)
+            {
+                stats.CritChance = Mathf.Clamp(stats.CritChance + hs.CritChanceBonusPercent, 0f, 100f);
+                stats.CritMultiplier = Mathf.Max(1f, stats.CritMultiplier + hs.CritMultBonus);
+            }
+
+        }
+
+
+
+        
+
     }
 }
 

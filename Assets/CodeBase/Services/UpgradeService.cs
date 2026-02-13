@@ -44,6 +44,10 @@ namespace CodeBase.StaticData
                 [UpgradeType.KnockbackChance] = ApplyKnockbackChance,
                 [UpgradeType.Luck] = ApplyLuck,
                 [UpgradeType.AttackSpeed] = ApplyWeaponAttackSpeed,
+                [UpgradeType.RegenHp] = ApplyRegenHp,
+                [UpgradeType.CritChancePercent] = ApplyWeaponCritChance,
+                [UpgradeType.CritMultiplier]    = ApplyWeaponCritMultiplier,
+
 
                 // get weapon
                 [UpgradeType.GetSecondaryWeapon] = ApplyGetWeapon,
@@ -182,6 +186,29 @@ namespace CodeBase.StaticData
         {
             _progress.Progress.heroStats.PickupRadius += roll.FloatValue;
         }
+        private void ApplyRegenHp(UpgradeRoll roll)
+        {
+            var stats = _progress.Progress.heroStats;
+
+            float add = RollValue(roll);          
+            stats.RegenHpPerSec = Mathf.Max(0f, stats.RegenHpPerSec + add);
+        }
+        private void ApplyWeaponCritChance(UpgradeRoll roll) =>
+            MutateAllWeapons(s =>
+            {
+                float value = RollValue(roll); // 10 => +10%
+                s.CritChance = Mathf.Clamp(s.CritChance + value, 0f, 100f);
+                return s;
+            });
+
+        private void ApplyWeaponCritMultiplier(UpgradeRoll roll) =>
+            MutateAllWeapons(s =>
+            {
+                float value = roll.FloatValue; // тут краще float як +0.2 / +0.5
+                s.CritMultiplier = Mathf.Max(1f, s.CritMultiplier + value);
+                return s;
+            });
+
 
         // -------------------- GET WEAPON --------------------
 

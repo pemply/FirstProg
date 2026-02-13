@@ -14,6 +14,8 @@
         Luck,
         GetSecondaryWeapon,
         AttackSpeed,
-
+        RegenHp,
+        CritChancePercent,
+        CritMultiplier,    
     }
 }

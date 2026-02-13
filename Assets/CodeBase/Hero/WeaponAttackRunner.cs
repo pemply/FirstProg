@@ -72,7 +72,7 @@ namespace CodeBase.Hero
         private void InitSystems()
         {
             _physics = new WeaponAttackPhysics(overlapSize: 16, raySize: 32);
-
+            _physics.DamageModifier = RollDamage;
             _auraFx = new PersistentAuraFx();
             _auraFx.SetParentGetter(() => transform.root);
         }
@@ -96,7 +96,11 @@ namespace CodeBase.Hero
         {
             _projectiles = projectiles;
             _warnedNoProjectiles = false;
+
+            if (_projectiles != null)
+                _projectiles.DamageModifier = RollDamage;
         }
+
 
         public void SetWeaponId(WeaponId id) => _weaponId = id;
 
@@ -108,6 +112,8 @@ namespace CodeBase.Hero
 
         public void ApplyStats(WeaponStats stats)
         {
+            Debug.Log($"CRIT: chance={_weaponStats.CritChance:0.###} mult={_weaponStats.CritMultiplier:0.###}");
+
             _weaponStats = stats;
             _hasStats = true;
 
@@ -297,7 +303,8 @@ namespace CodeBase.Hero
                     return _physics.FindNearestEnemy(origin, _weaponStats.Range) != null;
 
                 case WeaponStats.AttackShape.Cone:
-                    return _sensor != null && _sensor.TryGetNearest(origin, out _);
+                    return _sensor != null && _sensor.TryGetNearestInFront(origin, transform.root.forward, 120f, out _);
+
 
                 default:
                     return true;
@@ -338,6 +345,25 @@ namespace CodeBase.Hero
                     return false;
             }
         }
+        private DamageRoll RollDamage(float baseDamage)
+        {
+            float chancePercent = _weaponStats.CritChance;   // 10 = 10%
+            float mult = _weaponStats.CritMultiplier;        // 2 = x2
+
+            float chance01 = Mathf.Clamp01(chancePercent * 0.01f);
+
+            if (chance01 > 0f && Random.value < chance01)
+            {
+                float safeMult = Mathf.Max(1f, mult);
+                return new DamageRoll(baseDamage * safeMult, true);
+            }
+
+            return new DamageRoll(baseDamage, false);
+        }
+
+
+
+
 
         private Vector3 HeroCenter()
         {

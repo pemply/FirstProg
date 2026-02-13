@@ -72,13 +72,21 @@ namespace CodeBase.Infrastructure.Factory
 
             // Kamikaze
             var kamikaze = monster.GetComponent<KamikazeAttack>();
+
             if (kamikaze != null)
             {
+                if (baseAttack != null)
+                    baseAttack.enabled = false;
+
+                kamikaze.enabled = true;
                 kamikaze.Construct(heroTransform);
+
                 kamikaze.Damage = dmg;
                 kamikaze.AttackColdown = monsterData.AttackCooldown;
                 kamikaze.Cleavage = monsterData.Cleavage;
                 kamikaze.EffectiveDistance = monsterData.EffectiveDistance;
+
+                kamikaze.SetConfig(monsterData.Kamikaze);
             }
 
             return monster;

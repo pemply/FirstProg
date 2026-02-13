@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1bdf20ffa394551aeb0904d1fa17434, type: 3}
+  m_Name: XpRegen
+  m_EditorClassIdentifier: 
+  IgnoreRarity: 0
+  Type: 12
+  MaxPicks: 0
+  TitleOverride: 
+  UsesInt: 0
+  CommonF:
+    Min: 0.25
+    Max: 0.51
+  RareF:
+    Min: 0.7
+    Max: 1.34
+  EpicF:
+    Min: 5.4
+    Max: 11.34
+  LegendaryF:
+    Min: 24.87
+    Max: 36.44
+  CommonI:
+    Min: 0
+    Max: 0
+  RareI:
+    Min: 0
+    Max: 0
+  EpicI:
+    Min: 0
+    Max: 0
+  LegendaryI:
+    Min: 0
+    Max: 0

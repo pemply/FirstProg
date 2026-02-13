@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85adce3d89b046e9a8cd1ad68e5d7961, type: 3}
+  m_Name: Kam
+  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.MonsterStaticData
+  MonsterTypeId: 2
+  Hp: 6
+  Damage: 2.5
+  MaxLoot: 0
+  EffectiveDistance: 0.6
+  Cleavage: 1
+  MoveSpeed: 7.16
+  PrefabReference: {fileID: 1310794112546573680, guid: d32edbbe6699f6d4d81e9ab68067a586, type: 3}
+  AttackCooldown: 0
+  XpReward: 10
+  Kamikaze: {fileID: 11400000, guid: 938c3fd4ac838694189b67cc283d0d27, type: 2}

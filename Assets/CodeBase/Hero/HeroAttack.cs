@@ -80,7 +80,6 @@ namespace CodeBase.Hero
 
             if (_sensor != null)
                 _sensor.SetRadius(_weaponStats.Range);
-            Debug.Log($"[HeroAttack] ApplyStats shape={stats.Shape} range={stats.Range}");
             // aura persistent — як у Runner
             _auraFx.ApplyStats(stats);
 

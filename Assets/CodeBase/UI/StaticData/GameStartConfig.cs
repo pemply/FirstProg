@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using CodeBase.StaticData.CodeBase.StaticData;
+using UnityEngine;
 
 namespace CodeBase.StaticData
 {
@@ -8,5 +9,8 @@ namespace CodeBase.StaticData
         
         public WeaponId DefaultWeapon = WeaponId.Sword;
         public bool ForceDefaultWeapon; //  для тестів
+        public HeroId DefaultHeroId = HeroId.Knight;
+
+
     }
 }

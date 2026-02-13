@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using CodeBase.Enemy;
 using CodeBase.Hero;
+using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.Progress;
@@ -192,7 +193,7 @@ namespace CodeBase.Infrastructure.States
 
         private void LoadWaveData()
         {
-            _waveSequence = Resources.Load<WaveSequence>("Waves/WaveSequence/Wave");
+            _waveSequence = Resources.Load<WaveSequence>(AssetsPath.WaveListConfig);
 
             if (_waveSequence == null || _waveSequence.Waves.Count == 0)
             {

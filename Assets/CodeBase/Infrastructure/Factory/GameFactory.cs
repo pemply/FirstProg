@@ -26,6 +26,7 @@ namespace CodeBase.Infrastructure.Factory
         private readonly PillarFactory _pillarFactory;
         private readonly ProjectileFactory _projectileFactory ;
         private readonly IStaticDataService _staticData;
+        private readonly IPersistentProgressService _progressService;
 
         private readonly RunContextService _run;
 
@@ -34,15 +35,18 @@ namespace CodeBase.Infrastructure.Factory
             IStaticDataService staticData,
             IXpService xp,
             IDifficultyScalingService difficulty,
-            RunContextService run)
+            RunContextService run,
+            IPersistentProgressService progressService)
         {
             _staticData = staticData;
             _run = run;
+            _progressService = progressService;
 
             _projectileFactory = new ProjectileFactory(staticData); // ✅ тут створюємо
 
             _pillarFactory = new PillarFactory(assets);
-            _heroFactory = new HeroFactory(assets);
+            _heroFactory = new HeroFactory(run, staticData);
+
             _uiFactory = new UIFactory(assets);
             _pickupFactory = new PickupFactory(assets, xp);
             _monsterFactory = new MonsterFactory(staticData, difficulty);
@@ -52,11 +56,17 @@ namespace CodeBase.Infrastructure.Factory
             HeroGameObject = _heroFactory.CreateHero(at, out var heroT);
             HeroTransform = heroT;
 
-            ApplyWeaponStatsToHero(HeroGameObject);
+            if (HeroGameObject == null)
+            {
+                Debug.LogError("[GameFactory] Hero was not created (null).");
+                return null;
+            }
 
+            ApplyWeaponStatsToHero(HeroGameObject);
             RegisterProgressWatchers(HeroGameObject);
             return HeroGameObject;
         }
+
 
         private void ApplyWeaponStatsToHero(GameObject hero)
         {
@@ -67,9 +77,16 @@ namespace CodeBase.Infrastructure.Factory
                 return;
             }
 
-            applier.Construct(_run, _projectileFactory, _staticData);
+            var heroStats = _progressService?.Progress?.heroStats;
+            if (heroStats == null)
+            {
+                Debug.LogError("[GameFactory] heroStats is NULL. Progress is not initialized?");
+                return;
+            }
 
+            applier.Construct(_run, _projectileFactory, _staticData, heroStats);
         }
+
 
 
 

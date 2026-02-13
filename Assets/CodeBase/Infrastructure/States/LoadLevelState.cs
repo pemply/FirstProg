@@ -11,6 +11,7 @@ using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Infrastructure.States.BetweenStates;
 using CodeBase.Logic;
 using CodeBase.StaticData;
+using CodeBase.StaticData.CodeBase.StaticData;
 using CodeBase.UI;
 using UnityEngine;
 
@@ -29,6 +30,7 @@ namespace CodeBase.Infrastructure.States
         private readonly RunContextService _run;
         private readonly IStaticDataService _staticData;
         private readonly GameStartConfig _startConfig;
+        private readonly HeroPassiveApplier _passives;
 
         public LoadLevelState(
             GameStateMachine stateMachine,
@@ -47,6 +49,7 @@ namespace CodeBase.Infrastructure.States
 
             _run = run;
             _staticData = staticData;
+            _passives = new HeroPassiveApplier(run, progressService);
 
             _startConfig = Resources.Load<GameStartConfig>(AssetsPath.GameStartConfig);
         }
@@ -54,13 +57,16 @@ namespace CodeBase.Infrastructure.States
         public void Enter(string sceneName)
         {
             _run.Reset();
+            _run.SelectedHeroId = _startConfig != null ? _startConfig.DefaultHeroId : HeroId.None;
 
-            var id = _startConfig != null ? _startConfig.DefaultWeapon : WeaponId.None;
-            var weapon = _staticData.GetWeapon(id) ?? _staticData.GetDefaultWeapon();
+            HeroConfig heroCfg = _staticData.ForHero(_run.SelectedHeroId);
+
+            // стартова зброя ВІД ГЕРОЯ 
+            WeaponId startWeaponId = heroCfg != null ? heroCfg.StartWeapon : WeaponId.None;
+            var weapon = _staticData.GetWeapon(startWeaponId) ?? _staticData.GetDefaultWeapon();
             var stats = weapon != null ? weapon.BaseStats : default;
 
-            _run.Weapons.Add(new RunContextService.RunWeapon { Id = id, Stats = stats });
-
+            _run.Weapons.Add(new RunContextService.RunWeapon { Id = weapon.WeaponId, Stats = stats });
 
             _curtain.Show();
             _gameFactory.Cleanup();
@@ -73,21 +79,34 @@ namespace CodeBase.Infrastructure.States
 
         private void OnLoaded()
         {
-            var hs = _progressService.Progress.heroStats;
-            hs.CurrentHP = hs.MaxHP;
+            ApplyHeroConfigToProgress();
+
+            var heroCfg = _staticData.ForHero(_run.SelectedHeroId);
+         
+            _passives.Apply(heroCfg);
+            _passives.FinalizeProgressStats();
             GameObject hero = CreateHero();
+            ApplyHeroMoveSpeed(hero);
+            Debug.Log($"[PASSIVES@OnLoaded] runHash={_run.GetHashCode()} hero={_run.SelectedHeroId} " +
+                      $"passive={(heroCfg!=null?heroCfg.Passive.ToString():"NULL")} p={(heroCfg!=null?heroCfg.PassivePercent:0f)} " +
+                      $"run cd%={_run.CooldownPercent} dmg%={_run.DamagePercent} ms%={_run.MoveSpeedPercent}");
+
             GameObject hud = CreateHud();
 
             InitProgressReaders();
             BindHudToHero(hud, hero);
             CameraFollow(hero);
+            Debug.Log($"[SCALE] hero root lossyScale={hero.transform.lossyScale}");
+
+            var pickup = hero.GetComponentInChildren<SphereCollider>(true); // якщо у тебе pickup через SphereCollider
+            if (pickup != null)
+                Debug.Log($"[PICKUP] collider radius(local)={pickup.radius}, lossyScale={pickup.transform.lossyScale}");
 
             _gameFactory.CreatePillarSpawner();
 
-            InitRunWeapons(hero);
-
             _stateMachine.Enter<GameLoopState, GameLoopPayload>(new GameLoopPayload(hero, hud));
         }
+
 
 
         private GameObject CreateHero()
@@ -95,6 +114,7 @@ namespace CodeBase.Infrastructure.States
             GameObject initialPoint = GameObject.FindGameObjectWithTag(InitialPointTag);
             return _gameFactory.CreateHero(initialPoint);
         }
+
 
         private GameObject CreateHud() =>
             _gameFactory.CreateHud();
@@ -167,7 +187,47 @@ namespace CodeBase.Infrastructure.States
 
             Debug.Log($"Spawn PRIMARY weapon {runWeapon.Id}");
         }
-        
+        private void ApplyHeroConfigToProgress()
+        {
+            HeroConfig cfg = _staticData.ForHero(_run.SelectedHeroId);
+            if (cfg == null) return;
+
+            Stats hs = _progressService.Progress.heroStats;
+
+            hs.MaxHP = cfg.MaxHp;
+            hs.PickupRadius = cfg.PickupRadius;
+            hs.RegenHpPerSec = cfg.RegenHpPerSec;
+
+            // ---- crit бонуси героя ----
+            hs.CritChanceBonusPercent = Mathf.Clamp(cfg.CritChanceBonusPercent, 0f, 100f);
+            hs.CritMultBonus = Mathf.Max(0f, cfg.CritMultBonus);
+
+            hs.CurrentHP = hs.MaxHP;
+        }
+
+
+
+        private void ApplyHeroMoveSpeed(GameObject hero)
+        {
+            if (hero == null) return;
+
+            var heroMove = hero.GetComponentInChildren<CodeBase.Hero.HeroMove>(true);
+            if (heroMove == null)
+            {
+                Debug.LogWarning("[SPEED] HeroMove not found");
+                return;
+            }
+
+            var cfg = _staticData.ForHero(_run.SelectedHeroId);
+            float baseSpeed = cfg != null ? cfg.MoveSpeed : heroMove.MovementSpeed;
+
+            float speedMult = 1f + _run.MoveSpeedPercent / 100f; // 10 => 1.1
+            heroMove.MovementSpeed = baseSpeed * speedMult;
+
+            Debug.Log($"[SPEED] base={baseSpeed} ms%={_run.MoveSpeedPercent} final={heroMove.MovementSpeed}");
+        }
+
+
 
     }
 }

@@ -78,6 +78,50 @@ namespace CodeBase.Logic
 
             _targets.Remove(health);
         }
+        public bool TryGetNearestInFront(Vector3 from, Vector3 forward, float coneAngleDeg, out IHealth nearest)
+        {
+            nearest = null;
+            float bestSqr = float.PositiveInfinity;
+
+            // чистимо null і dead (як у TryGetNearest)
+            _targets.RemoveWhere(t =>
+            {
+                if (t == null) return true;
+                if (t is EnemyHealth eh && eh.IsDead) return true;
+                return false;
+            });
+
+            Vector3 fwd = forward;
+            fwd.y = 0f;
+            if (fwd.sqrMagnitude < 0.0001f) return false;
+            fwd.Normalize();
+
+            float cos = Mathf.Cos((coneAngleDeg * 0.5f) * Mathf.Deg2Rad);
+
+            foreach (IHealth t in _targets)
+            {
+                var mb = t as MonoBehaviour;
+                if (mb == null) continue;
+
+                Vector3 to = mb.transform.position - from;
+                to.y = 0f;
+
+                float sqr = to.sqrMagnitude;
+                if (sqr < Constant.Epsilone) continue;
+
+                float dot = Vector3.Dot(fwd, to / Mathf.Sqrt(sqr));
+                if (dot < cos) continue;
+
+                if (sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    nearest = t;
+                }
+            }
+
+            return nearest != null;
+        }
+
 
     }
 }

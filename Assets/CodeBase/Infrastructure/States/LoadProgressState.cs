@@ -23,8 +23,6 @@ namespace CodeBase.Infrastructure.States
 
         public void Enter()
         {
-            Debug.Log("[FLOW] LoadProgress.Enter");
-
             LoadProgressOrInitNew();
             _gameStateMachine.Enter<LoadLevelState, string>(_progressService.Progress.WorldData.PositionOnLevel.Level);
         }

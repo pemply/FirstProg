@@ -52,6 +52,10 @@ PrefabInstance:
       propertyPath: _animator
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 7402851078998325238, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
+      propertyPath: m_Radius
+      value: 1.23
+      objectReference: {fileID: 0}
     - target: {fileID: 8979026963889873829, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
       propertyPath: _animator
       value: 

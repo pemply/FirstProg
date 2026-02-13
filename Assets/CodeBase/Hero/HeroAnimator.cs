@@ -23,7 +23,6 @@ namespace CodeBase.Hero
             if (_animator == null)
                 _animator = GetComponentInChildren<Animator>(true);
             
-            Debug.Log($"[HeroAnimator] Awake animGO={_animator.gameObject.name} root={transform.root.name} ctrl={_animator.runtimeAnimatorController?.name}");
         }
 
         public void SetSpeed(float speed)

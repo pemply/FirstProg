@@ -49,6 +49,11 @@ namespace CodeBase.Enemy
 
             // speed 0..1
             float speed01 = (Agent.speed <= 0.001f) ? 0f : Mathf.Clamp01(Agent.velocity.magnitude / Agent.speed);
+            _logTimer += Time.deltaTime;
+            if (_logTimer >= 0.5f)
+            {
+                _logTimer = 0f;
+            }
 
             // SET PARAM
             if (_animator != null)
@@ -59,17 +64,6 @@ namespace CodeBase.Enemy
             if (_logTimer >= 0.5f)
             {
                 _logTimer = 0f;
-
-           //     string ctrl = (_animator && _animator.runtimeAnimatorController)
-               //     ? _animator.runtimeAnimatorController.name
-              //      : "NULL";
-
-                    // Debug.Log(
-                //    $"[EnemyAnim] anim={(_animator ? _animator.name : "NULL")} ctrl={ctrl} " +
-               //     $"dist={dist:0.00} move={move} agentVel={Agent.velocity.magnitude:0.00} " +
-               //     $"agentSpeed={Agent.speed:0.00} speed01={speed01:0.00} " +
-                  //  $"paramNow={(_animator ? _animator.GetFloat(SpeedHash) : -1f):0.00}"
-              //  );
             }
         }
 

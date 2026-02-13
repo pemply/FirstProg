@@ -33,6 +33,11 @@ namespace CodeBase.UI.Debug
           _instance = this;
           DontDestroyOnLoad(gameObject);
       }
+      private void OnDestroy()
+      {
+          if (_instance == this)
+              _instance = null;
+      }
 
         private void Start()
         {

@@ -18,7 +18,8 @@ namespace CodeBase.StaticData
         public float Knockback;
         public float KnockbackChance;
         public AttackShape Shape;
-
+        public float CritChance;    
+        public float CritMultiplier; 
     
         public enum AttackShape
         {
@@ -44,7 +45,8 @@ namespace CodeBase.StaticData
             KnockbackChance = 0.05f,
             Shape = AttackShape.Cone,
 
-            
+             CritChance = 0.1f,
+             CritMultiplier = 1f
         };
     }
 }

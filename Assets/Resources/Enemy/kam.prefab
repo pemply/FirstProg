@@ -330,6 +330,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.AgentMoveToPlayer
   Agent: {fileID: -7396957082619626820}
+  _attack: {fileID: 0}
+  _animator: {fileID: 0}
 --- !u!114 &9010384864570307231
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -420,6 +422,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d61bd45f8a36456aa71f76802f9d8f18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.Death
+  _deathType: 0
 --- !u!114 &261664605115957939
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,7 +437,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.KamikazeAttack
   Cleavage: 0.5
   AttackColdown: 0.5
-  EffectiveDistance: 0.5
+  EffectiveDistance: 0.05
   Damage: 10
 --- !u!114 &4864592470591883698
 MonoBehaviour:
