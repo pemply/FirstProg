@@ -22,11 +22,12 @@ namespace CodeBase.Infrastructure.Factory
             _difficulty = difficulty;
 
             _elite = Resources.Load<EliteConfig>(AssetsPath.EliteConfigPath);
-           
         }
 
-       public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent, Transform heroTransform)
+        public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent, Transform heroTransform)
         {
+            Debug.Log($"[SPAWN] requested type={monsterTypeId}");
+
             MonsterStaticData monsterData = _staticData.ForMonster(monsterTypeId);
 
             Vector3 spawnPos = parent != null ? parent.position : Vector3.zero;
@@ -35,13 +36,14 @@ namespace CodeBase.Infrastructure.Factory
             GameObject monster = Object.Instantiate(monsterData.PrefabReference, spawnPos, spawnRot, parent);
 
             bool isElite = _elite != null && Random.value <= _elite.Chance;
-
             float hp = CalcAndApplyRewards(monsterTypeId, monsterData, monster, isElite, out float dmg);
 
             if (isElite && _elite != null)
                 monster.transform.localScale *= _elite.ScaleMult;
 
-            // Health
+            // -------------------------------------------------
+            // HEALTH
+            // -------------------------------------------------
             IHealth health = monster.GetComponent<IHealth>();
             if (health == null)
                 Debug.LogError($"[MonsterFactory] IHealth missing on {monster.name}");
@@ -59,8 +61,30 @@ namespace CodeBase.Infrastructure.Factory
             if (agent != null)
                 agent.speed = monsterData.MoveSpeed;
 
-            // Base/Tank attack
+            // -------------------------------------------------
+            // ATTACK COMPONENTS
+            // -------------------------------------------------
             var baseAttack = monster.GetComponent<EnemyAttack>();
+            var kamikaze = monster.GetComponent<KamikazeAttack>();
+            var areaAttack = monster.GetComponent<EnemyAreaAttack>();
+
+            // -------------------------------------------------
+            // SENSOR RADIUS (дуже важливо)
+            // -------------------------------------------------
+            var sensor = monster.GetComponent<AttackSensorRadiusApplier>();
+            if (sensor != null)
+            {
+                // якщо ranged aoe ворог → сенсор великий
+                if (areaAttack != null && monsterData.AreaAttack != null)
+                    sensor.Apply(monsterData.AreaAttack.SensorRadius, 0f);
+                else
+                    sensor.Apply(monsterData.EffectiveDistance, monsterData.Cleavage);
+                
+            }
+
+            // -------------------------------------------------
+            // BASE MELEE ATTACK
+            // -------------------------------------------------
             if (baseAttack != null)
             {
                 baseAttack.Construct(heroTransform);
@@ -70,9 +94,9 @@ namespace CodeBase.Infrastructure.Factory
                 baseAttack.EffectiveDistance = monsterData.EffectiveDistance;
             }
 
-            // Kamikaze
-            var kamikaze = monster.GetComponent<KamikazeAttack>();
-
+            // -------------------------------------------------
+            // KAMIKAZE
+            // -------------------------------------------------
             if (kamikaze != null)
             {
                 if (baseAttack != null)
@@ -83,16 +107,55 @@ namespace CodeBase.Infrastructure.Factory
 
                 kamikaze.Damage = dmg;
                 kamikaze.AttackColdown = monsterData.AttackCooldown;
-                kamikaze.Cleavage = monsterData.Cleavage;
                 kamikaze.EffectiveDistance = monsterData.EffectiveDistance;
 
                 kamikaze.SetConfig(monsterData.Kamikaze);
             }
 
+            // -------------------------------------------------
+// AREA / RANGED AOE
+// -------------------------------------------------
+            if (areaAttack != null)
+            {
+                // якщо це AOE-ворог — базову melee атаку вимикаємо
+                if (baseAttack != null)
+                    baseAttack.enabled = false;
+
+                areaAttack.enabled = true;
+                areaAttack.Construct(heroTransform);
+
+                // ✅ ВАЖЛИВО: Damage/Cooldown/Radius беремо ТІЛЬКИ з AreaAttackConfig
+                areaAttack.SetConfig(monsterData.AreaAttack);
+
+                // ✅ (опційно) якщо тобі треба, щоб "dmg" впливав:
+                // areaAttack.Damage *= dmgMult; // але краще зроби dmgMult окремо, а не "dmg" як абсолют
+            }
+            else if (baseAttack != null && kamikaze == null)
+            {
+                // якщо не kamikaze і не areaAttack — лишаємо базову атаку активною
+                baseAttack.enabled = true;
+            }
+
+            Debug.Log(
+                $"[SPAWN] staticData type={monsterData.MonsterTypeId} prefab={monsterData.PrefabReference?.name}");
+
+            var healer = monster.GetComponent<EnemyHealer>();
+            if (healer != null)
+            {
+                healer.Construct(heroTransform);
+                healer.SetConfig(monsterData.Healer); // може бути null — SetConfig це переживе
+            }
+
+
+            
             return monster;
+            
+            
         }
 
-        private float CalcAndApplyRewards(MonsterTypeId monsterTypeId, MonsterStaticData monsterData, GameObject monster,
+
+        private float CalcAndApplyRewards(MonsterTypeId monsterTypeId, MonsterStaticData monsterData,
+            GameObject monster,
             bool isElite, out float dmg)
         {
             float hp = monsterData.Hp * _difficulty.HpMult;
@@ -108,7 +171,7 @@ namespace CodeBase.Infrastructure.Factory
 
             var holder = monster.GetComponent<XpRewardHolder>() ?? monster.AddComponent<XpRewardHolder>();
             holder.Set(xp);
-            
+
             return hp;
         }
     }

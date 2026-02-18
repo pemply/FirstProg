@@ -18,12 +18,10 @@ namespace CodeBase.Hero
         private const float MaxMeleeAnimRate = 3f;
         private const float AnimSpeedCap = 50f;
 
-        [Header("Slot")]
-        [SerializeField] private bool _isPrimarySlot; // true тільки на WeaponPrimary_Attack
+        [Header("Slot")] [SerializeField] private bool _isPrimarySlot; // true тільки на WeaponPrimary_Attack
         public bool IsPrimarySlot => _isPrimarySlot;
 
-        [Header("Refs")]
-        [SerializeField] private CharacterController _characterController;
+        [Header("Refs")] [SerializeField] private CharacterController _characterController;
         [SerializeField] private HeroAnimator _heroAnimator;
         [SerializeField] private TargetSensor _sensor;
         [SerializeField] private WeaponFxPlayer _fx;
@@ -48,12 +46,12 @@ namespace CodeBase.Hero
 
         private void Awake()
         {
-           
             CacheRefs();
             InitSystems();
 
             _isAnimationDriver = _isPrimarySlot;
         }
+
         private void CacheRefs()
         {
             if (_fx == null)
@@ -76,6 +74,7 @@ namespace CodeBase.Hero
             _auraFx = new PersistentAuraFx();
             _auraFx.SetParentGetter(() => transform.root);
         }
+
         private void OnEnable() => _auraFx.OnEnable();
 
         private void OnDisable()
@@ -303,8 +302,11 @@ namespace CodeBase.Hero
                     return _physics.FindNearestEnemy(origin, _weaponStats.Range) != null;
 
                 case WeaponStats.AttackShape.Cone:
-                    return _sensor != null && _sensor.TryGetNearestInFront(origin, transform.root.forward, 120f, out _);
-
+                {
+                    bool ok = _sensor != null &&
+                              _sensor.TryGetNearestInFront(origin, transform.root.forward, 120f, out var t);
+                    return ok;
+                }
 
                 default:
                     return true;
@@ -321,9 +323,11 @@ namespace CodeBase.Hero
                     if (!_warnedNoProjectiles)
                     {
                         _warnedNoProjectiles = true;
-                        Debug.LogError($"[WeaponAttackRunner] ProjectileFactory is NULL (weapon={_weaponId}, runner={name}). " +
-                                       $"Fix: caller must call Construct(projectiles) on this runner.");
+                        Debug.LogError(
+                            $"[WeaponAttackRunner] ProjectileFactory is NULL (weapon={_weaponId}, runner={name}). " +
+                            $"Fix: caller must call Construct(projectiles) on this runner.");
                     }
+
                     return false;
                 }
             }
@@ -345,10 +349,11 @@ namespace CodeBase.Hero
                     return false;
             }
         }
+
         private DamageRoll RollDamage(float baseDamage)
         {
-            float chancePercent = _weaponStats.CritChance;   // 10 = 10%
-            float mult = _weaponStats.CritMultiplier;        // 2 = x2
+            float chancePercent = _weaponStats.CritChance; // 10 = 10%
+            float mult = _weaponStats.CritMultiplier; // 2 = x2
 
             float chance01 = Mathf.Clamp01(chancePercent * 0.01f);
 
@@ -360,9 +365,6 @@ namespace CodeBase.Hero
 
             return new DamageRoll(baseDamage, false);
         }
-
-
-
 
 
         private Vector3 HeroCenter()

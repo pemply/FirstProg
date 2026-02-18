@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85adce3d89b046e9a8cd1ad68e5d7961, type: 3}
+  m_Name: Healer
+  m_EditorClassIdentifier: 
+  MonsterTypeId: 4
+  Hp: 50
+  Damage: 10
+  MaxLoot: 0
+  EffectiveDistance: 0.5
+  Cleavage: 0.5
+  MoveSpeed: 3
+  PrefabReference: {fileID: 4919134366698559346, guid: e8e5f05b78193844db99413f7900a8c4, type: 3}
+  AttackCooldown: 0
+  XpReward: 10
+  Kamikaze: {fileID: 0}
+  AreaAttack: {fileID: 0}
+  Healer: {fileID: 11400000, guid: 0cdca7065f696f740be9cd8ee00bf4b6, type: 2}

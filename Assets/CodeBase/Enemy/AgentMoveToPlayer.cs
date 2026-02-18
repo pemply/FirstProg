@@ -5,74 +5,112 @@ namespace CodeBase.Enemy
 {
     public class AgentMoveToPlayer : MonoBehaviour
     {
-        private const float MinimalDistance = 1f;
-
         public NavMeshAgent Agent;
+
         [SerializeField] private EnemyAttack _attack;
         [SerializeField] private Animator _animator;
+
         private static readonly int SpeedHash = Animator.StringToHash("Speed");
 
+        [Header("Tuning")]
+        [SerializeField] private float _stopPadding = .5f; // маленький запас, щоб не "стопало зарано"
+
         private Transform _heroTransform;
-        private float _logTimer;
+        private CharacterController _heroCC;
+        private float _heroRadius = 0.3f; // fallback
 
         private void Awake()
         {
-            _animator = GetComponentInChildren<Animator>(true);
-            _attack = GetComponent<EnemyAttack>();
+            if (_animator == null)
+                _animator = GetComponentInChildren<Animator>(true);
+
+            if (_attack == null)
+                _attack = GetComponent<EnemyAttack>();
         }
 
-        public void Construct(Transform heroTransform) => _heroTransform = heroTransform;
+        public void Construct(Transform heroTransform)
+        {
+            _heroTransform = heroTransform;
+
+            _heroCC = null;
+            if (heroTransform != null)
+                _heroCC = heroTransform.GetComponent<CharacterController>() ?? heroTransform.GetComponentInParent<CharacterController>();
+
+            _heroRadius = _heroCC != null ? _heroCC.radius : 0.3f;
+        }
 
         private void Update()
         {
             if (_heroTransform == null) return;
             if (Agent == null || !Agent.enabled || !Agent.isOnNavMesh) return;
+
+            // якщо зараз атакує — не рухаємось
             if (_attack != null && _attack.IsAttacking)
             {
-                _animator.SetFloat(SpeedHash, 0f);
+                StopAgent();
+                SetSpeed(0f);
                 return;
             }
 
-            var attack = GetComponent<EnemyAttack>();
+            float stopDist = 0.1f;
 
-            if (attack != null && attack.IsAttacking)
+            if (_attack != null)
             {
-                _animator.SetFloat(SpeedHash, 0f);
-                return;
+                float enemyR = Mathf.Max(0f, Agent.radius);
+
+                // EffectiveDistance — де стоїть "точка удару" від ворога
+                float reach = Mathf.Max(0.05f, _attack.EffectiveDistance);
+
+                // Cleavage — радіус сфери удару (OverlapSphere)
+                float hitR = Mathf.Max(0.05f, _attack.Cleavage);
+
+                // ✅ ключ:
+                // на дистанції stopDist герой вже має потрапляти в OverlapSphere біля StartPoint.
+                // Тому НЕ можна стопати на reach + радіуси (це зарано).
+                // Треба стопати ближче: віднімаємо hitR.
+                stopDist = reach + enemyR + _heroRadius - hitR + _stopPadding;
+
+                // safety
+                stopDist = Mathf.Max(0.1f, stopDist);
             }
 
-            float dist = Vector3.Distance(Agent.transform.position, _heroTransform.position);
-            bool move = dist > MinimalDistance;
+            // dist в XZ
+            Vector3 a = Agent.transform.position; a.y = 0f;
+            Vector3 b = _heroTransform.position;  b.y = 0f;
+            float dist = Vector3.Distance(a, b);
+
+            bool move = dist > stopDist;
 
             if (move)
-                Agent.SetDestination(_heroTransform.position);
+            {
+                Vector3 target = _heroTransform.position;
 
-            // speed 0..1
+                if (NavMesh.SamplePosition(target, out var hit, 2f, NavMesh.AllAreas))
+                    Agent.SetDestination(hit.position);
+                else
+                    Agent.SetDestination(target);
+            }
+            else
+            {
+                StopAgent();
+            }
+
             float speed01 = (Agent.speed <= 0.001f) ? 0f : Mathf.Clamp01(Agent.velocity.magnitude / Agent.speed);
-            _logTimer += Time.deltaTime;
-            if (_logTimer >= 0.5f)
-            {
-                _logTimer = 0f;
-            }
-
-            // SET PARAM
-            if (_animator != null)
-                _animator.SetFloat(SpeedHash, move ? speed01 : 0f);
-
-            // DEBUG раз на ~0.5с
-            _logTimer += Time.deltaTime;
-            if (_logTimer >= 0.5f)
-            {
-                _logTimer = 0f;
-            }
+            SetSpeed(move ? speed01 : 0f);
         }
 
-        private static bool HasParam(Animator a, string name)
+        private void StopAgent()
         {
-            if (a == null) return false;
-            foreach (var p in a.parameters)
-                if (p.name == name) return true;
-            return false;
+            if (Agent.hasPath)
+                Agent.ResetPath();
+
+            Agent.velocity = Vector3.zero;
+        }
+
+        private void SetSpeed(float v)
+        {
+            if (_animator != null)
+                _animator.SetFloat(SpeedHash, v);
         }
     }
 }

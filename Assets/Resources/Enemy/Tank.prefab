@@ -18,7 +18,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7396957082619626820, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
       propertyPath: m_StoppingDistance
-      value: 1
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: -7396957082619626820, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
       propertyPath: m_ObstacleAvoidanceType
@@ -64,6 +64,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 752167593799382840, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
+      propertyPath: m_Radius
+      value: 0.57
+      objectReference: {fileID: 0}
     - target: {fileID: 2930409255006868525, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
       propertyPath: Damage
       value: 1
@@ -76,9 +80,17 @@ PrefabInstance:
       propertyPath: m_Radius
       value: 0.59
       objectReference: {fileID: 0}
+    - target: {fileID: 5923526240835111159, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
+      propertyPath: _animator
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 7402851078998325238, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
       propertyPath: m_Radius
-      value: 2
+      value: 1.34
+      objectReference: {fileID: 0}
+    - target: {fileID: 8979026963889873829, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
+      propertyPath: _animator
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 9212566456173030763, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
       propertyPath: m_Name

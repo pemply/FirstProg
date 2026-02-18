@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6160d626ea794fefbbcd05c02ba57919, type: 3}
+  m_Name: AreaAttackConfig
+  m_EditorClassIdentifier: 
+  Damage: 35.6
+  Cooldown: 0.98
+  Windup: 1.04
+  AoERadius: 7.73
+  TelegraphPrefab: {fileID: 1830188523380823483, guid: 94aa2450d32f0c2488a93bf418bed6e2, type: 3}
+  SensorRadius: 30
+  ForwardLead: 1.5
+  SideOffset: 1
+  RandomJitter: 1.18
+  MinDistanceFromHeroMult: 0.36

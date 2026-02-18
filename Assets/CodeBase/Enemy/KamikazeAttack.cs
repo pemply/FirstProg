@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Linq;
 using CodeBase.Logic;
 using CodeBase.StaticData;
 using UnityEngine;
@@ -10,36 +9,46 @@ namespace CodeBase.Enemy
     [RequireComponent(typeof(EnemyHealth))]
     public class KamikazeAttack : MonoBehaviour
     {
-        // --- ЦЕ фабрика вже сетить ---
-        public float Cleavage = 0.5f;
+        // set by factory
         public float AttackColdown = 0.5f;
-        public float EffectiveDistance = 0.5f;
+        public float EffectiveDistance = 0.5f; // ✅ “додаткова” дистанція до героя (після врахування радіусів)
         public float Damage = 10f;
 
-        // --- НОВЕ: затримка перед вибухом ---
+        // config
         public float FuseDelay = 0.6f;
         public float RadiusPadding = 0.08f;
         public float BlinkSpeed = 12f;
 
         private Transform _heroTransform;
-        private float _cooldown;
-        private bool _arming;
-        private int _layerMask;
-        private readonly Collider[] _hits = new Collider[1];
+        private IHealth _heroHealth;
+        private CharacterController _heroCC;
 
         private NavMeshAgent _agent;
-        private AgentMoveToPlayer _move; // якщо інша назва - заміниш
+        private AgentMoveToPlayer _move;
         private EnemyAnimator _anim;
-        private KamikazeConfig _cfg;
+
         private Renderer[] _renderers;
         private MaterialPropertyBlock _mpb;
 
-        public void Construct(Transform heroTransform) => _heroTransform = heroTransform;
+        private float _cooldown;
+        private bool _arming;
+        private Coroutine _routine;
+
+        public void Construct(Transform heroTransform)
+        {
+            _heroTransform = heroTransform;
+            _heroHealth = heroTransform != null ? heroTransform.GetComponentInParent<IHealth>() : null;
+
+            if (heroTransform != null)
+            {
+                _heroCC = heroTransform.GetComponent<CharacterController>();
+                if (_heroCC == null)
+                    _heroCC = heroTransform.GetComponentInParent<CharacterController>();
+            }
+        }
 
         private void Awake()
         {
-            _layerMask = 1 << LayerMask.NameToLayer("Player");
-
             _agent = GetComponent<NavMeshAgent>() ?? GetComponentInParent<NavMeshAgent>();
             _move  = GetComponent<AgentMoveToPlayer>();
             _anim  = GetComponentInParent<EnemyAnimator>() ?? GetComponentInChildren<EnemyAnimator>(true);
@@ -47,23 +56,37 @@ namespace CodeBase.Enemy
             _renderers = GetComponentsInChildren<Renderer>(true);
             _mpb = new MaterialPropertyBlock();
         }
+
         public void SetConfig(KamikazeConfig cfg)
         {
-            _cfg = cfg;
-            if (_cfg == null) return;
-
-            FuseDelay = _cfg.FuseDelay;
-            BlinkSpeed = _cfg.BlinkSpeed;
-            RadiusPadding = _cfg.RadiusPadding;
+            if (cfg == null) return;
+            FuseDelay = cfg.FuseDelay;
+            BlinkSpeed = cfg.BlinkSpeed;
+            RadiusPadding = cfg.RadiusPadding;
         }
+
+        private void OnDisable()
+        {
+            if (_routine != null)
+            {
+                StopCoroutine(_routine);
+                _routine = null;
+            }
+        }
+
         private void Update()
         {
-            if (_heroTransform == null)
+            if (_heroTransform == null || _heroHealth == null)
                 return;
 
             if (_arming)
             {
                 Blink();
+
+                // якщо вже “впритул” — вибух одразу
+                if (DistanceXZ(transform.position, _heroTransform.position) <= ExplodeDistance())
+                    Explode();
+
                 return;
             }
 
@@ -73,21 +96,62 @@ namespace CodeBase.Enemy
                 return;
             }
 
-            transform.LookAt(_heroTransform);
+            // поворот (горизонтально)
+            Vector3 dir = _heroTransform.position - transform.position;
+            dir.y = 0f;
+            if (dir.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.LookRotation(dir);
 
-            if (!_arming && Hit(out Collider hit))
+            // ✅ старт fuse на “реальній” дистанції: радіуси + EffectiveDistance
+            float dist = DistanceXZ(transform.position, _heroTransform.position);
+            if (dist <= ArmDistance())
             {
-                _arming = true;
-                StartCoroutine(FuseAndExplode(hit));
+                _routine = StartCoroutine(FuseAndExplode());
             }
-
         }
 
-        private IEnumerator FuseAndExplode(Collider hit)
+        private IEnumerator FuseAndExplode()
         {
             _arming = true;
 
-            // стоп щоб став на місці
+            // стопаємося тільки коли вже армимося (так воно не буде “оббігати”)
+            StopMove();
+
+            float t = 0f;
+            float explodeDist = ExplodeDistance();
+
+            while (t < FuseDelay)
+            {
+                t += Time.deltaTime;
+
+                // якщо вже “впритул” — бахаємо раніше
+                if (DistanceXZ(transform.position, _heroTransform.position) <= explodeDist)
+                    break;
+
+                yield return null;
+            }
+
+            Explode();
+        }
+
+        private float ArmDistance()
+        {
+            float heroR  = _heroCC != null ? _heroCC.radius : 0.5f;
+            float agentR = _agent != null ? _agent.radius : 0.3f;
+
+            // ✅ EffectiveDistance тепер реально працює як “додаткова” дистанція до героя
+            return heroR + agentR + EffectiveDistance;
+        }
+
+        private float ExplodeDistance()
+        {
+            float heroR  = _heroCC != null ? _heroCC.radius : 0.5f;
+            float agentR = _agent != null ? _agent.radius : 0.3f;
+            return heroR + agentR + RadiusPadding;
+        }
+
+        private void StopMove()
+        {
             if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
             {
                 _agent.isStopped = true;
@@ -96,39 +160,17 @@ namespace CodeBase.Enemy
 
             if (_move != null)
                 _move.enabled = false;
-
-            float t = 0f;
-            while (t < FuseDelay)
-            {
-                t += Time.deltaTime;
-                yield return null;
-            }
-            hit.GetComponentInParent<IHealth>()?.TakeDamage(Damage);
-            _anim?.PlayExplode();
-
-            enabled = false;
         }
 
-
-        private bool Hit(out Collider hit)
+        private void Explode()
         {
-            hit = null;
+            if (!enabled) return;
 
-            float heroR = _heroTransform.GetComponent<CharacterController>()?.radius ?? 0.5f;
-            float agentR = _agent != null ? _agent.radius : 0.3f;
+            _heroHealth?.TakeDamage(Damage);
+            _anim?.PlayExplode();
 
-            float explodeRadius = heroR + agentR + RadiusPadding;
-
-            Vector3 p = transform.position + Vector3.up * 0.5f;
-            int hitCount = Physics.OverlapSphereNonAlloc(p, explodeRadius, _hits, _layerMask);
-
-            if (hitCount > 0)
-            {
-                hit = _hits[0];
-                return true;
-            }
-
-            return false;
+            _cooldown = AttackColdown;
+            enabled = false;
         }
 
         private void Blink()
@@ -145,6 +187,13 @@ namespace CodeBase.Enemy
                 _mpb.SetColor("_EmissionColor", Color.red * (0.2f + 2.0f * k));
                 r.SetPropertyBlock(_mpb);
             }
+        }
+
+        private static float DistanceXZ(Vector3 a, Vector3 b)
+        {
+            a.y = 0f;
+            b.y = 0f;
+            return Vector3.Distance(a, b);
         }
     }
 }

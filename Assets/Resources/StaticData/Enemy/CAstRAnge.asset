@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85adce3d89b046e9a8cd1ad68e5d7961, type: 3}
+  m_Name: CAstRAnge
+  m_EditorClassIdentifier: 
+  MonsterTypeId: 3
+  Hp: 14
+  Damage: 10
+  MaxLoot: 0
+  EffectiveDistance: 0.5
+  Cleavage: 0.5
+  MoveSpeed: 4.91
+  PrefabReference: {fileID: 7111108049148385258, guid: 1ffffc29ed14fcc4891cc73e59c86768, type: 3}
+  AttackCooldown: 0.77
+  XpReward: 10
+  Kamikaze: {fileID: 0}
+  AreaAttack: {fileID: 11400000, guid: 0bf134de149b3624abaf2a1c1440b673, type: 2}
+  Healer: {fileID: 0}

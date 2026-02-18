@@ -14,15 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.WeaponConfig
   WeaponId: 3
   BaseStats:
-    BaseCooldown: 0.14
+    BaseCooldown: 2.51
     AttackSpeed: 1
-    Damage: 8.78
-    Range: 3
+    Damage: 0.27
+    Range: 8.33
     HitWidth: 0
     Pierce: 221
     Knockback: 0
     KnockbackChance: 0.05
     Shape: 2
+    CritChance: 0.1
+    CritMultiplier: 1
   ViewPrefab: {fileID: 0}
   ProjectilePrefab: {fileID: 0}
   ProjectileSpeed: 0

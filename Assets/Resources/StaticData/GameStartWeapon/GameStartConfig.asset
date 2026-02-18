@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68e5caa17c714b569ad4535654555d81, type: 3}
   m_Name: GameStartConfig
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.GameStartConfig
-  DefaultWeapon: 0
+  DefaultWeapon: 2
   ForceDefaultWeapon: 0
-  DefaultHeroId: 2
+  DefaultHeroId: 3

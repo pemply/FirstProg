@@ -16,7 +16,7 @@ namespace CodeBase.StaticData
         public int MaxLoot;
      
     
-        [Range(.5f,5)]
+        [Range(.1f,5)]
         public float EffectiveDistance = .5f;
     
         [Range(.5f,5)]
@@ -33,7 +33,8 @@ namespace CodeBase.StaticData
         [Range(0, 100)]
         public int XpReward = 10;
         
-        public KamikazeConfig Kamikaze; // null для не-камікадзе
-
+        public KamikazeConfig Kamikaze; 
+        public AreaAttackConfig AreaAttack;   
+        public HealerConfig Healer;
     }
 }

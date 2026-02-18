@@ -7,9 +7,9 @@
         public const string GameOverWindowPath = "GameOverWindow/GameOverWindow";
         public const string XpPickupPath = "SceneObjPref/XPPIC";
         public const string DifConfigPath = "StaticData/DifficultyConfige/DifficultyConfig";
-        public const string EliteConfigPath = "StaticData/Enemy/Elite";
+        public const string EliteConfigPath = "StaticData/Enemy/Elite/elite";
         public const string PillarSpawnerPath = "SceneObjPref/sapwnerPilar"; 
-        public const string GameStartConfig = "StaticData/GameStartWeapon"; 
+        public const string GameStartConfig = "StaticData/GameStartWeapon/GameStartConfig"; 
         public const string ChanceRarityUpg = "StaticData/ChanceRarityUpg"; 
         public const string WeaponConfig = "StaticData/Weapon"; 
         public const string UpgradeConfig = "StaticData/UpgradeConfig"; 

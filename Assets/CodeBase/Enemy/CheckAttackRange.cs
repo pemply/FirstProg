@@ -1,21 +1,20 @@
-﻿using CodeBase.Logic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace CodeBase.Enemy
 {
     public class CheckAttackRange : MonoBehaviour
     {
-        [SerializeField] private EnemyAttack _attack;
         [SerializeField] private TriggerObserver _triggerObserver;
 
+        private IEnemyAttack _attackApi;
         private int _playerLayer;
 
         private void Awake()
         {
             _playerLayer = LayerMask.NameToLayer("Player");
 
-            if (_attack == null)
-                _attack = GetComponentInParent<EnemyAttack>(true);
+            // ✅ не беремо "перший MonoBehaviour", беремо саме атаку по інтерфейсу
+            _attackApi = GetComponentInParent<IEnemyAttack>(true);
 
             if (_triggerObserver == null)
                 _triggerObserver = GetComponentInChildren<TriggerObserver>(true);
@@ -23,18 +22,18 @@ namespace CodeBase.Enemy
 
         private void OnEnable()
         {
-            if (_triggerObserver == null || _attack == null)
+            if (_triggerObserver == null || _attackApi == null)
             {
-                Debug.LogError("[CheckAttackRange] deps NULL", this);
+                Debug.LogError("[CheckAttackRange] deps NULL or no IEnemyAttack in parents", this);
                 enabled = false;
                 return;
             }
 
             _triggerObserver.TriggerEnter += OnEnter;
-            _triggerObserver.TriggerStay += OnStay;
-            _triggerObserver.TriggerExit += OnExit;
+            _triggerObserver.TriggerStay  += OnStay;
+            _triggerObserver.TriggerExit  += OnExit;
 
-            _attack.DisableAttack();
+            _attackApi.DisableAttack();
         }
 
         private void OnDisable()
@@ -42,37 +41,34 @@ namespace CodeBase.Enemy
             if (_triggerObserver == null) return;
 
             _triggerObserver.TriggerEnter -= OnEnter;
-            _triggerObserver.TriggerStay -= OnStay;
-            _triggerObserver.TriggerExit -= OnExit;
+            _triggerObserver.TriggerStay  -= OnStay;
+            _triggerObserver.TriggerExit  -= OnExit;
         }
 
         private bool IsHero(Collider c)
         {
             if (c == null) return false;
-
-            // ✅ або сам collider на Player, або root на Player
             if (c.gameObject.layer == _playerLayer) return true;
             if (c.transform.root.gameObject.layer == _playerLayer) return true;
-
             return false;
         }
 
         private void OnEnter(Collider other)
         {
             if (!IsHero(other)) return;
-            _attack.EnableAttack();
+            _attackApi.EnableAttack();
         }
 
         private void OnStay(Collider other)
         {
             if (!IsHero(other)) return;
-            _attack.EnableAttack();
+            _attackApi.EnableAttack(); // лишаємо, щоб не було "пуша"/флуктуацій
         }
 
         private void OnExit(Collider other)
         {
             if (!IsHero(other)) return;
-            _attack.DisableAttack();
+            _attackApi.DisableAttack();
         }
     }
 }

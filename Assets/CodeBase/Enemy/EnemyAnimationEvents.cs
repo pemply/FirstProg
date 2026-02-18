@@ -1,28 +1,28 @@
-﻿using CodeBase.Enemy;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class EnemyAnimationEvents : MonoBehaviour
+namespace CodeBase.Enemy
 {
-    private EnemyAttack _attack;
-
-    private void Awake()
+    // має висіти НА ТОМУ Ж GO, ДЕ ANIMATOR
+    public class EnemyAnimEvents : MonoBehaviour
     {
-        _attack = GetComponentInParent<EnemyAttack>();
-    }
+        private EnemyAttack _attack;
 
-    // викликається Animation Event
-    public void OnAttack()
-    {
-   
+        private void Awake()
+        {
+            _attack = GetComponentInParent<EnemyAttack>(true);
+            if (_attack == null)
+                Debug.LogError("[EnemyAnimEvents] EnemyAttack not found in parents", this);
+        }
 
-        _attack.OnAttack();
-    }
+        // Назву зроби такою ж як у Animation Event:
+        public void OnAttack()
+        {
+            _attack?.OnAttack();
+        }
 
-    // викликається Animation Event
-    public void OnAttackEnded()
-    {
-
-
-        _attack.OnAttackEnded();
+        public void OnAttackEnded()
+        {
+            _attack?.OnAttackEnded();
+        }
     }
 }

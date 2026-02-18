@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d72c28fdc6a7459299fe738ebdb0d5ef, type: 3}
   m_Name: elite
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.EliteConfig
-  Chance: 0.1
+  Chance: 0.104
   HpMult: 2
   DmgMult: 1.5
   XpMult: 2

@@ -16,10 +16,11 @@ MonoBehaviour:
   Hp: 6
   Damage: 2.5
   MaxLoot: 0
-  EffectiveDistance: 0.6
-  Cleavage: 1
+  EffectiveDistance: 0.24
+  Cleavage: 0.5
   MoveSpeed: 7.16
   PrefabReference: {fileID: 1310794112546573680, guid: d32edbbe6699f6d4d81e9ab68067a586, type: 3}
   AttackCooldown: 0
   XpReward: 10
   Kamikaze: {fileID: 11400000, guid: 938c3fd4ac838694189b67cc283d0d27, type: 2}
+  AreaAttack: {fileID: 0}

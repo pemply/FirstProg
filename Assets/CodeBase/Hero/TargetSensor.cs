@@ -17,29 +17,40 @@ namespace CodeBase.Logic
         {
             _collider = GetComponent<SphereCollider>();
             _collider.isTrigger = true;
+
+            if (_targetMask.value == 0)
+                _targetMask = LayerMask.GetMask("Player");
         }
 
-        public void SetRadius(float radius) =>
-            _collider.radius = radius;
+        public void SetRadius(float radius) => _collider.radius = radius;
+
+        private void CleanupTargets()
+        {
+            _targets.RemoveWhere(t =>
+            {
+                if (t == null) return true;
+
+                // ✅ головне: прибираємо Destroy() Unity-об'єкти
+                var mb = t as MonoBehaviour;
+                if (mb == null) return true;
+
+                if (t is EnemyHealth eh && eh.IsDead) return true;
+
+                return false;
+            });
+        }
 
         public bool TryGetNearest(Vector3 from, out IHealth nearest)
         {
             nearest = null;
             float bestSqr = float.PositiveInfinity;
 
-            // ✅ чистимо null і dead
-            _targets.RemoveWhere(t =>
-            {
-                if (t == null) return true;
-                if (t is EnemyHealth eh && eh.IsDead) return true;
-                return false;
-            });
+            CleanupTargets();
 
             foreach (IHealth t in _targets)
             {
                 var mb = t as MonoBehaviour;
-                if (mb == null)
-                    continue;
+                if (mb == null) continue;
 
                 float sqr = (mb.transform.position - from).sqrMagnitude;
                 if (sqr < bestSqr)
@@ -52,44 +63,12 @@ namespace CodeBase.Logic
             return nearest != null;
         }
 
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (((1 << other.gameObject.layer) & _targetMask) == 0)
-                return;
-
-            IHealth health = other.GetComponentInParent<IHealth>();
-            if (health == null) return;
-
-            if (health is EnemyHealth eh && eh.IsDead)
-                return;
-
-            _targets.Add(health);
-        }
-
-
-        private void OnTriggerExit(Collider other)
-        {
-            if (((1 << other.gameObject.layer) & _targetMask) == 0)
-                return;
-
-            IHealth health = other.GetComponentInParent<IHealth>();
-            if (health == null) return;
-
-            _targets.Remove(health);
-        }
         public bool TryGetNearestInFront(Vector3 from, Vector3 forward, float coneAngleDeg, out IHealth nearest)
         {
             nearest = null;
             float bestSqr = float.PositiveInfinity;
 
-            // чистимо null і dead (як у TryGetNearest)
-            _targets.RemoveWhere(t =>
-            {
-                if (t == null) return true;
-                if (t is EnemyHealth eh && eh.IsDead) return true;
-                return false;
-            });
+            CleanupTargets();
 
             Vector3 fwd = forward;
             fwd.y = 0f;
@@ -122,6 +101,37 @@ namespace CodeBase.Logic
             return nearest != null;
         }
 
+        private bool MaskOk(Collider other)
+        {
+            int layer = other.gameObject.layer;
+            if (((1 << layer) & _targetMask.value) != 0)
+                return true;
 
+            int rootLayer = other.transform.root.gameObject.layer;
+            return ((1 << rootLayer) & _targetMask.value) != 0;
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!MaskOk(other))
+                return;
+
+            IHealth health = other.GetComponentInParent<IHealth>();
+            if (health == null) return;
+            if (health is EnemyHealth eh && eh.IsDead) return;
+
+            _targets.Add(health);
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (!MaskOk(other))
+                return;
+
+            IHealth health = other.GetComponentInParent<IHealth>();
+            if (health == null) return;
+
+            _targets.Remove(health);
+        }
     }
 }
