@@ -1,14 +1,13 @@
 ﻿using System;
+using CodeBase.GameLogic;
 using CodeBase.Hero;
 using CodeBase.Logic;
 using CodeBase.StaticData;
 using CodeBase.Infrastructure.Factory;
-using CodeBase.UI;
 using UnityEngine;
 
 namespace CodeBase.Combat
 {
-    // Без статиків. Один інстанс = свої буфери NonAlloc.
     public sealed class WeaponAttackPhysics
     {
         private readonly Collider[] _overlapHits;
@@ -16,10 +15,11 @@ namespace CodeBase.Combat
 
         private readonly int _enemyMask;
 
-        // Хук: дозволяє зовні (Runner) модифікувати дамаг (crit, buffs, debuffs)
+        // 👇 нове
+        private IDamagePopupService _popups;
+
         public Func<float, DamageRoll> DamageModifier;
 
-        // ✅ anti-double-hit cache (на 1 атаку)
         private readonly int[] _hitHealthIds;
         private int _hitHealthIdsCount;
 
@@ -28,11 +28,9 @@ namespace CodeBase.Combat
             _overlapHits = new Collider[overlapSize];
             _rayHits = new RaycastHit[raySize];
             _enemyMask = LayerMask.GetMask("Enemy");
-
-            // тримаємо стільки ж, скільки overlapSize — цього більш ніж достатньо
             _hitHealthIds = new int[Mathf.Max(8, overlapSize)];
         }
-
+        public void SetPopups(IDamagePopupService popups) => _popups = popups;
         private void BeginAttackHitCache() => _hitHealthIdsCount = 0;
 
         private bool RegisterHit(IHealth health)
@@ -41,7 +39,7 @@ namespace CodeBase.Combat
 
             for (int i = 0; i < _hitHealthIdsCount; i++)
                 if (_hitHealthIds[i] == id)
-                    return false; // вже били цього ворога в цій атаці
+                    return false;
 
             if (_hitHealthIdsCount < _hitHealthIds.Length)
                 _hitHealthIds[_hitHealthIdsCount++] = id;
@@ -212,7 +210,6 @@ namespace CodeBase.Combat
             IHealth health = col.GetComponentInParent<IHealth>();
             if (health == null) return false;
 
-            // ✅ не дамажимо того ж ворога двічі через кілька колайдерів
             if (!RegisterHit(health))
                 return false;
 
@@ -228,8 +225,8 @@ namespace CodeBase.Combat
 
             health.TakeDamage(dmg);
 
-            Vector3 pos = col.bounds.center;
-            DamagePopupSpawner.Instance?.Spawn(pos, Mathf.RoundToInt(dmg), isCrit);
+            // ✅ замість static Instance
+            _popups?.Spawn(col.bounds.center, Mathf.RoundToInt(dmg), isCrit);
 
             return true;
         }

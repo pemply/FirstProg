@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeBase.GameLogic;
 using CodeBase.Logic;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ namespace CodeBase.Enemy
 
         public event Action HealthChanged;
         public bool IsDead => _isDead;
-
+        public void Revive() => _isDead = false;
         public float maxHealth
         {
             get => _maxHealth;
@@ -27,8 +28,6 @@ namespace CodeBase.Enemy
 
         public void TakeDamage(float damage)
         {
-            Debug.Log($"[HP] {name} before={_currentHealth} dmg={damage}");
-
             if (_isDead) return;
             if (damage <= 0f) return;
 
@@ -39,7 +38,6 @@ namespace CodeBase.Enemy
                 _currentHealth = 0f;
                 _isDead = true;
             }
-            Debug.Log($"[HP] {name} after={_currentHealth}");
 
             HealthChanged?.Invoke();
         }

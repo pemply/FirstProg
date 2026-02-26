@@ -24,3 +24,4 @@ MonoBehaviour:
   XpReward: 20
   Kamikaze: {fileID: 0}
   AreaAttack: {fileID: 0}
+  Healer: {fileID: 0}

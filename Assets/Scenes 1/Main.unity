@@ -290,7 +290,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.CameraLogic.CameraFollow
   RotationAngleX: 40
-  DistanceOffset: 15
+  DistanceOffset: 24.9
   OffsetY: 0.6
 --- !u!114 &330585549
 MonoBehaviour:

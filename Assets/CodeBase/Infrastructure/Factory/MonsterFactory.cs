@@ -1,5 +1,7 @@
 ﻿using CodeBase.Enemy;
+using CodeBase.GameLogic;
 using CodeBase.Infrastructure.AssetManagement;
+using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Logic;
 using CodeBase.StaticData;
@@ -15,11 +17,12 @@ namespace CodeBase.Infrastructure.Factory
         private readonly IStaticDataService _staticData;
         private readonly IDifficultyScalingService _difficulty;
         private readonly EliteConfig _elite;
-
-        public MonsterFactory(IStaticDataService staticData, IDifficultyScalingService difficulty)
+        private readonly IPoolService _pool;
+        public MonsterFactory(IStaticDataService staticData, IDifficultyScalingService difficulty, IPoolService pool)
         {
             _staticData = staticData;
             _difficulty = difficulty;
+            _pool = pool;
 
             _elite = Resources.Load<EliteConfig>(AssetsPath.EliteConfigPath);
         }
@@ -33,8 +36,7 @@ namespace CodeBase.Infrastructure.Factory
             Vector3 spawnPos = parent != null ? parent.position : Vector3.zero;
             Quaternion spawnRot = parent != null ? parent.rotation : Quaternion.identity;
 
-            GameObject monster = Object.Instantiate(monsterData.PrefabReference, spawnPos, spawnRot, parent);
-
+            GameObject monster = _pool.Get(monsterData.PrefabReference, spawnPos, spawnRot, parent);            monster.transform.localScale = monsterData.PrefabReference.transform.localScale;
             bool isElite = _elite != null && Random.value <= _elite.Chance;
             float hp = CalcAndApplyRewards(monsterTypeId, monsterData, monster, isElite, out float dmg);
 
@@ -122,7 +124,7 @@ namespace CodeBase.Infrastructure.Factory
                     baseAttack.enabled = false;
 
                 areaAttack.enabled = true;
-                areaAttack.Construct(heroTransform);
+                areaAttack.Construct(heroTransform, _pool);
 
                 // ✅ ВАЖЛИВО: Damage/Cooldown/Radius беремо ТІЛЬКИ з AreaAttackConfig
                 areaAttack.SetConfig(monsterData.AreaAttack);
@@ -135,9 +137,6 @@ namespace CodeBase.Infrastructure.Factory
                 // якщо не kamikaze і не areaAttack — лишаємо базову атаку активною
                 baseAttack.enabled = true;
             }
-
-            Debug.Log(
-                $"[SPAWN] staticData type={monsterData.MonsterTypeId} prefab={monsterData.PrefabReference?.name}");
 
             var healer = monster.GetComponent<EnemyHealer>();
             if (healer != null)

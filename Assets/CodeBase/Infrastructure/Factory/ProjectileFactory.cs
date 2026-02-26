@@ -1,25 +1,28 @@
 ﻿using System;
-using CodeBase.Combat;
 using CodeBase.Hero;
 using CodeBase.StaticData;
+using CodeBase.Infrastructure.Services.Pool;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace CodeBase.Infrastructure.Factory
 {
     public class ProjectileFactory
     {
         private readonly IStaticDataService _staticData;
+        private readonly IPoolService _pool;
         private readonly int _enemyMask;
 
-        // повертає DamageRoll(damage, isCrit)
         public Func<float, DamageRoll> DamageModifier;
+        private IDamagePopupService _damagePopups;
 
-        public ProjectileFactory(IStaticDataService staticData)
+        public ProjectileFactory(IStaticDataService staticData, IPoolService pool)
         {
             _staticData = staticData;
+            _pool = pool;
             _enemyMask = LayerMask.GetMask("Enemy");
         }
+
+        public void SetDamagePopups(IDamagePopupService damagePopups) => _damagePopups = damagePopups;
 
         public void Spawn(WeaponId weaponId, Vector3 origin, Vector3 dir, WeaponStats stats)
         {
@@ -27,18 +30,19 @@ namespace CodeBase.Infrastructure.Factory
             if (cfg == null || cfg.ProjectilePrefab == null)
                 return;
 
-            var go = Object.Instantiate(cfg.ProjectilePrefab, origin, Quaternion.LookRotation(dir, Vector3.up));
+            var rot = Quaternion.LookRotation(dir, Vector3.up);
+
+            // ✅ пул
+            var go = _pool.Get(cfg.ProjectilePrefab, origin, rot);
 
             var proj = go.GetComponent<Projectile>();
             if (proj == null)
                 return;
 
-            // ---- roll damage (+crit) ----
             DamageRoll roll = DamageModifier != null
                 ? DamageModifier(stats.Damage)
                 : new DamageRoll(stats.Damage, false);
 
-            // ВАЖЛИВО: прокидаємо isCrit у projectile, щоб він показав попап при попаданні
             proj.SetCrit(roll.IsCrit);
 
             proj.Construct(
@@ -46,7 +50,8 @@ namespace CodeBase.Infrastructure.Factory
                 stats.Range,
                 cfg.ProjectileSpeed,
                 _enemyMask,
-                stats.Pierce
+                stats.Pierce,
+                _damagePopups
             );
         }
     }

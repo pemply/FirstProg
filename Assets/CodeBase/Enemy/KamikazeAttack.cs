@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using CodeBase.GameLogic;
 using CodeBase.Logic;
 using CodeBase.StaticData;
 using UnityEngine;

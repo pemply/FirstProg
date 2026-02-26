@@ -38,11 +38,14 @@ namespace CodeBase.Enemy
 
         private void OnDisable()
         {
-            if (_triggerObserver == null) return;
+            if (_triggerObserver != null)
+            {
+                _triggerObserver.TriggerEnter -= OnEnter;
+                _triggerObserver.TriggerStay  -= OnStay;
+                _triggerObserver.TriggerExit  -= OnExit;
+            }
 
-            _triggerObserver.TriggerEnter -= OnEnter;
-            _triggerObserver.TriggerStay  -= OnStay;
-            _triggerObserver.TriggerExit  -= OnExit;
+            _attackApi?.DisableAttack(); // ✅ важливо
         }
 
         private bool IsHero(Collider c)

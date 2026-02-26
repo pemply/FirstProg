@@ -1,8 +1,8 @@
-﻿
-using CodeBase.Infrastructure.AssetManagement;
+﻿using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Infrastructure.Services.Progress;
 using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Infrastructure.Services.SaveLoad;
@@ -31,7 +31,7 @@ namespace CodeBase.Infrastructure.States
         {
             _services = services;
         }
-        
+
         public void Enter()
         {
             _sceneLoader.Load(Initial, onLoaded: EnterLoadLevel);
@@ -42,31 +42,40 @@ namespace CodeBase.Infrastructure.States
             _stateMachine.Enter<LoadProgressState>();
         }
 
-        
-   private void RegisterServices()
+
+        private void RegisterServices()
         {
             _services.RegisterSingle<IInputService>(InputService());
             _services.RegisterSingle<IAssets>(new AssetProvider());
 
+            // Pool існує завжди
+            _services.RegisterSingle<IPoolService>(new PoolService());
+
             // META прогрес (сейв)
             _services.RegisterSingle<IPersistentProgressService>(new PersistentProgressService());
 
-            // RUN контекст (зброя, weapon stats, xp/level, timer)
+            // RUN контекст (weapon stats/xp/timer)
             _services.RegisterSingle(new RunContextService());
 
-            // Difficulty (без RunTimerService!)
             RegisterDifficultyScaling();
-
             _services.RegisterSingle<IPillarActivationService>(new PillarActivationService());
 
+            // ✅ Спочатку static data (реєстрація + LoadAll)
             RegisterStaticData(); // IStaticDataService + Load*
 
-            // XP тепер від RunContext, не від прогресу
+            // ✅ ТЕПЕР можна prewarm (бо PoolStatic вже завантажений)
+            _services.RegisterSingle<PoolPrewarmService>(
+                new PoolPrewarmService(
+                    _services.Single<IPoolService>(),
+                    _services.Single<IStaticDataService>(),
+                    _services.Single<IStaticDataService>().PoolStatic
+                )
+            );
+
             _services.RegisterSingle<IXpService>(
                 new XpService(_services.Single<RunContextService>())
             );
 
-            // Factory тепер теж потребує RunContext (щоб аплаїти weapon stats після спавну героя)
             _services.RegisterSingle<IGameFactory>(
                 new GameFactory(
                     _services.Single<IAssets>(),
@@ -74,7 +83,8 @@ namespace CodeBase.Infrastructure.States
                     _services.Single<IXpService>(),
                     _services.Single<IDifficultyScalingService>(),
                     _services.Single<RunContextService>(),
-                    _services.Single<IPersistentProgressService>()
+                    _services.Single<IPersistentProgressService>(),
+                    _services.Single<IPoolService>()
                 )
             );
 
@@ -94,10 +104,7 @@ namespace CodeBase.Infrastructure.States
                     _services.Single<IGameFactory>()
                 )
             );
-
-            // ❌ IRunResetService / RunResetService більше не реєструємо (reset робиться в LoadLevelState через _run.Reset())
         }
-
 
         private void RegisterDifficultyScaling()
         {
@@ -106,7 +113,6 @@ namespace CodeBase.Infrastructure.States
 
             _services.RegisterSingle<IDifficultyScalingService>(difficulty);
         }
-
 
 
         private void RegisterUpgradeService()

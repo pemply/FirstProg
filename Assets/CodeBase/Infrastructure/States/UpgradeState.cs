@@ -1,8 +1,8 @@
 ﻿using System.Linq;
+using CodeBase.GameLogic.Upgrade;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Infrastructure.States.BetweenStates;
-using CodeBase.Logic.Upgrade;
 using CodeBase.StaticData;
 using CodeBase.UI;
 using UnityEngine;

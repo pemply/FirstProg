@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.AI;
 
 namespace CodeBase.Enemy
@@ -7,65 +8,93 @@ namespace CodeBase.Enemy
     {
         [Header("Animator")]
         [SerializeField] private Animator _animator;
-        [SerializeField] private NavMeshAgent agent;
+        [SerializeField] private NavMeshAgent _agent;
 
         [Header("Explosion (optional)")]
         [SerializeField] private GameObject _explosionVfxPrefab;
-        [SerializeField] private float _destroyDelayAfterDie = 1.2f;
-        [SerializeField] private float _destroyDelayAfterExplode = 0.15f;
-        
         [SerializeField] private float _explosionFallbackLife = 2f;
 
         private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
-        private static readonly int DieHash = Animator.StringToHash("Die");
-        private static readonly int ExplodeHash = Animator.StringToHash("Explode");
-        private static readonly int AttackHash = Animator.StringToHash("Attack");
+        private static readonly int DieHash      = Animator.StringToHash("Die");
+        private static readonly int ExplodeHash  = Animator.StringToHash("Explode");
+        private static readonly int AttackHash   = Animator.StringToHash("Attack");
 
         private bool _finished;
+        private HashSet<int> _paramHashes;
 
         private void Awake()
         {
             if (_animator == null)
                 _animator = GetComponentInChildren<Animator>();
 
-            if (agent == null)
-                agent = GetComponent<NavMeshAgent>();
+            if (_agent == null)
+                _agent = GetComponent<NavMeshAgent>();
+
+            CacheAnimatorParams();
+        }
+
+        private void CacheAnimatorParams()
+        {
+            if (_animator == null)
+            {
+                _paramHashes = null;
+                return;
+            }
+
+            var ps = _animator.parameters;
+            _paramHashes = new HashSet<int>(ps != null ? ps.Length : 0);
+
+            if (ps != null)
+                for (int i = 0; i < ps.Length; i++)
+                    _paramHashes.Add(ps[i].nameHash);
+        }
+
+        private bool HasParam(int hash) =>
+            _animator != null && _paramHashes != null && _paramHashes.Contains(hash);
+
+        private void SetBoolSafe(int hash, bool value)
+        {
+            if (HasParam(hash))
+                _animator.SetBool(hash, value);
+        }
+
+        private void SetTriggerSafe(int hash)
+        {
+            if (HasParam(hash))
+                _animator.SetTrigger(hash);
         }
 
         private void Update()
         {
+            
             if (_finished)
                 return;
 
             if (!IsAgentValid())
             {
-                if (_animator != null)
-                    _animator.SetBool(IsMovingHash, false);
+                SetBoolSafe(IsMovingHash, false);
                 return;
             }
 
             bool moving =
-                agent.remainingDistance > agent.stoppingDistance + 0.05f &&
-                agent.velocity.sqrMagnitude > 0.01f;
-
-            if (_animator != null)
-                _animator.SetBool(IsMovingHash, moving);
+                _agent.remainingDistance > _agent.stoppingDistance + 0.05f &&
+                _agent.velocity.sqrMagnitude > 0.01f;
+        
+            SetBoolSafe(IsMovingHash, moving);
         }
 
         private bool IsAgentValid()
         {
-            return agent != null
-                   && agent.isActiveAndEnabled
-                   && agent.gameObject.activeInHierarchy
-                   && agent.isOnNavMesh;
+            return _agent != null
+                   && _agent.isActiveAndEnabled
+                   && _agent.gameObject.activeInHierarchy
+                   && _agent.isOnNavMesh;
         }
 
         public void PlayAttack()
         {
             if (_finished) return;
-            if (_animator == null) return;
-
-            _animator.SetTrigger(AttackHash);
+            SetTriggerSafe(AttackHash);
         }
 
         public void PlayDeath()
@@ -73,19 +102,15 @@ namespace CodeBase.Enemy
             if (_finished) return;
             _finished = true;
 
-            if (_animator != null)
-                _animator.SetBool(IsMovingHash, false);
-
-            if (agent != null && agent.isActiveAndEnabled)
+            SetBoolSafe(IsMovingHash, false);
+            if (_animator != null) _animator.applyRootMotion = false;
+            if (_agent != null && _agent.isActiveAndEnabled)
             {
-                agent.isStopped = true;
-                agent.enabled = false;
+                _agent.isStopped = true;
+                _agent.enabled = false;
             }
 
-            if (_animator != null)
-                _animator.SetTrigger(DieHash);
-
-            Destroy(transform.root.gameObject, _destroyDelayAfterDie);
+            SetTriggerSafe(DieHash);
         }
 
         public void PlayExplode()
@@ -93,21 +118,37 @@ namespace CodeBase.Enemy
             if (_finished) return;
             _finished = true;
 
-            if (_animator != null)
-                _animator.SetBool(IsMovingHash, false);
+            SetBoolSafe(IsMovingHash, false);
 
-            if (agent != null && agent.isActiveAndEnabled)
+            if (_agent != null && _agent.isActiveAndEnabled)
             {
-                agent.isStopped = true;
-                agent.enabled = false;
+                _agent.isStopped = true;
+                _agent.enabled = false;
             }
 
-            if (_animator != null)
-                _animator.SetTrigger(ExplodeHash);
+            SetTriggerSafe(ExplodeHash);
 
             SpawnExplosionVfx();
+        }
 
-            Destroy(transform.root.gameObject, _destroyDelayAfterExplode);
+        public void ResetForReuse()
+        {
+            _finished = false;
+
+            if (_animator != null)
+            {
+                _animator.Rebind();
+                _animator.Update(0f);
+            }
+            if (_agent != null)
+            {
+                if (!_agent.enabled)
+                    _agent.enabled = true;
+                _animator.applyRootMotion = false;
+                _agent.isStopped = false;
+            }
+
+            SetBoolSafe(IsMovingHash, false);
         }
 
         private void SpawnExplosionVfx()
@@ -117,9 +158,7 @@ namespace CodeBase.Enemy
 
             GameObject vfx = Instantiate(_explosionVfxPrefab, transform.position, Quaternion.identity);
 
-            // порахувати реальний лайфтайм по всіх particle системах
             float life = GetVfxLifetime(vfx);
-
             if (life <= 0.01f)
                 life = _explosionFallbackLife;
 
@@ -143,13 +182,11 @@ namespace CodeBase.Enemy
                 float startDelay = GetMax(main.startDelay);
                 float startLifetime = GetMax(main.startLifetime);
 
-                // duration + delay + lifetime = приблизний час “життя”
                 float life = startDelay + main.duration + startLifetime;
                 if (life > maxLife)
                     maxLife = life;
             }
 
-            // safety буфер щоб не обрізало останні частинки
             if (maxLife > 0f)
                 maxLife += 0.25f;
 
@@ -168,7 +205,6 @@ namespace CodeBase.Enemy
 
                 case ParticleSystemCurveMode.Curve:
                 case ParticleSystemCurveMode.TwoCurves:
-                    // приблизно, беремо constantMax як верхню оцінку
                     return curve.constantMax;
 
                 default:

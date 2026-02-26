@@ -17,22 +17,26 @@ namespace CodeBase.Infrastructure.Services.RunTime
         private RunContextService _run;
         private ProjectileFactory _projectiles;
         private IStaticDataService _staticData;
-        
-        public void Construct(RunContextService run, ProjectileFactory projectiles, CodeBase.Data.Stats heroStats)
+        private IDamagePopupService _damagePopups;
+        public void Construct(RunContextService run, ProjectileFactory projectiles, IDamagePopupService popups, Stats heroStats)
         {
-            Construct(run, projectiles, null, heroStats);
+            Construct(run, projectiles, popups, null, heroStats);
         }
 
-        public void Construct(RunContextService run, ProjectileFactory projectiles, IStaticDataService staticData, CodeBase.Data.Stats heroStats)
+        public void Construct(
+            RunContextService run,
+            ProjectileFactory projectiles,
+            IDamagePopupService popups,
+            IStaticDataService staticData,
+            Stats heroStats)
         {
-            Debug.Log($"[APPLIER Construct] run={(run != null)} proj={(projectiles != null)} staticData={(staticData != null)} heroStats={(heroStats != null)}");
-
             _run = run;
             _projectiles = projectiles;
+            _damagePopups = popups;
             _staticData = staticData;
             _heroStats = heroStats;
 
-            _weaponVisualSpawner = GetComponentInChildren<Hero.WeaponVisualSpawner>(true);
+            _weaponVisualSpawner = GetComponentInChildren<WeaponVisualSpawner>(true);
 
             _slots = new IWeaponStatsApplier[_slotAppliersMb.Length];
             for (int i = 0; i < _slotAppliersMb.Length; i++)
@@ -114,6 +118,9 @@ namespace CodeBase.Infrastructure.Services.RunTime
                 if (_slotAppliersMb[i] is IProjectileFactoryReceiver projRec)
                     projRec.Construct(_projectiles);
 
+                if (_slotAppliersMb[i] is WeaponAttackRunner runner)
+                    runner.Construct(_damagePopups);
+
                 if (_staticData != null && _slotAppliersMb[i] is IWeaponConfigReceiver cfgRec)
                     cfgRec.SetConfig(_staticData.GetWeapon(id));
 
@@ -157,6 +164,7 @@ namespace CodeBase.Infrastructure.Services.RunTime
             // ін’єкції, яких тобі бракує
             primary.SetWeaponId(id0);
             primary.Construct(_projectiles);
+            primary.Construct(_damagePopups);
 
             if (_staticData != null)
                 primary.SetConfig(_staticData.GetWeapon(id0));

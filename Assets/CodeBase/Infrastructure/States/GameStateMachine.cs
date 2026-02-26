@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.GameLogic;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Infrastructure.Services.Progress;
 using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Infrastructure.Services.SaveLoad;
@@ -40,7 +42,10 @@ namespace CodeBase.Infrastructure.States
                             services.Single<IGameFactory>(),
                             services.Single<IPersistentProgressService>(),
                             services.Single<RunContextService>(),
-                            services.Single<IStaticDataService>()),
+                            services.Single<IStaticDataService>(),
+                            services.Single<IPoolService>(),
+                           services.Single<PoolPrewarmService>()
+                        ),
                 [typeof(GameLoopState)] =  new GameLoopState(this,services.Single<IGameFactory>(), _runner,services.Single<IXpService>(), services.Single<RunContextService>(), services.Single<IDifficultyScalingService>() ),
                 [typeof(UpgradeState)] =  new UpgradeState(this, services.Single<IUpgradeService>(),services.Single<IStaticDataService>(), services.Single<RunContextService>(), services.Single<IPersistentProgressService>()),
                 [typeof(GameOverState)] =  new GameOverState(this, services.Single<IGameFactory>()),

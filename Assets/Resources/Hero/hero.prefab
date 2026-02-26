@@ -557,7 +557,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Infrastructure.Services.RunTime.WeaponStatsApplier
   _slotAppliersMb:
-  - {fileID: 879945446488004842}
+  - {fileID: 0}
   - {fileID: 7585943010974131341}
   - {fileID: 1572660663383031409}
   - {fileID: 8680060247615969580}
@@ -885,7 +885,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4854681582325162224}
-  - component: {fileID: 879945446488004842}
   - component: {fileID: 3111868008467309665}
   m_Layer: 3
   m_Name: WeaponPrimary_Attack
@@ -910,22 +909,6 @@ Transform:
   - {fileID: 7460831115012418309}
   m_Father: {fileID: 2245312051992444596}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &879945446488004842
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7956537109227115216}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 888883b62ce341a1904f73ee2c535232, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Hero.HeroAttack
-  _characterController: {fileID: 1244342044703085411}
-  _heroAnimator: {fileID: 8310355349624250904}
-  _sensor: {fileID: 2170665479738184855}
-  _fx: {fileID: 0}
 --- !u!114 &3111868008467309665
 MonoBehaviour:
   m_ObjectHideFlags: 0

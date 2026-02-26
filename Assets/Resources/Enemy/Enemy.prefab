@@ -102,11 +102,11 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.47
+  m_Radius: 0.66
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &1074857354686554006
 Rigidbody:
@@ -356,6 +356,7 @@ GameObject:
   - component: {fileID: 2453179040269729997}
   - component: {fileID: 6414975490319716142}
   - component: {fileID: 2359311381385230590}
+  - component: {fileID: 446096298511430586}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Untagged
@@ -558,6 +559,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _healColor: {r: 0, g: 1, b: 0, a: 1}
   _time: 0.15
+--- !u!114 &446096298511430586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9212566456173030763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc678174d4af4d698ce8363a7d4960f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &6723468375297860596
 PrefabInstance:
   m_ObjectHideFlags: 0

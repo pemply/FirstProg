@@ -1,5 +1,5 @@
-﻿using CodeBase.Infrastructure.Services;
-using CodeBase.Logic.Upgrade;
+﻿using CodeBase.GameLogic.Upgrade;
+using CodeBase.Infrastructure.Services;
 
 namespace CodeBase.StaticData
 {

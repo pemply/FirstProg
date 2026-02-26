@@ -1,20 +1,23 @@
 ﻿using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace CodeBase.Editor
 {
-    public static class FindMissingScripts
+    public static partial class FindMissingScripts
     {
-        [MenuItem("Tools/Find Missing Scripts (All Objects)")]
-        public static void FindMissingAllObjects()
+        [MenuItem("Tools/Find Missing Scripts (DontDestroyOnLoad)")]
+        public static void FindMissingInDontDestroyOnLoad()
         {
-            var objects = Resources.FindObjectsOfTypeAll<GameObject>();
             int count = 0;
+            var all = Resources.FindObjectsOfTypeAll<GameObject>();
 
-            foreach (var go in objects)
+            foreach (var go in all)
             {
-                // відсіємо “ассети” (префаби в Project) — це метод про сцену/плеймод
-                if (EditorUtility.IsPersistent(go))
+                if (!go.scene.IsValid())
+                    continue;
+
+                if (go.scene.name != "DontDestroyOnLoad")
                     continue;
 
                 var components = go.GetComponents<Component>();
@@ -23,53 +26,46 @@ namespace CodeBase.Editor
                     if (components[i] == null)
                     {
                         count++;
-                        Debug.LogError($"Missing script on GameObject: {GetHierarchyPath(go)}", go);
+                        Debug.LogError($"Missing script in DDoL: {(go)}", go);
+                        break;
                     }
                 }
             }
 
-            Debug.Log($"Done. Missing scripts found: {count}");
-        }
-
-        private static string GetHierarchyPath(GameObject go)
-        {
-            string path = go.name;
-            Transform t = go.transform;
-            while (t.parent != null)
-            {
-                t = t.parent;
-                path = t.name + "/" + path;
-            }
-            return path;
+            Debug.Log($"Done. Missing scripts in DontDestroyOnLoad: {count}");
         }
     }
-}
-public static partial class FindMissingScripts
-{
-    [MenuItem("Tools/Find Missing Scripts In Prefabs (Project)")]
-    public static void FindMissingInPrefabs()
+
+    public static partial class FindMissingScripts
     {
-        string[] guids = AssetDatabase.FindAssets("t:Prefab");
-        int count = 0;
-
-        foreach (string guid in guids)
+        [MenuItem("Tools/Find Missing Scripts In Scenes (Project)")]
+        public static void FindMissingInScenes()
         {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (prefab == null) continue;
+            var setup = EditorSceneManager.GetSceneManagerSetup();
 
-            var components = prefab.GetComponentsInChildren<Component>(true);
-            foreach (var c in components)
+            string[] guids = AssetDatabase.FindAssets("t:Scene");
+            int count = 0;
+
+            foreach (string guid in guids)
             {
-                if (c == null)
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+
+                int sceneMissing = 0;
+                foreach (var root in scene.GetRootGameObjects())
+                    sceneMissing += GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(root);
+
+                if (sceneMissing > 0)
                 {
-                    count++;
-                    Debug.LogError($"Missing script in Prefab: {path}", prefab);
-                    break; // достатньо 1 разу підсвітити префаб
+                    count += sceneMissing;
+                    Debug.LogError($"Missing script in Scene: {path} (missing: {sceneMissing})");
                 }
             }
-        }
 
-        Debug.Log($"Done. Prefabs with missing scripts: {count}");
+            EditorSceneManager.RestoreSceneManagerSetup(setup);
+
+            Debug.Log($"Done. Total missing scripts in scenes: {count}");
+        }
     }
 }
+

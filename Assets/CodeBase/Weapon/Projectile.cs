@@ -1,12 +1,17 @@
 ﻿using System.Collections.Generic;
+using CodeBase.GameLogic;
+using CodeBase.GameLogic.Pool;
 using CodeBase.Logic;
-using CodeBase.UI;
 using UnityEngine;
 
-public class Projectile : MonoBehaviour
+public class Projectile : MonoBehaviour, IPoolable
 {
     [SerializeField] private float _radius = 0.15f;
     [SerializeField] private float _maxLifeTime = 5f;
+    
+    private static int _alive;
+    private static int _returned;
+    private static int _destroyed;
 
     private float _damage;
     private float _speed;
@@ -15,13 +20,61 @@ public class Projectile : MonoBehaviour
     private float _timeLeft;
 
     private bool _isCrit;
+    private bool _despawned;
 
-    // ✅ щоб не дамажити того ж ворога двічі (через кілька колайдерів/кадрів)
     private readonly HashSet<int> _hitHealthIds = new HashSet<int>(16);
+
+    private PooledObject _pooled;
+    private IDamagePopupService _damagePopups;
+
+    private TrailRenderer _trail;
+    private ParticleSystem _ps;
+    private void OnEnable()
+    {
+        _alive++;
+         Debug.Log($"[PROJ] alive={_alive}");
+    }
+
+    private void OnDisable()
+    {
+        _alive--;
+         Debug.Log($"[PROJ] alive={_alive}");
+    }
+
+    private void OnDestroy()
+    {
+        _destroyed++;
+         Debug.Log($"[PROJ] destroyed={_destroyed}");
+    }
+    private void Awake()
+    {
+        _trail = GetComponentInChildren<TrailRenderer>(true);
+        _ps = GetComponentInChildren<ParticleSystem>(true);
+    }
+
+    public void OnSpawned()
+    {
+        _despawned = false;
+
+        // ресет візуалів (якщо є)
+        if (_trail != null) { _trail.Clear(); _trail.emitting = true; }
+        if (_ps != null) { _ps.Clear(true); _ps.Play(true); }
+    }
+
+    public void OnDespawned()
+    {
+        // щоб не тягнути старе
+        _damagePopups = null;
+        _hitHealthIds.Clear();
+        _returned++;
+        // Debug.Log($"[PROJ] returned={_returned} alive={_alive}");
+        if (_trail != null) _trail.emitting = false;
+        if (_ps != null) _ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+    }
 
     public void SetCrit(bool isCrit) => _isCrit = isCrit;
 
-    public void Construct(float damage, float range, float speed, int enemyMask, int pierce)
+    public void Construct(float damage, float range, float speed, int enemyMask, int pierce, IDamagePopupService damagePopups)
     {
         _damage = damage;
         _speed = Mathf.Max(0.01f, speed);
@@ -29,8 +82,9 @@ public class Projectile : MonoBehaviour
         _pierceLeft = Mathf.Max(0, pierce);
 
         _timeLeft = Mathf.Min(_maxLifeTime, Mathf.Max(0.2f, range / _speed));
-
         _hitHealthIds.Clear();
+
+        _damagePopups = damagePopups;
     }
 
     private void Update()
@@ -39,7 +93,7 @@ public class Projectile : MonoBehaviour
         _timeLeft -= dt;
         if (_timeLeft <= 0f)
         {
-            Destroy(gameObject);
+            Despawn();
             return;
         }
 
@@ -57,10 +111,8 @@ public class Projectile : MonoBehaviour
                 {
                     int id = ((Component)health).GetInstanceID();
 
-                    // ✅ вже били цього ворога цим снарядом — пропускаємо
                     if (_hitHealthIds.Contains(id))
                     {
-                        // трохи проштовхнемось, щоб не застрягти в тому ж колайдері
                         transform.position = hit.point + transform.forward * 0.05f;
                         return;
                     }
@@ -68,9 +120,7 @@ public class Projectile : MonoBehaviour
                     _hitHealthIds.Add(id);
 
                     health.TakeDamage(_damage);
-
-                    DamagePopupSpawner.Instance?.Spawn(hit.point, Mathf.RoundToInt(_damage), _isCrit);
-
+                    _damagePopups?.Spawn(hit.point, Mathf.RoundToInt(_damage), _isCrit);
 
                     if (_pierceLeft > 0)
                     {
@@ -79,12 +129,26 @@ public class Projectile : MonoBehaviour
                         return;
                     }
 
-                    Destroy(gameObject);
+                    Despawn();
                     return;
                 }
             }
         }
 
         transform.position = to;
+    }
+
+    private void Despawn()
+    {
+        if (_despawned) return;
+        _despawned = true;
+
+        if (_pooled == null)
+            _pooled = GetComponent<PooledObject>();
+
+        Debug.Log($"[PROJ] Despawn {name} pooled={(_pooled!=null)} alive={_alive} returned={_returned} destroyed={_destroyed}");
+
+        if (_pooled != null) _pooled.Release();
+        else Destroy(gameObject);
     }
 }

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
+using CodeBase.GameLogic.Upgrade;
 using CodeBase.Infrastructure.Services;
-using CodeBase.Logic.Upgrade;
 using CodeBase.StaticData.CodeBase.StaticData;
 
 namespace CodeBase.StaticData
@@ -23,7 +23,7 @@ namespace CodeBase.StaticData
 
         HeroConfig ForHero(HeroId id);
         IReadOnlyList<HeroConfig> AllHeroes();
-
+        PoolStaticData PoolStatic { get; }
         void LoadAll();
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using CodeBase.Logic.Upgrade;
+using CodeBase.GameLogic.Upgrade;
 using CodeBase.StaticData;
 using CodeBase.StaticData.CodeBase.StaticData;
 

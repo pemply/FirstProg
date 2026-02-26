@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using CodeBase.Enemy;
+using CodeBase.GameLogic;
 using CodeBase.Logic;
 using UnityEngine;
 

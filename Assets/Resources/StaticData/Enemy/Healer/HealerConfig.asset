@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a426fbcda6ec4e90929806972e36139f, type: 3}
   m_Name: HealerConfig
   m_EditorClassIdentifier: 
-  Cooldown: 2
-  HealAmount: 8
+  Cooldown: 0.4
+  HealAmount: 1
   HealRadius: 10
   BehindDistance: 4
   KeepFromHero: 10
   HealFxPrefab: {fileID: 187142, guid: 2007cffb629cd3e46bda243a0c757a95, type: 3}
-  FxLifetime: 1
+  FxLifetime: 4.22
   FxOffset: {x: 0, y: 1.5, z: 0}

@@ -1,7 +1,8 @@
-﻿using TMPro;
+﻿using CodeBase.GameLogic.Pool;
+using TMPro;
 using UnityEngine;
 
-public class DamagePopupView : MonoBehaviour
+public class DamagePopupView : MonoBehaviour, IPoolable
 {
     [SerializeField] private TMP_Text _text;
 
@@ -12,8 +13,8 @@ public class DamagePopupView : MonoBehaviour
     [Header("Crit")]
     [SerializeField] private float _critLife = 1.0f;
     [SerializeField] private float _critFloatSpeed = 95f;
-    [SerializeField] private float _critPopInTime = 0.10f;   // надувся
-    [SerializeField] private float _critPopOutTime = 0.18f;  // відскок назад
+    [SerializeField] private float _critPopInTime = 0.10f;
+    [SerializeField] private float _critPopOutTime = 0.18f;
     [SerializeField] private float _critStartScale = 0.65f;
     [SerializeField] private float _critPeakScale = 1.35f;
 
@@ -24,25 +25,40 @@ public class DamagePopupView : MonoBehaviour
     private bool _isCrit;
     private Vector3 _baseScale;
 
+    private PooledObject _pooled;
+
+    // 🔥 важливо: поки не Show() — Update нічого не робить
+    private bool _armed;
+
     private void Awake()
     {
         _rt = transform as RectTransform;
         if (_text == null) _text = GetComponent<TMP_Text>();
+        _baseScale = _rt != null ? _rt.localScale : Vector3.one;
+    }
 
-        _baseScale = _rt.localScale;
+    private void EnsurePooled()
+    {
+        if (_pooled == null)
+            _pooled = GetComponentInParent<PooledObject>();
     }
 
     public void Show(Vector3 screenPos, int damage, bool isCrit)
     {
-        _rt.position = screenPos;
-        _isCrit = isCrit;
+        EnsurePooled();
 
+        if (_rt == null) _rt = transform as RectTransform;
+        _rt.position = screenPos;
+
+        _isCrit = isCrit;
+        _t = 0f;
+
+        // 🔥 ставимо life/speed ДО того, як armed стане true
         if (isCrit)
         {
             _life = _critLife;
             _floatSpeed = _critFloatSpeed;
 
-            // 🔥 CRIT: pop + glitchy shake + золото
             _text.text =
                 $"<size=220%><color=#FF2E2E>" +
                 $"<incr a=1.25 f=1.8 w=0.55><shake a=2.2 d=0.33 w=0.7>CRIT!</shake></incr>" +
@@ -51,7 +67,6 @@ public class DamagePopupView : MonoBehaviour
                 $"<incr a=1.18 f=2.2 w=0.70><shake a=1.6 d=0.28 w=0.9>{damage}</shake></incr>" +
                 $"</color></size>";
 
-            // стартовий “здутий” scale + далі твій pop-скейл в Update()
             _rt.localScale = _baseScale * _critStartScale;
         }
         else
@@ -59,7 +74,6 @@ public class DamagePopupView : MonoBehaviour
             _life = _normalLife;
             _floatSpeed = _normalFloatSpeed;
 
-            // ✅ NORMAL: приємний pop + легка хвиля по цифрах (дуже subtle)
             _text.text =
                 $"<size=130%><color=#FFFFFF>" +
                 $"<incr a=1.08 f=2.6 w=0.35><wave a=0.35 f=1.7 w=0.35>{damage}</wave></incr>" +
@@ -67,31 +81,35 @@ public class DamagePopupView : MonoBehaviour
 
             _rt.localScale = _baseScale;
         }
-    }
 
+        ResetVisualState();
+
+        // 🔥 тепер можна апдейтитись
+        _armed = true;
+    }
 
     private void Update()
     {
+        if (!_armed)
+            return;
+
         _t += Time.deltaTime;
 
-        // рух вгору
-        _rt.position += Vector3.up * _floatSpeed * Time.deltaTime;
+        if (_rt != null)
+            _rt.position += Vector3.up * _floatSpeed * Time.deltaTime;
 
         if (_isCrit)
         {
-            // ---- POP SCALE: in -> out -> settle ----
             float scaleK;
 
             if (_t < _critPopInTime)
             {
                 float a = _t / Mathf.Max(0.0001f, _critPopInTime);
-                // easeOutBack-ish
                 scaleK = Mathf.Lerp(_critStartScale, _critPeakScale, EaseOutCubic(a));
             }
             else if (_t < _critPopInTime + _critPopOutTime)
             {
                 float a = (_t - _critPopInTime) / Mathf.Max(0.0001f, _critPopOutTime);
-                // повертаємось до 1.0
                 scaleK = Mathf.Lerp(_critPeakScale, 1.0f, EaseOutCubic(a));
             }
             else
@@ -99,13 +117,13 @@ public class DamagePopupView : MonoBehaviour
                 scaleK = 1.0f;
             }
 
-            _rt.localScale = _baseScale * scaleK;
+            if (_rt != null)
+                _rt.localScale = _baseScale * scaleK;
 
-            // ---- Fade out в кінці ----
             float tail = 0.20f;
             if (_t > _life - tail)
             {
-                float a = Mathf.InverseLerp(_life, _life - tail, _t); // 1..0
+                float a = Mathf.InverseLerp(_life, _life - tail, _t);
                 var c = _text.color;
                 c.a = Mathf.Clamp01(a);
                 _text.color = c;
@@ -113,7 +131,49 @@ public class DamagePopupView : MonoBehaviour
         }
 
         if (_t >= _life)
-            Destroy(gameObject);
+            Despawn();
+    }
+
+    private void Despawn()
+    {
+        _armed = false;
+
+        EnsurePooled();
+        if (_pooled != null) _pooled.Release();
+        else Destroy(gameObject);
+    }
+
+    public void OnSpawned()
+    {
+        EnsurePooled();
+
+        _armed = false;   // 🔥 поки Show не викликали — не апдейтимось
+        _t = 0f;
+
+        // поставимо дефолт, щоб не було life=0
+        _life = _normalLife;
+        _floatSpeed = _normalFloatSpeed;
+
+        ResetVisualState();
+    }
+
+    public void OnDespawned()
+    {
+        _armed = false;
+        _t = 0f;
+    }
+
+    private void ResetVisualState()
+    {
+        if (_text != null)
+        {
+            var c = _text.color;
+            c.a = 1f;
+            _text.color = c;
+        }
+
+        if (!_isCrit && _rt != null)
+            _rt.localScale = _baseScale;
     }
 
     private static float EaseOutCubic(float t)

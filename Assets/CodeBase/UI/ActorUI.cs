@@ -1,4 +1,5 @@
-﻿using CodeBase.Logic;
+﻿using CodeBase.GameLogic;
+using CodeBase.Logic;
 using UnityEngine;
 
 namespace CodeBase.UI

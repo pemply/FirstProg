@@ -1,4 +1,7 @@
 ﻿using System.Collections;
+using CodeBase.GameLogic;
+using CodeBase.GameLogic.Pool;
+using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Logic;
 using CodeBase.StaticData;
 using UnityEngine;
@@ -19,13 +22,12 @@ namespace CodeBase.Enemy
         public GameObject TelegraphPrefab;
 
         [Header("Range")]
-        public float SensorRadius = 8f; // з конфига (коли дозволено кастити)
+        public float SensorRadius = 8f;
 
         private float _forwardLead = 1.5f;
         private float _sideOffset = 1f;
         private float _randomJitter = 0.5f;
         private float _minDistanceFromHeroMult = 0.8f;
-
 
         private Transform _hero;
         private IHealth _heroHealth;
@@ -35,13 +37,18 @@ namespace CodeBase.Enemy
         private bool _canAttack;
 
         private Coroutine _castRoutine;
+
+        // ✅ pool
+        private IPoolService _pool;
         private GameObject _telegraphInstance;
+        private PooledObject _telegraphPooled;
 
         public bool IsAttacking => _casting;
 
-        public void Construct(Transform hero)
+        public void Construct(Transform hero, IPoolService pool)
         {
             _hero = hero;
+            _pool = pool;
             _heroHealth = hero != null ? hero.GetComponentInParent<IHealth>() : null;
         }
 
@@ -56,13 +63,11 @@ namespace CodeBase.Enemy
             TelegraphPrefab = cfg.TelegraphPrefab;
             SensorRadius = cfg.SensorRadius;
 
-            // 🔥 targeting
             _forwardLead = cfg.ForwardLead;
             _sideOffset = cfg.SideOffset;
             _randomJitter = cfg.RandomJitter;
             _minDistanceFromHeroMult = cfg.MinDistanceFromHeroMult;
         }
-
 
         private void Update()
         {
@@ -76,7 +81,6 @@ namespace CodeBase.Enemy
                 return;
             }
 
-            // герой має бути в SensorRadius (XZ)
             Vector3 a = transform.position; a.y = 0f;
             Vector3 b = _hero.position;     b.y = 0f;
             float dist = Vector3.Distance(a, b);
@@ -92,30 +96,35 @@ namespace CodeBase.Enemy
             _casting = true;
             _cd = Cooldown;
 
-            // ✅ фіксуємо точку удару на землі, але НЕ прямо під героєм
             Vector3 target = CalcTargetPoint();
             target.y = transform.position.y;
 
             SpawnTelegraph(target);
 
-            float time = 0f;
-            while (time < Windup)
+            try
             {
-                time += Time.deltaTime;
-                yield return null;
+                float time = 0f;
+                while (time < Windup)
+                {
+                    time += Time.deltaTime;
+                    yield return null;
+                }
+
+                if (_hero != null && _heroHealth != null)
+                {
+                    Vector3 heroPos = _hero.position;
+                    heroPos.y = target.y;
+
+                    if ((heroPos - target).sqrMagnitude <= AoERadius * AoERadius)
+                        _heroHealth.TakeDamage(Damage);
+                }
             }
-
-            DespawnTelegraph();
-
-            // дамаг якщо герой залишився в зоні (XZ)
-            Vector3 heroPos = _hero.position;
-            heroPos.y = target.y;
-
-            if ((heroPos - target).sqrMagnitude <= AoERadius * AoERadius)
-                _heroHealth.TakeDamage(Damage);
-
-            _casting = false;
-            _castRoutine = null;
+            finally
+            {
+                DespawnTelegraph();   // ✅ гарантовано
+                _casting = false;
+                _castRoutine = null;
+            }
         }
 
         private Vector3 CalcTargetPoint()
@@ -123,7 +132,6 @@ namespace CodeBase.Enemy
             Vector3 heroPos = _hero.position;
             Vector3 heroXZ = new Vector3(heroPos.x, 0f, heroPos.z);
 
-            // "вперед" героя (мінімальний варіант, працює завжди)
             Vector3 forward = _hero.forward;
             forward.y = 0f;
             if (forward.sqrMagnitude < 0.0001f)
@@ -131,20 +139,17 @@ namespace CodeBase.Enemy
             else
                 forward.Normalize();
 
-            // right (перпендикуляр)
             Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
 
             float sideSign = Random.value < 0.5f ? -1f : 1f;
 
             Vector3 offset = forward * _forwardLead + right * (_sideOffset * sideSign);
 
-            // невеликий шум
             Vector2 j = Random.insideUnitCircle * _randomJitter;
             offset += right * j.x + forward * j.y;
 
             Vector3 target = heroPos + offset;
 
-            // --- clamp target within SensorRadius from enemy (XZ) ---
             Vector3 enemyXZ = transform.position; enemyXZ.y = 0f;
             Vector3 targetXZ = target; targetXZ.y = 0f;
 
@@ -154,13 +159,11 @@ namespace CodeBase.Enemy
             if (dist > SensorRadius && dist > 0.0001f)
                 targetXZ = enemyXZ + toTarget / dist * SensorRadius;
 
-            // --- ensure not too close to hero (avoid "under feet") ---
             float minDist = Mathf.Max(0.25f, AoERadius * _minDistanceFromHeroMult);
             Vector3 heroToTarget = targetXZ - heroXZ;
 
             if (heroToTarget.magnitude < minDist)
             {
-                // відсунемо точку від героя (в напрямку від ворога до героя, або назад по forward)
                 Vector3 pushDir = (heroXZ - enemyXZ);
                 if (pushDir.sqrMagnitude < 0.0001f)
                     pushDir = -forward;
@@ -177,25 +180,35 @@ namespace CodeBase.Enemy
 
         private void SpawnTelegraph(Vector3 target)
         {
-            if (TelegraphPrefab == null)
-                return;
+            if (TelegraphPrefab == null) return;
 
             DespawnTelegraph();
 
-            _telegraphInstance = Instantiate(TelegraphPrefab, target, Quaternion.identity);
+            // ✅ якщо пула ще нема — fallback на Instantiate
+            _telegraphInstance = _pool != null
+                ? _pool.Get(TelegraphPrefab, target, Quaternion.identity)
+                : Instantiate(TelegraphPrefab, target, Quaternion.identity);
 
-            var tele = _telegraphInstance.GetComponent<AoETelegraph>();
+            _telegraphPooled = _telegraphInstance != null
+                ? _telegraphInstance.GetComponent<PooledObject>()
+                : null;
+
+            var tele = _telegraphInstance != null ? _telegraphInstance.GetComponent<AoETelegraph>() : null;
             if (tele != null)
                 tele.Setup(AoERadius);
         }
 
         private void DespawnTelegraph()
         {
-            if (_telegraphInstance != null)
-            {
+            if (_telegraphInstance == null) return;
+
+            if (_telegraphPooled != null)
+                _telegraphPooled.Release();
+            else
                 Destroy(_telegraphInstance);
-                _telegraphInstance = null;
-            }
+
+            _telegraphInstance = null;
+            _telegraphPooled = null;
         }
 
         public void EnableAttack() => _canAttack = true;

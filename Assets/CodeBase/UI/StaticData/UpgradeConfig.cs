@@ -1,5 +1,5 @@
 ﻿using System;
-using CodeBase.Logic.Upgrade;
+using CodeBase.GameLogic.Upgrade;
 using UnityEngine;
 
 namespace CodeBase.StaticData

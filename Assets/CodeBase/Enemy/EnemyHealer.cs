@@ -1,4 +1,5 @@
-﻿using CodeBase.Logic;
+﻿using CodeBase.GameLogic;
+using CodeBase.Logic;
 using CodeBase.StaticData;
 using UnityEngine;
 using UnityEngine.AI;
@@ -58,8 +59,18 @@ namespace CodeBase.Enemy
 
         private void Update()
         {
-            if (_hero == null) return;
+            if (GetComponent<EnemyHealth>().IsDead)
+            {
+                if (_agent != null && _agent.enabled)
+                {
+                    _agent.isStopped = true;
+                    _agent.ResetPath();
+                    _agent.velocity = Vector3.zero;
+                }
+                return;
+            }
 
+            if (_hero == null) return;
             // 1) ретаргет раз в 0.25с (щоб не дергалось)
             _retargetTimer -= Time.deltaTime;
             if (_retargetTimer <= 0f)
@@ -101,6 +112,8 @@ namespace CodeBase.Enemy
             PlayHealFx(_currentTarget);
 
             _cd = _cooldown;
+            if (GetComponent<EnemyHealth>().IsDead)
+                Debug.LogError("HEALER MOVES WHILE DEAD", this);
         }
 
         private IHealth FindMostDamagedAlly(bool ignoreHealers)

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b2c452c8cae457198f4916d2c2e9f58, type: 3}
   m_Name: SniperHero
   m_EditorClassIdentifier: 
-  CritChanceBonusPercent: 50
+  CritChanceBonusPercent: 1
   CritMultBonus: 0
   Id: 3
   Title: 

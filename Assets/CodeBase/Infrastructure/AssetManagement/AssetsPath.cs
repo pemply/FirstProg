@@ -16,5 +16,6 @@
         public const string HeroesConfig = "StaticData/Heroes"; 
         public const string EnemyConfig = "StaticData/Enemy"; 
         public const string WaveListConfig = "StaticData/Waves/WaveSequence/Wave"; 
+        public const string PoolStaticDataPath  = "StaticData/PoolPrewarmer/PoolStaticData"; 
     }
 }

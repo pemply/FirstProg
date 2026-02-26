@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeBase.Data;
+using CodeBase.GameLogic;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Logic;

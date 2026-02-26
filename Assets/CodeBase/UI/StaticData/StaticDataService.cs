@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using CodeBase.GameLogic.Upgrade;
 using CodeBase.Infrastructure.AssetManagement;
-using CodeBase.Logic.Upgrade;
 using CodeBase.StaticData.CodeBase.StaticData;
 using UnityEngine;
 
@@ -19,6 +19,8 @@ namespace CodeBase.StaticData
         private UpgradeRarityChances _rarityChances;
         public UpgradeRarityChances RarityChances => _rarityChances;
         private Dictionary<MonsterTypeId, KamikazeConfig > _kamikaze;
+        private PoolStaticData _poolStatic;
+        public PoolStaticData PoolStatic => _poolStatic;
 
         public void LoadMonsters()
         {
@@ -83,6 +85,8 @@ namespace CodeBase.StaticData
         public IReadOnlyList<HeroConfig> AllHeroes() =>
             _heroes?.Values.ToList() ?? new List<HeroConfig>();
 
+
+
         public HeroConfig GetDefaultHero()
         {
             if (_heroes == null || _heroes.Count == 0)
@@ -100,7 +104,7 @@ namespace CodeBase.StaticData
             LoadMonsters();
             LoadUpgrades();
             LoadHeroes();
-    
+            _poolStatic = Resources.Load<PoolStaticData>(AssetsPath.PoolStaticDataPath);
 
         }
     }

@@ -25,7 +25,7 @@ namespace CodeBase.Hero
         [SerializeField] private HeroAnimator _heroAnimator;
         [SerializeField] private TargetSensor _sensor;
         [SerializeField] private WeaponFxPlayer _fx;
-
+        private IDamagePopupService _popups;
         private WeaponStats _weaponStats;
         private bool _hasStats;
 
@@ -51,7 +51,11 @@ namespace CodeBase.Hero
 
             _isAnimationDriver = _isPrimarySlot;
         }
-
+        public void Construct(IDamagePopupService popups)
+        {
+            _popups = popups;
+            _physics?.SetPopups(_popups);
+        }
         private void CacheRefs()
         {
             if (_fx == null)
@@ -71,6 +75,8 @@ namespace CodeBase.Hero
         {
             _physics = new WeaponAttackPhysics(overlapSize: 16, raySize: 32);
             _physics.DamageModifier = RollDamage;
+            if (_popups != null)
+                _physics.SetPopups(_popups);
             _auraFx = new PersistentAuraFx();
             _auraFx.SetParentGetter(() => transform.root);
         }

@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 4381028620449918267}
   - component: {fileID: 2417571292251551273}
   - component: {fileID: 6130361990707921196}
-  - component: {fileID: 1025351632587975149}
   m_Layer: 0
   m_Name: aura
   m_TagString: Untagged
@@ -4834,17 +4833,3 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
---- !u!114 &1025351632587975149
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546035026385981223}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e70d4534cd448318e2988cb3daf295a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _ps: {fileID: 2417571292251551273}
-  _yOffset: 0.05

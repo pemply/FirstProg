@@ -17,22 +17,21 @@ namespace CodeBase.UI.Debug
         
 
 
-      private void Awake()
-      {
+        private void Awake()
+        {
 #if !UNITY_EDITOR && !DEVELOPMENT_BUILD
     gameObject.SetActive(false);
     return;
 #endif
 
-          if (_instance != null)
-          {
-              Destroy(gameObject);
-              return;
-          }
+            if (_instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
 
-          _instance = this;
-          DontDestroyOnLoad(gameObject);
-      }
+            _instance = this;
+        }
       private void OnDestroy()
       {
           if (_instance == this)

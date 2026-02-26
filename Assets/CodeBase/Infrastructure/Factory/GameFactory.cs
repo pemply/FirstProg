@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Infrastructure.Services.Progress;
 using CodeBase.Infrastructure.Services.RunTime;
-
 using CodeBase.StaticData;
 using UnityEngine;
 
@@ -24,11 +24,14 @@ namespace CodeBase.Infrastructure.Factory
         private readonly PickupFactory _pickupFactory;
         private readonly MonsterFactory _monsterFactory;
         private readonly PillarFactory _pillarFactory;
-        private readonly ProjectileFactory _projectileFactory ;
+        private readonly ProjectileFactory _projectileFactory;
         private readonly IStaticDataService _staticData;
         private readonly IPersistentProgressService _progressService;
-
         private readonly RunContextService _run;
+        private readonly IPoolService _poolService;
+
+        // ✅ НЕ readonly — підчепимо після LoadLevel
+        private IDamagePopupService _damagePopups;
 
         public GameFactory(
             IAssets assets,
@@ -36,21 +39,30 @@ namespace CodeBase.Infrastructure.Factory
             IXpService xp,
             IDifficultyScalingService difficulty,
             RunContextService run,
-            IPersistentProgressService progressService)
+            IPersistentProgressService progressService, IPoolService poolService)
         {
             _staticData = staticData;
             _run = run;
             _progressService = progressService;
+            _poolService = poolService;
 
-            _projectileFactory = new ProjectileFactory(staticData); // ✅ тут створюємо
+            _projectileFactory = new ProjectileFactory(staticData, _poolService);
 
             _pillarFactory = new PillarFactory(assets);
             _heroFactory = new HeroFactory(run, staticData);
 
             _uiFactory = new UIFactory(assets);
-            _pickupFactory = new PickupFactory(assets, xp);
-            _monsterFactory = new MonsterFactory(staticData, difficulty);
+            _pickupFactory = new PickupFactory(assets, xp, _poolService);
+            _monsterFactory = new MonsterFactory(staticData, difficulty, poolService);
         }
+
+        // ✅ викликається після LoadLevel, коли DamagePopupSpawner вже є на сцені
+        public void SetDamagePopups(IDamagePopupService damagePopups)
+        {
+            _damagePopups = damagePopups;
+            _projectileFactory.SetDamagePopups(damagePopups);
+        }
+
         public GameObject CreateHero(GameObject at)
         {
             HeroGameObject = _heroFactory.CreateHero(at, out var heroT);
@@ -66,7 +78,6 @@ namespace CodeBase.Infrastructure.Factory
             RegisterProgressWatchers(HeroGameObject);
             return HeroGameObject;
         }
-
 
         private void ApplyWeaponStatsToHero(GameObject hero)
         {
@@ -84,11 +95,12 @@ namespace CodeBase.Infrastructure.Factory
                 return;
             }
 
-            applier.Construct(_run, _projectileFactory, _staticData, heroStats);
+            // ✅ _damagePopups може бути null, якщо ти викликав CreateHero до SetDamagePopups
+            if (_damagePopups == null)
+                Debug.LogWarning("[GameFactory] DamagePopups is NULL. Call SetDamagePopups() after LoadLevel before CreateHero().");
+
+            applier.Construct(_run, _projectileFactory, _damagePopups, _staticData, heroStats);
         }
-
-
-
 
         public GameObject CreateHud()
         {
@@ -105,8 +117,6 @@ namespace CodeBase.Infrastructure.Factory
 
         public void CreateXpShards(Vector3 at, int totalXp) =>
             _pickupFactory.CreateXpShards(at, totalXp, HeroTransform);
-
-  
 
         public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent)
         {

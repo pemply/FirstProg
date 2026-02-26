@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.WeaponConfig
   WeaponId: 2
   BaseStats:
-    BaseCooldown: 2.21
-    AttackSpeed: 1
-    Damage: 3.74
+    BaseCooldown: 1.3
+    AttackSpeed: 0.29
+    Damage: 15.5
     Range: 17.43
     HitWidth: 0.74
     Pierce: 2

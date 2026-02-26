@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.GameLogic.Upgrade;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services.PersistentProgress;
 using CodeBase.Infrastructure.Services.RunTime;
-using CodeBase.Logic.Upgrade;
 using UnityEngine;
 
 namespace CodeBase.StaticData

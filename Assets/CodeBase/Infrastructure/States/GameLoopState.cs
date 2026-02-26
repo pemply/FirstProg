@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using CodeBase.Enemy;
+using CodeBase.GameLogic;
 using CodeBase.Hero;
 using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Factory;

@@ -16,7 +16,7 @@ namespace CodeBase.Enemy
 
             if (_observer == null)
             {
-                Debug.LogWarning($"[AttackSensorRadiusApplier] TriggerObserver missing on {name}", this);
+                UnityEngine.Debug.LogWarning($"[AttackSensorRadiusApplier] TriggerObserver missing on {name}", this);
                 return;
             }
 

@@ -1,4 +1,6 @@
-﻿using CodeBase.Infrastructure.AssetManagement;
+﻿using CodeBase.GameLogic;
+using CodeBase.Infrastructure.AssetManagement;
+using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Infrastructure.Services.Progress;
 using CodeBase.Logic;
 using UnityEngine;
@@ -7,41 +9,37 @@ namespace CodeBase.Infrastructure.Factory
 {
     public class PickupFactory
     {
-        private readonly IAssets _assets;
         private readonly IXpService _xp;
+        private readonly IPoolService _pool;
 
-        public PickupFactory(IAssets assets, IXpService xp)
+        private readonly GameObject _xpPrefab; // ✅ справжній prefab-key
+
+        public PickupFactory(IAssets assets, IXpService xp, IPoolService pool)
         {
-            _assets = assets;
             _xp = xp;
+            _pool = pool;
+
+            _xpPrefab = assets.LoadPrefab(AssetsPath.XpPickupPath); // ✅ не Instantiate
+
+            
         }
 
         public GameObject CreateXpPickup(Vector3 at, int amount)
         {
-            GameObject go = _assets.Instantiate(AssetsPath.XpPickupPath, at);
-
-            var pickup = go.GetComponent<XpPickup>();
-            if (pickup == null)
-                Debug.LogError("[PickupFactory] XpPickup component missing on prefab");
-
-            // ⚠️ старий метод: без hero, залишаємо як є (якщо десь викликається)
-            pickup?.Construct(amount, _xp);
+            var go = SpawnXp(at, amount);
             return go;
         }
-    
 
-        // ✅ НОВЕ: пачка shard-ів (варіант 2)
         public void CreateXpShards(Vector3 at, int totalXp, Transform hero)
         {
             if (totalXp <= 0) return;
-            if (hero == null)
-            {
-                CreateXpPickup(at, totalXp);
-                return;
-            }
-            int shardCount = Mathf.Clamp(totalXp / 5, 3, 10); 
-            float bigPart = Random.Range(0.25f, 0.45f);
 
+            // hero тут по факту не потрібен (магніт робить PickupCollector),
+            // але лишаємо сигнатуру, якщо десь так викликається
+
+            int shardCount = Mathf.Clamp(totalXp / 5, 3, 10);
+
+            float bigPart = Random.Range(0.25f, 0.45f);
             int bigPool = Mathf.RoundToInt(totalXp * bigPart);
             int smallPool = totalXp - bigPool;
 
@@ -49,20 +47,16 @@ namespace CodeBase.Infrastructure.Factory
             bigCount = Mathf.Min(bigCount, shardCount - 1);
             int smallCount = shardCount - bigCount;
 
-            // 1) big shards
-            SpawnSplit(at, bigPool, bigCount, hero);
-
-            // 2) small shards
-            SpawnSplit(at, smallPool, smallCount, hero);
+            SpawnSplit(at, bigPool, bigCount);
+            SpawnSplit(at, smallPool, smallCount);
         }
 
-        private void SpawnSplit(Vector3 at, int pool, int parts, Transform hero)
+        private void SpawnSplit(Vector3 at, int pool, int parts)
         {
             if (parts <= 0) return;
 
             if (pool <= 0)
             {
-                // мінімум 1xp кожен, щоб було “багато”
                 for (int i = 0; i < parts; i++)
                     SpawnOne(at, 1);
                 return;
@@ -81,7 +75,6 @@ namespace CodeBase.Infrastructure.Factory
                 }
                 else
                 {
-                    // лишаємо мінімум по 1 на кожен залишок
                     int maxForThis = remaining - (left - 1);
                     value = Random.Range(1, Mathf.Max(2, maxForThis));
                 }
@@ -93,22 +86,39 @@ namespace CodeBase.Infrastructure.Factory
 
         private void SpawnOne(Vector3 at, int amount)
         {
-            Vector3 p = at + new Vector3(Random.Range(-0.35f, 0.35f), 0f, Random.Range(-0.35f, 0.35f));
+            Vector3 p = at + new Vector3(
+                Random.Range(-0.35f, 0.35f),
+                0f,
+                Random.Range(-0.35f, 0.35f)
+            );
 
-            GameObject go = _assets.Instantiate(AssetsPath.XpPickupPath, p);
+            SpawnXp(p, amount);
+        }
+
+        private GameObject SpawnXp(Vector3 pos, int amount)
+        {
+            if (_xpPrefab == null)
+            {
+                Debug.LogError("[PickupFactory] XP prefab is null");
+                return null;
+            }
+
+            GameObject go = _pool.Get(_xpPrefab, pos, Quaternion.identity);
 
             var pickup = go.GetComponent<XpPickup>();
             if (pickup == null)
             {
                 Debug.LogError("[PickupFactory] XpPickup component missing on prefab");
-                return;
+                return go;
             }
 
             pickup.Construct(amount, _xp);
 
-            // легенький scale під amount
+            // ✅ красиво + без накопичення
             float s = 1f + Mathf.Clamp01(amount / 15f) * 0.6f;
-            go.transform.localScale *= s;
+            go.transform.localScale = _xpPrefab.transform.localScale * s;
+
+            return go;
         }
     }
 }
