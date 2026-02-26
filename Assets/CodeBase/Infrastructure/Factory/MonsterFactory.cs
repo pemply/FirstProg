@@ -3,12 +3,10 @@ using CodeBase.GameLogic;
 using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Infrastructure.Services.RunTime;
-using CodeBase.Logic;
 using CodeBase.StaticData;
 using CodeBase.UI;
 using UnityEngine;
 using UnityEngine.AI;
-using Object = UnityEngine.Object;
 
 namespace CodeBase.Infrastructure.Factory
 {
@@ -18,6 +16,7 @@ namespace CodeBase.Infrastructure.Factory
         private readonly IDifficultyScalingService _difficulty;
         private readonly EliteConfig _elite;
         private readonly IPoolService _pool;
+
         public MonsterFactory(IStaticDataService staticData, IDifficultyScalingService difficulty, IPoolService pool)
         {
             _staticData = staticData;
@@ -29,23 +28,28 @@ namespace CodeBase.Infrastructure.Factory
 
         public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent, Transform heroTransform)
         {
-            Debug.Log($"[SPAWN] requested type={monsterTypeId}");
+            Debug.Log($"[SPAWN] type={monsterTypeId} heroId={(heroTransform? heroTransform.GetInstanceID(): -1)} heroPos={(heroTransform? heroTransform.position.ToString() : "null")}");
+           
 
             MonsterStaticData monsterData = _staticData.ForMonster(monsterTypeId);
 
             Vector3 spawnPos = parent != null ? parent.position : Vector3.zero;
             Quaternion spawnRot = parent != null ? parent.rotation : Quaternion.identity;
 
-            GameObject monster = _pool.Get(monsterData.PrefabReference, spawnPos, spawnRot, parent);            monster.transform.localScale = monsterData.PrefabReference.transform.localScale;
+            GameObject monster = _pool.Get(monsterData.PrefabReference, spawnPos, spawnRot, parent);
+
+            monster.transform.localScale = monsterData.PrefabReference.transform.localScale;
+
+            ResetPooledMonster(monster);
+            
             bool isElite = _elite != null && Random.value <= _elite.Chance;
+
             float hp = CalcAndApplyRewards(monsterTypeId, monsterData, monster, isElite, out float dmg);
 
             if (isElite && _elite != null)
                 monster.transform.localScale *= _elite.ScaleMult;
-
-            // -------------------------------------------------
+           
             // HEALTH
-            // -------------------------------------------------
             IHealth health = monster.GetComponent<IHealth>();
             if (health == null)
                 Debug.LogError($"[MonsterFactory] IHealth missing on {monster.name}");
@@ -62,31 +66,24 @@ namespace CodeBase.Infrastructure.Factory
             var agent = monster.GetComponent<NavMeshAgent>();
             if (agent != null)
                 agent.speed = monsterData.MoveSpeed;
-
-            // -------------------------------------------------
+            
             // ATTACK COMPONENTS
-            // -------------------------------------------------
+
             var baseAttack = monster.GetComponent<EnemyAttack>();
             var kamikaze = monster.GetComponent<KamikazeAttack>();
             var areaAttack = monster.GetComponent<EnemyAreaAttack>();
 
-            // -------------------------------------------------
-            // SENSOR RADIUS (дуже важливо)
-            // -------------------------------------------------
+            // SENSOR RADIUS
             var sensor = monster.GetComponent<AttackSensorRadiusApplier>();
             if (sensor != null)
             {
-                // якщо ranged aoe ворог → сенсор великий
                 if (areaAttack != null && monsterData.AreaAttack != null)
                     sensor.Apply(monsterData.AreaAttack.SensorRadius, 0f);
                 else
                     sensor.Apply(monsterData.EffectiveDistance, monsterData.Cleavage);
-                
             }
 
-            // -------------------------------------------------
             // BASE MELEE ATTACK
-            // -------------------------------------------------
             if (baseAttack != null)
             {
                 baseAttack.Construct(heroTransform);
@@ -96,9 +93,8 @@ namespace CodeBase.Infrastructure.Factory
                 baseAttack.EffectiveDistance = monsterData.EffectiveDistance;
             }
 
-            // -------------------------------------------------
             // KAMIKAZE
-            // -------------------------------------------------
+
             if (kamikaze != null)
             {
                 if (baseAttack != null)
@@ -114,48 +110,83 @@ namespace CodeBase.Infrastructure.Factory
                 kamikaze.SetConfig(monsterData.Kamikaze);
             }
 
-            // -------------------------------------------------
-// AREA / RANGED AOE
-// -------------------------------------------------
+            // AREA / RANGED AOE
             if (areaAttack != null)
             {
-                // якщо це AOE-ворог — базову melee атаку вимикаємо
                 if (baseAttack != null)
                     baseAttack.enabled = false;
 
                 areaAttack.enabled = true;
                 areaAttack.Construct(heroTransform, _pool);
-
-                // ✅ ВАЖЛИВО: Damage/Cooldown/Radius беремо ТІЛЬКИ з AreaAttackConfig
                 areaAttack.SetConfig(monsterData.AreaAttack);
-
-                // ✅ (опційно) якщо тобі треба, щоб "dmg" впливав:
-                // areaAttack.Damage *= dmgMult; // але краще зроби dmgMult окремо, а не "dmg" як абсолют
             }
             else if (baseAttack != null && kamikaze == null)
             {
-                // якщо не kamikaze і не areaAttack — лишаємо базову атаку активною
                 baseAttack.enabled = true;
             }
+
+            // HEALER
 
             var healer = monster.GetComponent<EnemyHealer>();
             if (healer != null)
             {
+                healer.enabled = true;
                 healer.Construct(heroTransform);
-                healer.SetConfig(monsterData.Healer); // може бути null — SetConfig це переживе
+                healer.SetConfig(monsterData.Healer);
             }
 
-
-            
             return monster;
-            
-            
         }
 
 
-        private float CalcAndApplyRewards(MonsterTypeId monsterTypeId, MonsterStaticData monsterData,
+        private void ResetPooledMonster(GameObject monster)
+        {
+            // 1) Re-enable behaviours
+            var mover = monster.GetComponent<AgentMoveToPlayer>();
+            if (mover != null) mover.enabled = true;
+
+            var healer = monster.GetComponent<EnemyHealer>();
+            if (healer != null) healer.enabled = true;
+
+            // 2) Reset animator driver (if exists)
+            var anim = monster.GetComponent<EnemyAnimator>();
+            if (anim != null) anim.ResetForReuse();
+
+            // 3) Reset attacks (IMPORTANT: implement ResetForReuse below)
+            var baseAttack = monster.GetComponent<EnemyAttack>();
+            if (baseAttack != null) baseAttack.ResetForReuse();
+
+            var kamikaze = monster.GetComponent<KamikazeAttack>();
+            if (kamikaze != null) kamikaze.ResetForReuse();
+
+            var area = monster.GetComponent<EnemyAreaAttack>();
+            if (area != null) area.ResetForReuse();
+
+            // 4) NavMeshAgent state reset
+            var agent = monster.GetComponent<NavMeshAgent>();
+            if (agent != null)
+            {
+                if (!agent.enabled)
+                    agent.enabled = true;
+
+                agent.isStopped = false;
+                agent.ResetPath();
+
+                if (!agent.isOnNavMesh)
+                {
+                    NavMeshHit hit;
+                    if (NavMesh.SamplePosition(monster.transform.position, out hit, 2f, NavMesh.AllAreas))
+                        agent.Warp(hit.position);
+                }
+            }
+        }
+
+        private float CalcAndApplyRewards(
+            MonsterTypeId monsterTypeId,
+            MonsterStaticData monsterData,
             GameObject monster,
-            bool isElite, out float dmg)
+            bool isElite,
+            out float dmg)
         {
             float hp = monsterData.Hp * _difficulty.HpMult;
             dmg = monsterData.Damage * _difficulty.DmgMult;

@@ -60,7 +60,11 @@ public class WaveController
             yield return new WaitForSeconds(_config.SpawnInterval);
         }
     }
-
+    public void Dispose()
+    {
+        _runner.StopCoroutine(_spawnRoutine); // якщо є
+        WaveFinished = null; // або відписки
+    }
     private IEnumerator DurationTimer()
     {
         yield return new WaitForSeconds(_config.Duration);

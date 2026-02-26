@@ -60,6 +60,7 @@ namespace CodeBase.Infrastructure.States
 
         public void Enter(string sceneName)
         {
+            _pool.DespawnAllActive();
             _run.Reset();
             _run.SelectedHeroId = _startConfig != null ? _startConfig.DefaultHeroId : HeroId.None;
 
@@ -97,7 +98,7 @@ namespace CodeBase.Infrastructure.States
             // 3) Тепер створюємо героя (WeaponStatsApplier вже отримає damagePopups)
             GameObject hero = CreateHero();
             ApplyHeroMoveSpeed(hero);
-
+            Debug.Log($"[HERO] spawned id={hero.transform.GetInstanceID()} pos={hero.transform.position}");
             InitProgressReaders();
             BindHudToHero(hud, hero);
             CameraFollow(hero);

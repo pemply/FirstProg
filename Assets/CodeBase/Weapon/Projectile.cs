@@ -120,7 +120,10 @@ public class Projectile : MonoBehaviour, IPoolable
                     _hitHealthIds.Add(id);
 
                     health.TakeDamage(_damage);
-                    _damagePopups?.Spawn(hit.point, Mathf.RoundToInt(_damage), _isCrit);
+                    if (_damagePopups != null && IsUnityObjectAlive(_damagePopups))
+                        _damagePopups.Spawn(hit.point, Mathf.RoundToInt(_damage), _isCrit);
+                    else
+                        _damagePopups = null;
 
                     if (_pierceLeft > 0)
                     {
@@ -137,7 +140,11 @@ public class Projectile : MonoBehaviour, IPoolable
 
         transform.position = to;
     }
-
+    private bool IsUnityObjectAlive(object service)
+    {
+        var uo = service as UnityEngine.Object;
+        return uo == null || uo; 
+    }
     private void Despawn()
     {
         if (_despawned) return;

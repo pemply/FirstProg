@@ -226,5 +226,21 @@ namespace CodeBase.Enemy
             DespawnTelegraph();
             _casting = false;
         }
+        public void ResetForReuse()
+        {
+            enabled = true;
+
+            _cd = 0f;
+            _casting = false;
+            _canAttack = false;
+
+            if (_castRoutine != null)
+            {
+                StopCoroutine(_castRoutine);
+                _castRoutine = null;
+            }
+
+            DespawnTelegraph();
+        }
     }
 }

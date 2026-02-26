@@ -23,7 +23,7 @@ namespace CodeBase.Infrastructure.Services.Pool
             // "AoE_Telegraph",
             // "Healer",
         };
-
+        private readonly HashSet<GameObject> _active = new();
         private readonly Dictionary<GameObject, Transform> _folders = new();
         private readonly Dictionary<GameObject, Stack<GameObject>> _pools = new();
 
@@ -95,6 +95,7 @@ namespace CodeBase.Infrastructure.Services.Pool
             t.SetPositionAndRotation(pos, rot);
 
             inst.SetActive(true);
+            _active.Add(inst);
             inst.GetComponent<PooledObject>()?.CallSpawned();
 
             MaybeLogStats();
@@ -105,7 +106,7 @@ namespace CodeBase.Infrastructure.Services.Pool
         public void Release(GameObject instance)
         {
             if (instance == null) return;
-
+            _active.Remove(instance); 
             var pooled = instance.GetComponent<PooledObject>();
             if (pooled == null || pooled.PrefabKey == null)
             {
@@ -122,7 +123,23 @@ namespace CodeBase.Infrastructure.Services.Pool
 
             MaybeLogStats();
         }
+        public void DespawnAllActive()
+        {
+            if (_active.Count == 0)
+                return;
 
+            // копія, бо Release змінює _active
+            var list = new List<GameObject>(_active);
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                var go = list[i];
+                if (go != null)
+                    Release(go);
+            }
+
+            _active.Clear();
+        }
         public void Clear()
         {
             foreach (var kv in _pools)
@@ -164,6 +181,7 @@ namespace CodeBase.Infrastructure.Services.Pool
 
         private void ReturnToPool(GameObject inst)
         {
+            _active.Remove(inst);
             var pooled = inst.GetComponent<PooledObject>();
             var key = pooled.PrefabKey;
 

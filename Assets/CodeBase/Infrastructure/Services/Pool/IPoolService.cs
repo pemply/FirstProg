@@ -8,5 +8,6 @@ namespace CodeBase.Infrastructure.Services.Pool
         void Release(GameObject instance);
         void Prewarm(GameObject prefab, int count, Transform parent = null);
         void Clear(); // опціонально, на restart run
+        void DespawnAllActive();
     }
 }

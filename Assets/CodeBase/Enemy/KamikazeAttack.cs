@@ -196,5 +196,25 @@ namespace CodeBase.Enemy
             b.y = 0f;
             return Vector3.Distance(a, b);
         }
+        public void ResetForReuse()
+        {
+            enabled = true;
+
+            _cooldown = 0f;
+            _arming = false;
+
+            if (_routine != null)
+            {
+                StopCoroutine(_routine);
+                _routine = null;
+            }
+
+            // повернути рух після минулого "StopMove"
+            if (_move != null)
+                _move.enabled = true;
+
+            if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
+                _agent.isStopped = false;
+        }
     }
 }

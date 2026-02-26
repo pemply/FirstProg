@@ -207,12 +207,11 @@ namespace CodeBase.Infrastructure.States
 
         private void CreateWaveSystem(GameObject hero)
         {
-            Transform center = _gameFactory.HeroTransform != null
-                ? _gameFactory.HeroTransform
-                : hero.transform;
+            var run = AllServices.Container.Single<RunContextService>();
+            run.SetHero(hero.transform); 
 
             var killReward = AllServices.Container.Single<IKillRewardService>();
-            WaveSpawner spawner = new WaveSpawner(_gameFactory, center, killReward);
+            WaveSpawner spawner = new WaveSpawner(_gameFactory, run, killReward);
 
             _waveController = new WaveController(_runnerMono, spawner);
             _waveController.WaveFinished += OnWaveFinished;
@@ -238,9 +237,32 @@ namespace CodeBase.Infrastructure.States
 
         private void OnHeroDied()
         {
+            ForceStop();               // гарантовано зупини все
             _stateMachine.Enter<GameOverState>();
         }
 
+        private void ForceStop()
+        {
+            _xp.LevelUp -= OnLevelUp;
+
+            if (_heroHealth != null)
+                _heroHealth.DeathEvent -= OnHeroDied;
+
+            if (_waveController != null)
+            {
+                _waveController.WaveFinished -= OnWaveFinished;
+                _waveController.Dispose();
+                _waveController = null;
+            }
+
+            if (_timerRoutine != null)
+            {
+                _runnerMono.StopCoroutine(_timerRoutine);
+                _timerRoutine = null;
+            }
+
+            _killReward?.Cleanup();
+        }
         private void OnLevelUp(int level)
         {
             _pendingUpgrades++;

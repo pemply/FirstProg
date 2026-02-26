@@ -600,7 +600,13 @@ MonoBehaviour:
   _heroAnimator: {fileID: 8310355349624250904}
   CharacterController: {fileID: 1244342044703085411}
   MovementSpeed: 20
-  _animator: {fileID: 7638429548792677059}
+  _turnSpeed: 12
+  _backpedalDot: -0.15
+  _autoAim: 1
+  _aimRefresh: 0.12
+  _enemyMask:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!143 &1244342044703085411
 CharacterController:
   m_ObjectHideFlags: 0

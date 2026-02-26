@@ -173,5 +173,15 @@ namespace CodeBase.Enemy
 
         public void EnableAttack() => _attackIsActive = true;
         public void DisableAttack() => _attackIsActive = false;
+        public void ResetForReuse()
+        {
+            _attackCooldown = 0f;
+            _isAttacking = false;
+            _attackIsActive = false; // сенсор сам включить через EnableAttack()
+            enabled = true;
+
+            if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
+                _agent.isStopped = false;
+        }
     }
 }

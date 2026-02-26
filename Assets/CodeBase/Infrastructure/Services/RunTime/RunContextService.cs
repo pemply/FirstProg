@@ -2,6 +2,7 @@
 using CodeBase.GameLogic.Upgrade;
 using CodeBase.StaticData;
 using CodeBase.StaticData.CodeBase.StaticData;
+using UnityEngine;
 
 namespace CodeBase.Infrastructure.Services.RunTime
 {
@@ -12,6 +13,8 @@ namespace CodeBase.Infrastructure.Services.RunTime
             public WeaponId Id;
             public WeaponStats Stats;
         }
+        public Transform HeroTransform { get; private set; }
+        public void SetHero(Transform hero) => HeroTransform = hero;
 
         // Weapons[0] = primary
         public List<RunWeapon> Weapons { get; } = new();
@@ -54,6 +57,7 @@ namespace CodeBase.Infrastructure.Services.RunTime
             Level = 1;
             XpInLevel = 0;
             ElapsedSeconds = 0f;
+
             CooldownPercent = 0f;
             MaxHpPercent = 0f;
             DamagePercent = 0f;
@@ -65,6 +69,9 @@ namespace CodeBase.Infrastructure.Services.RunTime
             UpgradePicks.Clear();
 
             SelectedHeroId = HeroId.None;
+
+            HeroTransform = null; // ✅ важливо
+            HeroPassivesApplied = false;
         }
 
         public void Tick(float dt) => ElapsedSeconds += dt;
