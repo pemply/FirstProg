@@ -23,7 +23,8 @@ namespace CodeBase.Enemy
         private static readonly int DieHash      = Animator.StringToHash("Die");
         private static readonly int ExplodeHash  = Animator.StringToHash("Explode");
         private static readonly int AttackHash   = Animator.StringToHash("Attack");
-
+        private static readonly int ThrowHash = Animator.StringToHash("Throw");
+        private static readonly int ThrowSpeedHash = Animator.StringToHash("ThrowSpeed");
         private bool _finished;
         private HashSet<int> _paramHashes;
 
@@ -119,7 +120,14 @@ namespace CodeBase.Enemy
 
             SetTriggerSafe(DieHash);
         }
-
+     
+        public void PlayThrow(float speed)
+        {
+            if (_finished || _animator == null) return;
+            _animator.SetFloat(ThrowSpeedHash, Mathf.Max(0.05f, speed));
+            _animator.SetTrigger(ThrowHash);
+        }
+        
         // ✅ НОВЕ: вибух з радіусом
         public void PlayExplode(float radius)
         {

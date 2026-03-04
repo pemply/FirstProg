@@ -2,25 +2,33 @@
 
 namespace CodeBase.Enemy
 {
-    // має висіти НА ТОМУ Ж GO, ДЕ ANIMATOR
     public class EnemyAnimEvents : MonoBehaviour
     {
-        private EnemyAttack _attack;
+        private EnemyAttack _melee;
+        private EnemyAreaAttack _area;
 
         private void Awake()
         {
-            _attack = GetComponentInParent<EnemyAttack>(true);
+            _melee = GetComponentInParent<EnemyAttack>(true);
+            _area  = GetComponentInParent<EnemyAreaAttack>(true);
         }
 
-        // Назву зроби такою ж як у Animation Event:
+        // melee атака
         public void OnAttack()
         {
-            _attack?.OnAttack();
+            _melee?.OnAttack();
         }
 
         public void OnAttackEnded()
         {
-            _attack?.OnAttackEnded();
+            _melee?.OnAttackEnded();
+        }
+
+        // 🔥 кидок гранати
+        public void OnThrow()
+        {
+            Debug.Log("[AnimEvent] THROW → AreaAttack");
+            _area?.OnThrowEvent();
         }
     }
 }

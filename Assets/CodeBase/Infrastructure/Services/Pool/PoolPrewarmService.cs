@@ -67,7 +67,8 @@ namespace CodeBase.Infrastructure.Services.RunTime
 
             if (_poolStatic.AoETelegraphPrefab != null)
                 _pool.Prewarm(_poolStatic.AoETelegraphPrefab, 20);
-
+            if (_poolStatic.RangerGrenadePrefab != null)
+                _pool.Prewarm(_poolStatic.RangerGrenadePrefab, 20);
             if (_poolStatic.ProjectileImpactPrefab != null)
                 _pool.Prewarm(_poolStatic.ProjectileImpactPrefab, 40);
 

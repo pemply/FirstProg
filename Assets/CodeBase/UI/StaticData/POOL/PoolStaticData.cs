@@ -20,5 +20,7 @@ namespace CodeBase.StaticData
         
         public  GameObject SwordSlashFxPrefab;
         public GameObject KamikazeExplosionPrefab;
+        
+        public GameObject RangerGrenadePrefab;
     }
 }
