@@ -187,11 +187,11 @@ namespace CodeBase.Combat
             if (dir.sqrMagnitude < 0.0001f)
                 dir = selfRoot != null ? selfRoot.forward : Vector3.forward;
 
-            projectiles.Spawn(weaponId, origin, dir.normalized, stats);
+            projectiles.Spawn(weaponId, origin, dir.normalized, stats, selfRoot); // ✅ ownerRoot
             return true;
         }
 
-        public bool AttackLine(Vector3 origin, Vector3 forward, WeaponStats stats, ProjectileFactory projectiles, WeaponId weaponId)
+        public bool AttackLine(Vector3 origin, Vector3 forward, WeaponStats stats, ProjectileFactory projectiles, WeaponId weaponId, Transform selfRoot)
         {
             if (projectiles == null) return false;
             if (weaponId == WeaponId.None) return false;
@@ -201,7 +201,7 @@ namespace CodeBase.Combat
             if (fwd.sqrMagnitude < 0.0001f) return false;
             fwd.Normalize();
 
-            projectiles.Spawn(weaponId, origin, fwd, stats);
+            projectiles.Spawn(weaponId, origin, fwd, stats, selfRoot); // ✅ ownerRoot
             return true;
         }
 

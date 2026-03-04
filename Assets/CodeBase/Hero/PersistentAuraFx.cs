@@ -91,7 +91,7 @@ namespace CodeBase.Weapon
             if (_cfg == null) return;
             if (!_hasStats) return;
 
-            float baseRange = Mathf.Max(0.001f, _cfg.PersistentFxBaseRange);
+            float baseRange = Mathf.Max(0.001f, _cfg.AttackFxBaseRange);
             float k = Mathf.Max(0.01f, _stats.Range) / baseRange;
 
             // якщо з якихось причин не зловили в Ensure

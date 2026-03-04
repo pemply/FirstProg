@@ -24,7 +24,6 @@ namespace CodeBase.Enemy
         {
             if (_triggerObserver == null || _attackApi == null)
             {
-                Debug.LogError("[CheckAttackRange] deps NULL or no IEnemyAttack in parents", this);
                 enabled = false;
                 return;
             }

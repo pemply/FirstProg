@@ -10,8 +10,6 @@ namespace CodeBase.Enemy
         private void Awake()
         {
             _attack = GetComponentInParent<EnemyAttack>(true);
-            if (_attack == null)
-                Debug.LogError("[EnemyAnimEvents] EnemyAttack not found in parents", this);
         }
 
         // Назву зроби такою ж як у Animation Event:

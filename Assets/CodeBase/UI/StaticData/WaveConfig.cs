@@ -14,7 +14,7 @@ public class EnemyMixEntry
 public class WaveConfig : ScriptableObject
 {
     [Min(1f)] public float Duration = 30f;
-    [Min(0.1f)] public float SpawnInterval = 1f;
+    [Min(0.01f)] public float SpawnInterval = 1f;
     [Min(1)] public int MaxAlive = 10;
 
     public List<EnemyMixEntry> Mix = new();

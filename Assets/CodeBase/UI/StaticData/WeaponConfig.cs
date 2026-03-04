@@ -16,13 +16,20 @@ namespace CodeBase.StaticData
         public float ProjectileSpeed = 12f;
         
         [Header("FX")]
-        public GameObject PersistentFxPrefab;   // для Aura (постійно)
+        public GameObject PersistentFxPrefab;
         public Vector3 PersistentFxOffset;
-        public GameObject AttackFxPrefab;       // одноразово на атаку
+
+        public GameObject AttackFxPrefab;
         public Vector3 AttackFxOffset;
         public float AttackFxLifetime = 0.6f;
-        [Header("Persistent FX Scale")]
-        public float PersistentFxBaseRange = 1f; // при якому Range scale = 1
 
+        [Header("Attack FX Scale")]
+        public float AttackFxBaseRange = 1f;
+        public float AttackFxBaseWidth = 1f;
+        public float AttackFxScaleMult = 1f;   
+        
+        [Header("Projectile FX")]
+        public GameObject ProjectileMuzzlePrefab;
+        public GameObject ProjectileImpactPrefab;
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using CodeBase.GameLogic;
-using CodeBase.Logic;
+using CodeBase.GameLogic.Pool;
 using CodeBase.StaticData;
 using UnityEngine;
 using UnityEngine.AI;
@@ -11,14 +11,19 @@ namespace CodeBase.Enemy
     public class KamikazeAttack : MonoBehaviour
     {
         // set by factory
-        public float AttackColdown = 0.5f;
-        public float EffectiveDistance = 0.5f; // ✅ “додаткова” дистанція до героя (після врахування радіусів)
+        public float EffectiveDistance = 0.5f;   // коли починати ф'юз (ранній тригер)
         public float Damage = 10f;
+
+        // radius of damage + VFX (великий радіус урону)
+        public float ExplosionRadius = 1.5f;
 
         // config
         public float FuseDelay = 0.6f;
-        public float RadiusPadding = 0.08f;
         public float BlinkSpeed = 12f;
+
+        // detonation (коли реально підриватись — майже впритул)
+        public float DetonatePadding = 0.08f;    // маленький зазор для детонації
+        private float _cancelFuseExtra = 0.35f;
 
         private Transform _heroTransform;
         private IHealth _heroHealth;
@@ -31,9 +36,11 @@ namespace CodeBase.Enemy
         private Renderer[] _renderers;
         private MaterialPropertyBlock _mpb;
 
-        private float _cooldown;
         private bool _arming;
         private Coroutine _routine;
+
+        private PooledObject _pooled;
+        private bool _exploded;
 
         public void Construct(Transform heroTransform)
         {
@@ -54,6 +61,8 @@ namespace CodeBase.Enemy
             _move  = GetComponent<AgentMoveToPlayer>();
             _anim  = GetComponentInParent<EnemyAnimator>() ?? GetComponentInChildren<EnemyAnimator>(true);
 
+            _pooled = GetComponentInParent<PooledObject>(true);
+
             _renderers = GetComponentsInChildren<Renderer>(true);
             _mpb = new MaterialPropertyBlock();
         }
@@ -61,77 +70,82 @@ namespace CodeBase.Enemy
         public void SetConfig(KamikazeConfig cfg)
         {
             if (cfg == null) return;
+
             FuseDelay = cfg.FuseDelay;
             BlinkSpeed = cfg.BlinkSpeed;
-            RadiusPadding = cfg.RadiusPadding;
+
+            // було RadiusPadding -> тепер це padding для детонації (впритул)
+            DetonatePadding = cfg.RadiusPadding;
+            ExplosionRadius = cfg.ExplosionRadius;
+            _cancelFuseExtra = cfg.CancelFuseExtra;
         }
 
         private void OnDisable()
         {
-            if (_routine != null)
-            {
-                StopCoroutine(_routine);
-                _routine = null;
-            }
+            StopFuseCoroutine();
         }
 
         private void Update()
         {
-            if (_heroTransform == null || _heroHealth == null)
+            if (_heroTransform == null || _heroHealth == null || _exploded)
                 return;
+
+            float dist = DistanceXZ(transform.position, _heroTransform.position);
 
             if (_arming)
             {
                 Blink();
 
-                // якщо вже “впритул” — вибух одразу
-                if (DistanceXZ(transform.position, _heroTransform.position) <= ExplodeDistance())
+                if (dist <= DetonateDistance())
                     Explode();
 
                 return;
             }
 
-            if (_cooldown > 0f)
-            {
-                _cooldown -= Time.deltaTime;
-                return;
-            }
-
-            // поворот (горизонтально)
+            // face hero
             Vector3 dir = _heroTransform.position - transform.position;
             dir.y = 0f;
             if (dir.sqrMagnitude > 0.0001f)
                 transform.rotation = Quaternion.LookRotation(dir);
 
-            // ✅ старт fuse на “реальній” дистанції: радіуси + EffectiveDistance
-            float dist = DistanceXZ(transform.position, _heroTransform.position);
-            if (dist <= ArmDistance())
-            {
+            // start fuse once
+            if (_routine == null && dist <= ArmDistance())
                 _routine = StartCoroutine(FuseAndExplode());
-            }
         }
 
         private IEnumerator FuseAndExplode()
         {
             _arming = true;
-
-            // стопаємося тільки коли вже армимося (так воно не буде “оббігати”)
             StopMove();
 
             float t = 0f;
-            float explodeDist = ExplodeDistance();
+            float detonateDist = DetonateDistance();
+            float cancelDist   = ArmDistance() + _cancelFuseExtra;
 
             while (t < FuseDelay)
             {
-                t += Time.deltaTime;
+                if (_heroTransform == null || _heroHealth == null)
+                {
+                    CancelFuse();
+                    yield break;
+                }
 
-                // якщо вже “впритул” — бахаємо раніше
-                if (DistanceXZ(transform.position, _heroTransform.position) <= explodeDist)
+                float dist = DistanceXZ(transform.position, _heroTransform.position);
+
+                if (dist <= detonateDist)
                     break;
 
+                if (dist > cancelDist)
+                {
+                    CancelFuse();
+                    yield break;
+                }
+
+                t += Time.deltaTime;
                 yield return null;
             }
 
+            _routine = null;
             Explode();
         }
 
@@ -139,16 +153,27 @@ namespace CodeBase.Enemy
         {
             float heroR  = _heroCC != null ? _heroCC.radius : 0.5f;
             float agentR = _agent != null ? _agent.radius : 0.3f;
-
-            // ✅ EffectiveDistance тепер реально працює як “додаткова” дистанція до героя
             return heroR + agentR + EffectiveDistance;
         }
 
-        private float ExplodeDistance()
+        // ✅ підриваємось тільки впритул (НЕ плутати з ExplosionRadius)
+        private float DetonateDistance()
         {
             float heroR  = _heroCC != null ? _heroCC.radius : 0.5f;
             float agentR = _agent != null ? _agent.radius : 0.3f;
-            return heroR + agentR + RadiusPadding;
+            return heroR + agentR + DetonatePadding;
+        }
+
+        private void CancelFuse()
+        {
+            StopFuseCoroutine();
+            _arming = false;
+
+            if (_move != null)
+                _move.enabled = true;
+
+            if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
+                _agent.isStopped = false;
         }
 
         private void StopMove()
@@ -163,15 +188,34 @@ namespace CodeBase.Enemy
                 _move.enabled = false;
         }
 
+        private void StopFuseCoroutine()
+        {
+            if (_routine != null)
+            {
+                StopCoroutine(_routine);
+                _routine = null;
+            }
+        }
+
         private void Explode()
         {
-            if (!enabled) return;
+            if (_exploded) return;
+            _exploded = true;
 
-            _heroHealth?.TakeDamage(Damage);
-            _anim?.PlayExplode();
+            StopFuseCoroutine();
+            _arming = false;
 
-            _cooldown = AttackColdown;
-            enabled = false;
+            // damage by ExplosionRadius (великий радіус)
+            bool inRange = _heroTransform != null &&
+                           DistanceXZ(transform.position, _heroTransform.position) <= ExplosionRadius;
+
+            if (inRange)
+                _heroHealth?.TakeDamage(Damage);
+
+            // VFX scale by ExplosionRadius
+            _anim?.PlayExplode(ExplosionRadius);
+
+            _pooled?.Release();
         }
 
         private void Blink()
@@ -196,20 +240,18 @@ namespace CodeBase.Enemy
             b.y = 0f;
             return Vector3.Distance(a, b);
         }
+
         public void ResetForReuse()
         {
             enabled = true;
 
-            _cooldown = 0f;
+            _pooled = GetComponentInParent<PooledObject>(true);
+
             _arming = false;
+            _exploded = false;
 
-            if (_routine != null)
-            {
-                StopCoroutine(_routine);
-                _routine = null;
-            }
+            StopFuseCoroutine();
 
-            // повернути рух після минулого "StopMove"
             if (_move != null)
                 _move.enabled = true;
 

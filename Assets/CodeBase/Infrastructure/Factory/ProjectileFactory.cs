@@ -24,15 +24,20 @@ namespace CodeBase.Infrastructure.Factory
 
         public void SetDamagePopups(IDamagePopupService damagePopups) => _damagePopups = damagePopups;
 
-        public void Spawn(WeaponId weaponId, Vector3 origin, Vector3 dir, WeaponStats stats)
+        public void Spawn(WeaponId weaponId, Vector3 origin, Vector3 dir, WeaponStats stats, Transform ownerRoot)
         {
+            
             var cfg = _staticData.GetWeapon(weaponId);
             if (cfg == null || cfg.ProjectilePrefab == null)
                 return;
 
             var rot = Quaternion.LookRotation(dir, Vector3.up);
-
-            // ✅ пул
+// muzzle
+            if (cfg.ProjectileMuzzlePrefab != null)
+            {
+              
+                _pool.Get(cfg.ProjectileMuzzlePrefab, origin, rot);
+            }
             var go = _pool.Get(cfg.ProjectilePrefab, origin, rot);
 
             var proj = go.GetComponent<Projectile>();
@@ -46,12 +51,16 @@ namespace CodeBase.Infrastructure.Factory
             proj.SetCrit(roll.IsCrit);
 
             proj.Construct(
-                roll.Damage,
-                stats.Range,
-                cfg.ProjectileSpeed,
-                _enemyMask,
-                stats.Pierce,
-                _damagePopups
+                damage: roll.Damage,
+                range: stats.Range,
+                speed: cfg.ProjectileSpeed,
+                enemyMask: _enemyMask,
+                pierce: stats.Pierce,
+                damagePopups: _damagePopups,
+                impactFx: cfg.ProjectileImpactPrefab,   // ✅ з WeaponConfig
+                muzzleFx: cfg.ProjectileMuzzlePrefab,   // ✅ з WeaponConfig
+                ownerRoot: ownerRoot,
+                pool: _pool                               // ✅ щоб FX теж були в пулі
             );
         }
     }

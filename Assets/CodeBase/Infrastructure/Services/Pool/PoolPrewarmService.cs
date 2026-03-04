@@ -68,7 +68,17 @@ namespace CodeBase.Infrastructure.Services.RunTime
             if (_poolStatic.AoETelegraphPrefab != null)
                 _pool.Prewarm(_poolStatic.AoETelegraphPrefab, 20);
 
-           
+            if (_poolStatic.ProjectileImpactPrefab != null)
+                _pool.Prewarm(_poolStatic.ProjectileImpactPrefab, 40);
+
+            if (_poolStatic.ProjectileMuzzlePrefab != null)
+                _pool.Prewarm(_poolStatic.ProjectileMuzzlePrefab, 40);
+            
+            if (_poolStatic.SwordSlashFxPrefab != null)
+                _pool.Prewarm(_poolStatic.SwordSlashFxPrefab, 20);
+            
+            if (_poolStatic.KamikazeExplosionPrefab != null)
+                _pool.Prewarm(_poolStatic.KamikazeExplosionPrefab, 20);
         }
     }
 }

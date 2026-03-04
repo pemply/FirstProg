@@ -16,9 +16,9 @@ MonoBehaviour:
   BaseStats:
     BaseCooldown: 1.14
     AttackSpeed: 1
-    Damage: 16.26
+    Damage: 5
     Range: 2
-    HitWidth: 1.07
+    HitWidth: 1
     Pierce: 1
     Knockback: 0.56
     KnockbackChance: 0.05
@@ -26,11 +26,15 @@ MonoBehaviour:
     CritChance: 0.1
     CritMultiplier: 1
   ViewPrefab: {fileID: 195646, guid: 1bf2955dde85e584bbd706a505b46582, type: 3}
-  ProjectilePrefab: {fileID: 116678, guid: cda7c4d5ffb811d43966bc10e823bcc2, type: 3}
+  ProjectilePrefab: {fileID: 0}
   ProjectileSpeed: 0
   PersistentFxPrefab: {fileID: 0}
   PersistentFxOffset: {x: 0, y: 0, z: 0}
-  AttackFxPrefab: {fileID: 0}
-  AttackFxOffset: {x: 0, y: 1, z: 0.8}
-  AttackFxLifetime: 0.6
-  PersistentFxBaseRange: 1
+  AttackFxPrefab: {fileID: 6131268248031804023, guid: 58eb57a8db9362b49a2c9d078230ae67, type: 3}
+  AttackFxOffset: {x: 0, y: 0, z: 0}
+  AttackFxLifetime: 2.48
+  AttackFxBaseRange: 2
+  AttackFxBaseWidth: 1
+  AttackFxScaleMult: 1
+  ProjectileMuzzlePrefab: {fileID: 0}
+  ProjectileImpactPrefab: {fileID: 0}

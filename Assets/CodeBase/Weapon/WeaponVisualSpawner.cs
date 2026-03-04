@@ -105,5 +105,12 @@ namespace CodeBase.Hero
             t.localRotation = Quaternion.identity;
             t.localScale = Vector3.one;
         }
+        // в WeaponVisualSpawner
+
     }
 }
+
+public interface IWeaponPresentation
+    {
+        Transform Muzzle { get; }
+    }

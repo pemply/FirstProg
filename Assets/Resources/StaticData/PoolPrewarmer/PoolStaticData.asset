@@ -15,3 +15,7 @@ MonoBehaviour:
   DamagePopupPrefab: {fileID: 817414748877970379, guid: d7841d181e92cc94f892c40f49999b28, type: 3}
   XpOrbPrefab: {fileID: 3372899062782863903, guid: dd31e379c66086a4ea1c77953254f4c1, type: 3}
   AoETelegraphPrefab: {fileID: 1830188523380823483, guid: 94aa2450d32f0c2488a93bf418bed6e2, type: 3}
+  ProjectileImpactPrefab: {fileID: 3291244538907713110, guid: 4e25fca77bf9f0f4b810156a77203cb3, type: 3}
+  ProjectileMuzzlePrefab: {fileID: 3875329135514961720, guid: 09e753e00edbb714ebf549c2dd326f01, type: 3}
+  SwordSlashFxPrefab: {fileID: 6131268248031804023, guid: 58eb57a8db9362b49a2c9d078230ae67, type: 3}
+  KamikazeExplosionPrefab: {fileID: 389972561583142955, guid: a6a02baceacd0a34892152a14a057b79, type: 3}

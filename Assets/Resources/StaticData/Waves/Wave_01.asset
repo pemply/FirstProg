@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a3433401c964a97980fe968f3b65356, type: 3}
   m_Name: Wave_01
   m_EditorClassIdentifier: Assembly-CSharp::WaveConfig
-  Duration: 75.8
-  SpawnInterval: 0.58
-  MaxAlive: 14
+  Duration: 3.3
+  SpawnInterval: 1.14
+  MaxAlive: 485
   Mix:
-  - Type: 4
-    Weight: 32
+  - Type: 2
+    Weight: 115
   - Type: 0
-    Weight: 32
-  - Type: 1
-    Weight: 32
+    Weight: 115
   - Type: 3
-    Weight: 32
+    Weight: 115
+  - Type: 4
+    Weight: 115
+  - Type: 1
+    Weight: 115

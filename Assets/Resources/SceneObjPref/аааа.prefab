@@ -49,6 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _radius: 0.15
   _maxLifeTime: 5
+  _impactFx: {fileID: 3291244538907713110, guid: 4e25fca77bf9f0f4b810156a77203cb3, type: 3}
 --- !u!136 &5295842674955132531
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -165,6 +166,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 6818747259059932917, guid: 7a75a92e02200be479484ecf349dad80, type: 3}
+    - {fileID: 4327855196564153423, guid: 7a75a92e02200be479484ecf349dad80, type: 3}
+    - {fileID: 7936831027206932864, guid: 7a75a92e02200be479484ecf349dad80, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

@@ -16,7 +16,7 @@ MonoBehaviour:
   BaseStats:
     BaseCooldown: 1.3
     AttackSpeed: 0.29
-    Damage: 15.5
+    Damage: 5.07
     Range: 17.43
     HitWidth: 0.74
     Pierce: 2
@@ -30,7 +30,11 @@ MonoBehaviour:
   ProjectileSpeed: 139.9
   PersistentFxPrefab: {fileID: 0}
   PersistentFxOffset: {x: 0, y: 0, z: 0}
-  AttackFxPrefab: {fileID: 101130, guid: 13d4b1dc067a2604aa9b6be7401f0d5a, type: 3}
+  AttackFxPrefab: {fileID: 3875329135514961720, guid: 09e753e00edbb714ebf549c2dd326f01, type: 3}
   AttackFxOffset: {x: 0, y: 1, z: 0.8}
-  AttackFxLifetime: 0.08
-  PersistentFxBaseRange: 1
+  AttackFxLifetime: 0.72
+  AttackFxBaseRange: 1
+  AttackFxBaseWidth: 1
+  AttackFxScaleMult: 1
+  ProjectileMuzzlePrefab: {fileID: 3875329135514961720, guid: 09e753e00edbb714ebf549c2dd326f01, type: 3}
+  ProjectileImpactPrefab: {fileID: 3291244538907713110, guid: 4e25fca77bf9f0f4b810156a77203cb3, type: 3}

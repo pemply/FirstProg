@@ -1,5 +1,7 @@
 ﻿using CodeBase.Combat;
 using CodeBase.Infrastructure.Factory;
+using CodeBase.Infrastructure.Services;
+using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Logic;
 using CodeBase.StaticData;
 using CodeBase.Weapon;
@@ -24,7 +26,7 @@ namespace CodeBase.Hero
         [Header("Refs")] [SerializeField] private CharacterController _characterController;
         [SerializeField] private HeroAnimator _heroAnimator;
         [SerializeField] private TargetSensor _sensor;
-        [SerializeField] private WeaponFxPlayer _fx;
+        private WeaponFxPlayer _fx;
         private IDamagePopupService _popups;
         private WeaponStats _weaponStats;
         private bool _hasStats;
@@ -40,15 +42,15 @@ namespace CodeBase.Hero
         private bool _attackInProgress;
 
         private bool _warnedNoProjectiles;
-
         // хто драйвить анімацію (окремо від слота)
         private bool _isAnimationDriver;
-
+      
         private void Awake()
         {
             CacheRefs();
             InitSystems();
-
+            if (_fx != null)
+                _fx.Construct(AllServices.Container.Single<IPoolService>());
             _isAnimationDriver = _isPrimarySlot;
         }
         public void Construct(IDamagePopupService popups)
@@ -69,6 +71,8 @@ namespace CodeBase.Hero
 
             if (_sensor == null)
                 _sensor = GetComponentInChildren<TargetSensor>(true) ?? GetComponentInParent<TargetSensor>(true);
+            
+            
         }
 
         private void InitSystems()
@@ -234,16 +238,21 @@ namespace CodeBase.Hero
             if (!CanAnimateAsPrimary()) return;
             if (!_attackInProgress) return;
 
-            // melee overcap: дамаг не через event
             if (_weaponStats.Shape == WeaponStats.AttackShape.Cone && ShouldUseMeleeTick())
                 return;
 
             _attackInProgress = false;
 
-            Vector3 origin = HeroCenter();
+            Vector3 origin = (_weaponStats.Shape == WeaponStats.AttackShape.Line ||
+                              _weaponStats.Shape == WeaponStats.AttackShape.Aim)
+                ? RangedMuzzleOrigin()
+                : HeroCenter();
+
             if (!DoAttack(origin)) return;
 
-            _fx?.PlayAttackFx(origin);
+// melee fx тільки для cone
+            if (_weaponStats.Shape == WeaponStats.AttackShape.Cone)
+                PlayMeleeFx(origin);
         }
 
         public void OnAttackEnded()
@@ -252,17 +261,25 @@ namespace CodeBase.Hero
             _heroAnimator?.ResetAttackSpeed();
         }
 
+
+     
+
         // ---------------- SECONDARY ----------------
 
         private void DoSecondaryAttackNow()
         {
-            Vector3 origin = HeroCenter();
+            Vector3 origin = (_weaponStats.Shape == WeaponStats.AttackShape.Line ||
+                             _weaponStats.Shape == WeaponStats.AttackShape.Aim)
+                ? RangedMuzzleOrigin()
+                : HeroCenter();
 
             bool attacked = DoAttack(origin);
             _cooldownLeft = attacked ? Mathf.Max(0.02f, _weaponStats.Cooldown) : RetryDelay;
 
             if (!attacked) return;
-            _fx?.PlayAttackFx(origin);
+
+            if (_weaponStats.Shape == WeaponStats.AttackShape.Cone)
+                PlayMeleeFx(origin);
         }
 
         // ---------------- MELEE TICK ----------------
@@ -276,7 +293,7 @@ namespace CodeBase.Hero
 
             if (!attacked) return;
 
-            _fx?.PlayAttackFx(origin);
+            PlayMeleeFx(origin); // ✅ один шлях
 
             // візуал махання обмежуємо
             if (_isPrimarySlot && _isAnimationDriver && _heroAnimator != null && _meleeAnimCdLeft <= 0f)
@@ -285,7 +302,20 @@ namespace CodeBase.Hero
                 _heroAnimator.PlayAttack(HeroAnimator.AttackType.Melee);
             }
         }
+        private void PlayMeleeFx(Vector3 origin)
+        {
+            if (_fx == null) return;
+            if (_weaponStats.Shape != WeaponStats.AttackShape.Cone) return;
 
+            Vector3 fwd = transform.root.forward;
+            fwd.y = 0f;
+            if (fwd.sqrMagnitude < 0.0001f) fwd = Vector3.forward;
+
+            // ✅ точка перед героєм, щоб дуга читалась
+            Vector3 fxOrigin = origin + fwd.normalized * 0.8f + Vector3.up * 0.15f;
+
+            _fx.PlayAttackFx(fxOrigin, fwd, _weaponStats.Range, _weaponStats.HitWidth);
+        }
         private bool ShouldUseMeleeTick()
         {
             float cd = Mathf.Max(0.0001f, _weaponStats.Cooldown);
@@ -338,12 +368,15 @@ namespace CodeBase.Hero
                 }
             }
 
-            Vector3 fwd = transform.root.forward;
+            Vector3 fwd = (_weaponStats.Shape == WeaponStats.AttackShape.Line ||
+                           _weaponStats.Shape == WeaponStats.AttackShape.Aim)
+                ? RangedForward()
+                : transform.root.forward;
 
             switch (_weaponStats.Shape)
             {
                 case WeaponStats.AttackShape.Line:
-                    return _physics.AttackLine(origin, fwd, _weaponStats, _projectiles, _weaponId);
+                    return _physics.AttackLine(origin, fwd, _weaponStats, _projectiles, _weaponId, transform.root);
 
                 case WeaponStats.AttackShape.Cone:
                     return _physics.AttackCone(origin, fwd, _weaponStats, 180f, transform.root);
@@ -371,8 +404,31 @@ namespace CodeBase.Hero
 
             return new DamageRoll(baseDamage, false);
         }
+        private Vector3 RangedMuzzleOrigin()
+        {
+            var m = GetMuzzle();
+            return m != null ? m.position : HeroCenter();
+        }
 
+        private Vector3 RangedForward()
+        {
+            var m = GetMuzzle();
+            Vector3 fwd = m != null ? m.forward : transform.root.forward;
 
+            fwd.y = 0f; // top-down
+            return fwd.sqrMagnitude < 0.0001f ? Vector3.forward : fwd.normalized;
+        }
+        private Transform GetMuzzle()
+        {
+            var all = transform.root.GetComponentsInChildren<MonoBehaviour>(true);
+            IWeaponPresentation pres = null;
+
+            for (int i = 0; i < all.Length; i++)
+                if (all[i] is IWeaponPresentation p) { pres = p; break; }
+
+            var m = pres?.Muzzle;
+            return m;
+        }
         private Vector3 HeroCenter()
         {
             Transform root = transform.root;

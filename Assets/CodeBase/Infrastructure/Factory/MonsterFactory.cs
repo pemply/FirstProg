@@ -28,7 +28,6 @@ namespace CodeBase.Infrastructure.Factory
 
         public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent, Transform heroTransform)
         {
-            Debug.Log($"[SPAWN] type={monsterTypeId} heroId={(heroTransform? heroTransform.GetInstanceID(): -1)} heroPos={(heroTransform? heroTransform.position.ToString() : "null")}");
            
 
             MonsterStaticData monsterData = _staticData.ForMonster(monsterTypeId);
@@ -104,8 +103,9 @@ namespace CodeBase.Infrastructure.Factory
                 kamikaze.Construct(heroTransform);
 
                 kamikaze.Damage = dmg;
-                kamikaze.AttackColdown = monsterData.AttackCooldown;
                 kamikaze.EffectiveDistance = monsterData.EffectiveDistance;
+
+                kamikaze.ExplosionRadius = monsterData.Cleavage; // ✅ ось це
 
                 kamikaze.SetConfig(monsterData.Kamikaze);
             }
@@ -141,6 +141,7 @@ namespace CodeBase.Infrastructure.Factory
 
         private void ResetPooledMonster(GameObject monster)
         {
+            
             // 1) Re-enable behaviours
             var mover = monster.GetComponent<AgentMoveToPlayer>();
             if (mover != null) mover.enabled = true;
@@ -148,10 +149,12 @@ namespace CodeBase.Infrastructure.Factory
             var healer = monster.GetComponent<EnemyHealer>();
             if (healer != null) healer.enabled = true;
 
-            // 2) Reset animator driver (if exists)
             var anim = monster.GetComponent<EnemyAnimator>();
-            if (anim != null) anim.ResetForReuse();
-
+            if (anim != null)
+            {
+                anim.Construct(_pool);
+                anim.ResetForReuse(); // можна лишити як було, або тут після Construct
+            }
             // 3) Reset attacks (IMPORTANT: implement ResetForReuse below)
             var baseAttack = monster.GetComponent<EnemyAttack>();
             if (baseAttack != null) baseAttack.ResetForReuse();

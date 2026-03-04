@@ -3,10 +3,8 @@ using UnityEngine.AI;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.StaticData;
 using CodeBase.Enemy;
-using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.Progress;
 using CodeBase.Infrastructure.Services.RunTime;
-using CodeBase.UI;
 
 public class WaveSpawner : IWaveSpawner
 {
@@ -52,13 +50,37 @@ public class WaveSpawner : IWaveSpawner
         if (enemy == null)
             return false;
 
-        var death = enemy.GetComponent<EnemyDeath>();
-        _killReward.Register(death, typeId);
-
         PlaceEnemy(enemy, spawnPos);
 
-        _alive++;
-        HookDeath(enemy);
+        _alive++; // ✅ ОДИН раз
+
+        // ✅ handle на enemy, не на root
+        var handle = enemy.GetComponent<AliveCounterHandle>();
+        if (handle == null)
+            handle = enemy.AddComponent<AliveCounterHandle>();
+
+        handle.Construct(() => _alive = Mathf.Max(0, _alive - 1));
+
+        // ✅ kill reward тільки на смерть
+        var death = enemy.GetComponent<EnemyDeath>();
+        if (death != null)
+        {
+            _killReward.Register(death, typeId);
+
+            // ✅ при смерті теж mark gone (щоб disable не добив вдруге)
+            death.DeathEvent += OnDeath;
+
+            void OnDeath()
+            {
+                death.DeathEvent -= OnDeath;
+                handle.MarkGone(); // ✅ один шлях з guard
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[WaveSpawner] Enemy '{enemy.name}' has no EnemyDeath.", enemy);
+        }
+
         return true;
     }
 
@@ -84,27 +106,7 @@ public class WaveSpawner : IWaveSpawner
         if (agent != null && agent.isOnNavMesh) agent.Warp(pos);
         else enemy.transform.position = pos;
     }
-
-    private void HookDeath(GameObject enemy)
-    {
-        var death = enemy.GetComponent<EnemyDeath>();
-        if (death == null)
-        {
-            Debug.LogError($"[WaveSpawner] Enemy '{enemy.name}' has no EnemyDeath.");
-            return;
-        }
-
-        death.DeathEvent += OnDeath;
-
-        void OnDeath()
-        {
-            death.DeathEvent -= OnDeath;
-            _alive = Mathf.Max(0, _alive - 1);
-        }
-    }
-    
 }
-
 
 public interface IWaveSpawner
 {

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using CodeBase;
 using CodeBase.GameLogic;
 using CodeBase.GameLogic.Pool;
+using CodeBase.Infrastructure.Services.Pool;
 using CodeBase.Logic;
 using UnityEngine;
 
@@ -8,7 +10,7 @@ public class Projectile : MonoBehaviour, IPoolable
 {
     [SerializeField] private float _radius = 0.15f;
     [SerializeField] private float _maxLifeTime = 5f;
-    
+
     private static int _alive;
     private static int _returned;
     private static int _destroyed;
@@ -22,8 +24,12 @@ public class Projectile : MonoBehaviour, IPoolable
     private bool _isCrit;
     private bool _despawned;
 
+    private GameObject _impactFx;
+    private GameObject _muzzleFx;
+    private Transform _ownerRoot;
+    
     private readonly HashSet<int> _hitHealthIds = new HashSet<int>(16);
-
+    private IPoolService _pool;
     private PooledObject _pooled;
     private IDamagePopupService _damagePopups;
 
@@ -55,7 +61,7 @@ public class Projectile : MonoBehaviour, IPoolable
     public void OnSpawned()
     {
         _despawned = false;
-
+_hitHealthIds.Clear();
         // ресет візуалів (якщо є)
         if (_trail != null) { _trail.Clear(); _trail.emitting = true; }
         if (_ps != null) { _ps.Clear(true); _ps.Play(true); }
@@ -74,7 +80,15 @@ public class Projectile : MonoBehaviour, IPoolable
 
     public void SetCrit(bool isCrit) => _isCrit = isCrit;
 
-    public void Construct(float damage, float range, float speed, int enemyMask, int pierce, IDamagePopupService damagePopups)
+    public void Construct(float damage,
+        float range,
+        float speed,
+        int enemyMask,
+        int pierce,
+        IDamagePopupService damagePopups,
+        GameObject impactFx,
+        GameObject muzzleFx,
+        Transform ownerRoot, IPoolService pool)
     {
         _damage = damage;
         _speed = Mathf.Max(0.01f, speed);
@@ -85,6 +99,12 @@ public class Projectile : MonoBehaviour, IPoolable
         _hitHealthIds.Clear();
 
         _damagePopups = damagePopups;
+
+        _impactFx = impactFx;
+        _muzzleFx = muzzleFx;
+        _ownerRoot = ownerRoot;
+        _pool = pool;
+        
     }
 
     private void Update()
@@ -102,7 +122,7 @@ public class Projectile : MonoBehaviour, IPoolable
         Vector3 dir = to - from;
         float dist = dir.magnitude;
 
-        if (dist > 0.0001f)
+        if (dist > Constant.Epsilone)
         {
             if (Physics.SphereCast(from, _radius, dir.normalized, out RaycastHit hit, dist, _enemyMask))
             {
@@ -118,8 +138,16 @@ public class Projectile : MonoBehaviour, IPoolable
                     }
 
                     _hitHealthIds.Add(id);
+                    var healthComponent = (Component)health;
 
+
+                    if (_ownerRoot != null && healthComponent.transform.root == _ownerRoot)
+                    {
+                        transform.position = hit.point + transform.forward * 0.05f;
+                        return;
+                    }
                     health.TakeDamage(_damage);
+                    SpawnImpact(hit.point, hit.normal);
                     if (_damagePopups != null && IsUnityObjectAlive(_damagePopups))
                         _damagePopups.Spawn(hit.point, Mathf.RoundToInt(_damage), _isCrit);
                     else
@@ -140,6 +168,18 @@ public class Projectile : MonoBehaviour, IPoolable
 
         transform.position = to;
     }
+    private void SpawnImpact(Vector3 point, Vector3 normal)
+    {
+        if (_impactFx == null || _pool == null) return;
+        _pool.Get(_impactFx, point, Quaternion.LookRotation(normal));
+    }
+
+    private void SpawnMuzzle()
+    {
+        if (_muzzleFx == null || _pool == null) return;
+        _pool.Get(_muzzleFx, transform.position, transform.rotation);
+    }
+
     private bool IsUnityObjectAlive(object service)
     {
         var uo = service as UnityEngine.Object;

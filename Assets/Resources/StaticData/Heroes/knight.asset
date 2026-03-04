@@ -18,7 +18,7 @@ MonoBehaviour:
   Title: 
   StartWeapon: 1
   MoveSpeed: 15
-  MaxHp: 100.2
+  MaxHp: 1248.7
   PickupRadius: 2
   DamageMultiplier: 1
   RegenHpPerSec: 0.4

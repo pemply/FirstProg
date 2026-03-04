@@ -13,12 +13,16 @@ MonoBehaviour:
   m_Name: Wave_03
   m_EditorClassIdentifier: Assembly-CSharp::WaveConfig
   Duration: 45
-  SpawnInterval: 0.1
-  MaxAlive: 1482
+  SpawnInterval: 0.01
+  MaxAlive: 191
   Mix:
   - Type: 0
     Weight: 6
   - Type: 1
     Weight: 2
   - Type: 2
+    Weight: 2
+  - Type: 3
+    Weight: 2
+  - Type: 4
     Weight: 2

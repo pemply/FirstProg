@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CodeBase.Infrastructure.Services.Pool;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,6 +14,10 @@ namespace CodeBase.Enemy
         [Header("Explosion (optional)")]
         [SerializeField] private GameObject _explosionVfxPrefab;
         [SerializeField] private float _explosionFallbackLife = 2f;
+        
+        [SerializeField] private float _explosionVfxBaseRadius = 1f;
+
+        private IPoolService _pool;
 
         private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
         private static readonly int DieHash      = Animator.StringToHash("Die");
@@ -21,6 +26,8 @@ namespace CodeBase.Enemy
 
         private bool _finished;
         private HashSet<int> _paramHashes;
+
+        public void Construct(IPoolService pool) => _pool = pool;
 
         private void Awake()
         {
@@ -66,7 +73,6 @@ namespace CodeBase.Enemy
 
         private void Update()
         {
-            
             if (_finished)
                 return;
 
@@ -79,7 +85,7 @@ namespace CodeBase.Enemy
             bool moving =
                 _agent.remainingDistance > _agent.stoppingDistance + 0.05f &&
                 _agent.velocity.sqrMagnitude > 0.01f;
-        
+
             SetBoolSafe(IsMovingHash, moving);
         }
 
@@ -104,6 +110,7 @@ namespace CodeBase.Enemy
 
             SetBoolSafe(IsMovingHash, false);
             if (_animator != null) _animator.applyRootMotion = false;
+
             if (_agent != null && _agent.isActiveAndEnabled)
             {
                 _agent.isStopped = true;
@@ -113,10 +120,14 @@ namespace CodeBase.Enemy
             SetTriggerSafe(DieHash);
         }
 
-        public void PlayExplode()
+        // ✅ НОВЕ: вибух з радіусом
+        public void PlayExplode(float radius)
         {
             if (_finished) return;
             _finished = true;
+
+            if (_animator != null)
+                _animator.applyRootMotion = false;
 
             SetBoolSafe(IsMovingHash, false);
 
@@ -127,8 +138,13 @@ namespace CodeBase.Enemy
             }
 
             SetTriggerSafe(ExplodeHash);
+            SpawnExplosionVfx(radius);
+        }
 
-            SpawnExplosionVfx();
+        // ✅ Backward-compatible (якщо десь ще викликаєш без параметра)
+        public void PlayExplode()
+        {
+            PlayExplode(0f);
         }
 
         public void ResetForReuse()
@@ -137,32 +153,50 @@ namespace CodeBase.Enemy
 
             if (_animator != null)
             {
+                _animator.applyRootMotion = false;
                 _animator.Rebind();
                 _animator.Update(0f);
             }
+
             if (_agent != null)
             {
                 if (!_agent.enabled)
                     _agent.enabled = true;
-                _animator.applyRootMotion = false;
-                _agent.isStopped = false;
+
+                if (_agent.isOnNavMesh)
+                    _agent.isStopped = false;
             }
 
             SetBoolSafe(IsMovingHash, false);
         }
 
-        private void SpawnExplosionVfx()
+        private void SpawnExplosionVfx(float radius)
         {
             if (_explosionVfxPrefab == null)
                 return;
 
-            GameObject vfx = Instantiate(_explosionVfxPrefab, transform.position, Quaternion.identity);
+            GameObject vfx;
 
-            float life = GetVfxLifetime(vfx);
-            if (life <= 0.01f)
-                life = _explosionFallbackLife;
+            if (_pool != null)
+            {
+                vfx = _pool.Get(_explosionVfxPrefab, transform.position, Quaternion.identity, null);
+            }
+            else
+            {
+                vfx = Instantiate(_explosionVfxPrefab, transform.position, Quaternion.identity);
 
-            Destroy(vfx, life);
+                float life = GetVfxLifetime(vfx);
+                if (life <= 0.01f) life = _explosionFallbackLife;
+                Destroy(vfx, life);
+            }
+
+            // ✅ масштаб під радіус (якщо radius заданий)
+            if (vfx != null && radius > 0.001f && _explosionVfxBaseRadius > 0.001f)
+            {
+                // scale=1 відповідає baseRadius, тому scale = radius/baseRadius
+                float k = radius / _explosionVfxBaseRadius;
+                vfx.transform.localScale = Vector3.one * k;
+            }
         }
 
         private static float GetVfxLifetime(GameObject vfxRoot)
@@ -195,21 +229,14 @@ namespace CodeBase.Enemy
 
         private static float GetMax(ParticleSystem.MinMaxCurve curve)
         {
-            switch (curve.mode)
+            return curve.mode switch
             {
-                case ParticleSystemCurveMode.Constant:
-                    return curve.constant;
-
-                case ParticleSystemCurveMode.TwoConstants:
-                    return curve.constantMax;
-
-                case ParticleSystemCurveMode.Curve:
-                case ParticleSystemCurveMode.TwoCurves:
-                    return curve.constantMax;
-
-                default:
-                    return curve.constantMax;
-            }
+                ParticleSystemCurveMode.Constant     => curve.constant,
+                ParticleSystemCurveMode.TwoConstants => curve.constantMax,
+                ParticleSystemCurveMode.Curve        => curve.constantMax,
+                ParticleSystemCurveMode.TwoCurves    => curve.constantMax,
+                _                                    => curve.constantMax
+            };
         }
     }
 }
