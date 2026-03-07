@@ -34,8 +34,7 @@ public class DamagePopupView : MonoBehaviour, IPoolable
     {
         _rt = transform as RectTransform;
         if (_text == null) _text = GetComponent<TMP_Text>();
-        _baseScale = _rt != null ? _rt.localScale : Vector3.one;
-    }
+        _baseScale = (_rt != null ? _rt.localScale : Vector3.one) * 0.4f;    }
 
     private void EnsurePooled()
     {
@@ -95,43 +94,57 @@ public class DamagePopupView : MonoBehaviour, IPoolable
 
         _t += Time.deltaTime;
 
-        if (_rt != null)
-            _rt.position += Vector3.up * _floatSpeed * Time.deltaTime;
-
-        if (_isCrit)
-        {
-            float scaleK;
-
-            if (_t < _critPopInTime)
-            {
-                float a = _t / Mathf.Max(0.0001f, _critPopInTime);
-                scaleK = Mathf.Lerp(_critStartScale, _critPeakScale, EaseOutCubic(a));
-            }
-            else if (_t < _critPopInTime + _critPopOutTime)
-            {
-                float a = (_t - _critPopInTime) / Mathf.Max(0.0001f, _critPopOutTime);
-                scaleK = Mathf.Lerp(_critPeakScale, 1.0f, EaseOutCubic(a));
-            }
-            else
-            {
-                scaleK = 1.0f;
-            }
-
-            if (_rt != null)
-                _rt.localScale = _baseScale * scaleK;
-
-            float tail = 0.20f;
-            if (_t > _life - tail)
-            {
-                float a = Mathf.InverseLerp(_life, _life - tail, _t);
-                var c = _text.color;
-                c.a = Mathf.Clamp01(a);
-                _text.color = c;
-            }
-        }
+        MoveUp();
+        ApplyCritScale();   // тільки якщо _isCrit
+        ApplyTailFade();    // для всіх
 
         if (_t >= _life)
             Despawn();
+    }
+
+    private void MoveUp()
+    {
+        if (_rt == null) return;
+        _rt.position += Vector3.up * _floatSpeed * Time.deltaTime;
+    }
+
+    private void ApplyCritScale()
+    {
+        if (!_isCrit || _rt == null) 
+            return;
+
+        float scaleK;
+
+        if (_t < _critPopInTime)
+        {
+            float a = _t / Mathf.Max(0.0001f, _critPopInTime);
+            scaleK = Mathf.Lerp(_critStartScale, _critPeakScale, EaseOutCubic(a));
+        }
+        else if (_t < _critPopInTime + _critPopOutTime)
+        {
+            float a = (_t - _critPopInTime) / Mathf.Max(0.0001f, _critPopOutTime);
+            scaleK = Mathf.Lerp(_critPeakScale, 1.0f, EaseOutCubic(a));
+        }
+        else
+        {
+            scaleK = 1.0f;
+        }
+
+        _rt.localScale = _baseScale * scaleK;
+    }
+
+    private void ApplyTailFade()
+    {
+        if (_text == null) return;
+
+        float tail = 0.18f;                 // 0.18–0.22 норм
+        if (_t <= _life - tail) return;
+
+        float a = Mathf.InverseLerp(_life, _life - tail, _t);
+
+        var c = _text.color;
+        c.a = Mathf.Clamp01(a);
+        _text.color = c;
     }
 
     private void Despawn()
@@ -175,7 +188,32 @@ public class DamagePopupView : MonoBehaviour, IPoolable
         if (!_isCrit && _rt != null)
             _rt.localScale = _baseScale;
     }
+    public void ShowHealLike(Vector3 screenPos, int heal, float life, float floatSpeed)
+    {
+        EnsurePooled();
 
+        if (_rt == null) _rt = transform as RectTransform;
+        _rt.position = screenPos;
+
+        _isCrit = false;
+        _t = 0f;
+
+        _life = Mathf.Max(0.15f, life);
+        _floatSpeed = Mathf.Max(10f, floatSpeed);
+
+        // ✅ більш “солодкий” heal: +, зелений, легкий shake/wave
+        _text.text =
+            $"<size=155%><color=#49FF79>" +
+            $"<incr a=1.14 f=2.0 w=0.60>" +
+            $"<wave a=0.18 f=2.8 w=0.60>+{heal}</wave>" +
+            $"</incr></color></size>";
+
+        // ✅ легкий pop-in (як “пружинка”)
+        _rt.localScale = _baseScale * 0.88f;
+
+        ResetVisualState();
+        _armed = true;
+    }
     private static float EaseOutCubic(float t)
     {
         t = Mathf.Clamp01(t);

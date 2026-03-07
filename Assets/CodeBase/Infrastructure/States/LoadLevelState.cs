@@ -91,7 +91,8 @@ namespace CodeBase.Infrastructure.States
 
             // 1) HUD перший (бо в ньому DamagePopupSpawner)
             GameObject hud = CreateHud();
-
+            var juice = Camera.main != null ? Camera.main.GetComponent<CombatJuice>() : null;
+            juice?.BindHud(hud);
             // 2) Біндимо попапи + prewarm (перед CreateHero!)
             BindDamagePopups(hud);
             _prewarm.PrewarmAll();

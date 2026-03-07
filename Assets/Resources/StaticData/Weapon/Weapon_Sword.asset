@@ -15,7 +15,7 @@ MonoBehaviour:
   WeaponId: 1
   BaseStats:
     BaseCooldown: 1.14
-    AttackSpeed: 1
+    AttackSpeed: 1.4
     Damage: 5
     Range: 2
     HitWidth: 1

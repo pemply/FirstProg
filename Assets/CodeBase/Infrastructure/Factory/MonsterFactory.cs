@@ -16,16 +16,19 @@ namespace CodeBase.Infrastructure.Factory
         private readonly IDifficultyScalingService _difficulty;
         private readonly EliteConfig _elite;
         private readonly IPoolService _pool;
+        private IDamagePopupService _popupService;
 
-        public MonsterFactory(IStaticDataService staticData, IDifficultyScalingService difficulty, IPoolService pool)
+        public MonsterFactory(IStaticDataService staticData, IDifficultyScalingService difficulty, IPoolService pool, IDamagePopupService popupService)
         {
             _staticData = staticData;
             _difficulty = difficulty;
             _pool = pool;
+            _popupService = popupService;
 
             _elite = Resources.Load<EliteConfig>(AssetsPath.EliteConfigPath);
         }
-
+        public void SetDamagePopups(IDamagePopupService popups) =>
+            _popupService = popups;
         public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent, Transform heroTransform)
         {
            
@@ -131,7 +134,7 @@ namespace CodeBase.Infrastructure.Factory
             if (healer != null)
             {
                 healer.enabled = true;
-                healer.Construct(heroTransform);
+                healer.Construct(heroTransform, _popupService);
                 healer.SetConfig(monsterData.Healer);
             }
 

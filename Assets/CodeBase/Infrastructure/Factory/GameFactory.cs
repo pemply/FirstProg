@@ -22,7 +22,7 @@ namespace CodeBase.Infrastructure.Factory
         private readonly HeroFactory _heroFactory;
         private readonly UIFactory _uiFactory;
         private readonly PickupFactory _pickupFactory;
-        private readonly MonsterFactory _monsterFactory;
+        private MonsterFactory _monsterFactory;
         private readonly PillarFactory _pillarFactory;
         private readonly ProjectileFactory _projectileFactory;
         private readonly IStaticDataService _staticData;
@@ -53,7 +53,7 @@ namespace CodeBase.Infrastructure.Factory
 
             _uiFactory = new UIFactory(assets);
             _pickupFactory = new PickupFactory(assets, xp, _poolService);
-            _monsterFactory = new MonsterFactory(staticData, difficulty, poolService);
+            _monsterFactory = new MonsterFactory(staticData, difficulty, poolService, _damagePopups);
         }
 
         // ✅ викликається після LoadLevel, коли DamagePopupSpawner вже є на сцені
@@ -61,6 +61,8 @@ namespace CodeBase.Infrastructure.Factory
         {
             _damagePopups = damagePopups;
             _projectileFactory.SetDamagePopups(damagePopups);
+
+            _monsterFactory.SetDamagePopups(damagePopups); // ✅ ОЦЕ ДОДАЙ
         }
 
         public GameObject CreateHero(GameObject at)

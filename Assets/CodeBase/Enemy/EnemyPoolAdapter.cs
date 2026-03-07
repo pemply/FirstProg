@@ -39,15 +39,7 @@ namespace CodeBase.Enemy
 
         private void OnDied()
         {
-            // ❗️ВАЖЛИВО:
-            // Для NORMAL смерті НЕ релізь тут, бо ти хочеш чекати animation event.
-            // Для EXPLODE — так, можна одразу.
-            // Тому: цей адаптер або НЕ підписується на DeathEvent,
-            // або релізиться тільки коли EnemyDeath сам скаже “можна”.
-            //
-            // Я рекомендую: ВИДАЛИ це повністю і хай EnemyDeath керує релізом.
-            //
-            // Якщо залишаєш — то хоча б не релізь тут.
+
         }
 
         public void OnSpawned()
@@ -86,7 +78,7 @@ namespace CodeBase.Enemy
 
         public void OnDespawned()
         {
-            // нічого
+
         }
     }
 }

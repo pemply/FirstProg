@@ -1,4 +1,5 @@
 ﻿using CodeBase.Combat;
+using CodeBase.GameLogic;
 using CodeBase.Infrastructure.Factory;
 using CodeBase.Infrastructure.Services;
 using CodeBase.Infrastructure.Services.Pool;
@@ -20,14 +21,18 @@ namespace CodeBase.Hero
         private const float MaxMeleeAnimRate = 3f;
         private const float AnimSpeedCap = 50f;
 
-        [Header("Slot")] [SerializeField] private bool _isPrimarySlot; // true тільки на WeaponPrimary_Attack
+        [Header("Slot")]
+        [SerializeField] private bool _isPrimarySlot; // true тільки на WeaponPrimary_Attack
         public bool IsPrimarySlot => _isPrimarySlot;
 
-        [Header("Refs")] [SerializeField] private CharacterController _characterController;
+        [Header("Refs")]
+        [SerializeField] private CharacterController _characterController;
         [SerializeField] private HeroAnimator _heroAnimator;
         [SerializeField] private TargetSensor _sensor;
+
         private WeaponFxPlayer _fx;
         private IDamagePopupService _popups;
+
         private WeaponStats _weaponStats;
         private bool _hasStats;
 
@@ -42,22 +47,24 @@ namespace CodeBase.Hero
         private bool _attackInProgress;
 
         private bool _warnedNoProjectiles;
+
         // хто драйвить анімацію (окремо від слота)
         private bool _isAnimationDriver;
-      
+
+        // juice (камера/флеш/хітстоп) — окремий компонент
+        private CombatJuice _juice;
+
         private void Awake()
         {
             CacheRefs();
             InitSystems();
-            if (_fx != null)
-                _fx.Construct(AllServices.Container.Single<IPoolService>());
+
+            _fx?.Construct(AllServices.Container.Single<IPoolService>());
+
             _isAnimationDriver = _isPrimarySlot;
+            _juice = Camera.main != null ? Camera.main.GetComponent<CombatJuice>() : null;
         }
-        public void Construct(IDamagePopupService popups)
-        {
-            _popups = popups;
-            _physics?.SetPopups(_popups);
-        }
+
         private void CacheRefs()
         {
             if (_fx == null)
@@ -71,16 +78,16 @@ namespace CodeBase.Hero
 
             if (_sensor == null)
                 _sensor = GetComponentInChildren<TargetSensor>(true) ?? GetComponentInParent<TargetSensor>(true);
-            
-            
         }
 
         private void InitSystems()
         {
             _physics = new WeaponAttackPhysics(overlapSize: 16, raySize: 32);
             _physics.DamageModifier = RollDamage;
+
             if (_popups != null)
                 _physics.SetPopups(_popups);
+
             _auraFx = new PersistentAuraFx();
             _auraFx.SetParentGetter(() => transform.root);
         }
@@ -91,7 +98,6 @@ namespace CodeBase.Hero
         {
             _auraFx.OnDisable();
 
-            // якщо герой не пересоздається між ранами — чистимо runtime-стан
             _hasStats = false;
             _weaponStats = default;
             _cooldownLeft = 0f;
@@ -101,6 +107,12 @@ namespace CodeBase.Hero
 
         // ---------------- injections ----------------
 
+        public void Construct(IDamagePopupService popups)
+        {
+            _popups = popups;
+            _physics?.SetPopups(_popups);
+        }
+
         public void Construct(ProjectileFactory projectiles)
         {
             _projectiles = projectiles;
@@ -109,7 +121,6 @@ namespace CodeBase.Hero
             if (_projectiles != null)
                 _projectiles.DamageModifier = RollDamage;
         }
-
 
         public void SetWeaponId(WeaponId id) => _weaponId = id;
 
@@ -121,12 +132,9 @@ namespace CodeBase.Hero
 
         public void ApplyStats(WeaponStats stats)
         {
-            Debug.Log($"CRIT: chance={_weaponStats.CritChance:0.###} mult={_weaponStats.CritMultiplier:0.###}");
-
             _weaponStats = stats;
             _hasStats = true;
 
-            // не чіпаємо _cooldownLeft (щоб не ламати таймер)
             _attackInProgress = false;
 
             if (_sensor != null)
@@ -149,6 +157,7 @@ namespace CodeBase.Hero
                 return;
 
             TickTimers();
+
             if (_cooldownLeft > 0f)
                 return;
 
@@ -243,14 +252,13 @@ namespace CodeBase.Hero
 
             _attackInProgress = false;
 
-            Vector3 origin = (_weaponStats.Shape == WeaponStats.AttackShape.Line ||
-                              _weaponStats.Shape == WeaponStats.AttackShape.Aim)
-                ? RangedMuzzleOrigin()
-                : HeroCenter();
+            Vector3 origin =
+                (_weaponStats.Shape == WeaponStats.AttackShape.Line || _weaponStats.Shape == WeaponStats.AttackShape.Aim)
+                    ? RangedMuzzleOrigin()
+                    : HeroCenter();
 
             if (!DoAttack(origin)) return;
 
-// melee fx тільки для cone
             if (_weaponStats.Shape == WeaponStats.AttackShape.Cone)
                 PlayMeleeFx(origin);
         }
@@ -261,17 +269,14 @@ namespace CodeBase.Hero
             _heroAnimator?.ResetAttackSpeed();
         }
 
-
-     
-
         // ---------------- SECONDARY ----------------
 
         private void DoSecondaryAttackNow()
         {
-            Vector3 origin = (_weaponStats.Shape == WeaponStats.AttackShape.Line ||
-                             _weaponStats.Shape == WeaponStats.AttackShape.Aim)
-                ? RangedMuzzleOrigin()
-                : HeroCenter();
+            Vector3 origin =
+                (_weaponStats.Shape == WeaponStats.AttackShape.Line || _weaponStats.Shape == WeaponStats.AttackShape.Aim)
+                    ? RangedMuzzleOrigin()
+                    : HeroCenter();
 
             bool attacked = DoAttack(origin);
             _cooldownLeft = attacked ? Mathf.Max(0.02f, _weaponStats.Cooldown) : RetryDelay;
@@ -293,15 +298,15 @@ namespace CodeBase.Hero
 
             if (!attacked) return;
 
-            PlayMeleeFx(origin); // ✅ один шлях
+            PlayMeleeFx(origin);
 
-            // візуал махання обмежуємо
             if (_isPrimarySlot && _isAnimationDriver && _heroAnimator != null && _meleeAnimCdLeft <= 0f)
             {
                 _meleeAnimCdLeft = 1f / MaxMeleeAnimRate;
                 _heroAnimator.PlayAttack(HeroAnimator.AttackType.Melee);
             }
         }
+
         private void PlayMeleeFx(Vector3 origin)
         {
             if (_fx == null) return;
@@ -311,11 +316,10 @@ namespace CodeBase.Hero
             fwd.y = 0f;
             if (fwd.sqrMagnitude < 0.0001f) fwd = Vector3.forward;
 
-            // ✅ точка перед героєм, щоб дуга читалась
             Vector3 fxOrigin = origin + fwd.normalized * 0.8f + Vector3.up * 0.15f;
-
             _fx.PlayAttackFx(fxOrigin, fwd, _weaponStats.Range, _weaponStats.HitWidth);
         }
+
         private bool ShouldUseMeleeTick()
         {
             float cd = Mathf.Max(0.0001f, _weaponStats.Cooldown);
@@ -340,7 +344,7 @@ namespace CodeBase.Hero
                 case WeaponStats.AttackShape.Cone:
                 {
                     bool ok = _sensor != null &&
-                              _sensor.TryGetNearestInFront(origin, transform.root.forward, 120f, out var t);
+                              _sensor.TryGetNearestInFront(origin, transform.root.forward, 120f, out _);
                     return ok;
                 }
 
@@ -351,7 +355,6 @@ namespace CodeBase.Hero
 
         private bool DoAttack(Vector3 origin)
         {
-            // ranged потребує фабрику + валідний weaponId
             if (_weaponStats.Shape == WeaponStats.AttackShape.Line || _weaponStats.Shape == WeaponStats.AttackShape.Aim)
             {
                 if (_projectiles == null)
@@ -368,8 +371,7 @@ namespace CodeBase.Hero
                 }
             }
 
-            Vector3 fwd = (_weaponStats.Shape == WeaponStats.AttackShape.Line ||
-                           _weaponStats.Shape == WeaponStats.AttackShape.Aim)
+            Vector3 fwd = (_weaponStats.Shape == WeaponStats.AttackShape.Line || _weaponStats.Shape == WeaponStats.AttackShape.Aim)
                 ? RangedForward()
                 : transform.root.forward;
 
@@ -391,19 +393,19 @@ namespace CodeBase.Hero
 
         private DamageRoll RollDamage(float baseDamage)
         {
-            float chancePercent = _weaponStats.CritChance; // 10 = 10%
-            float mult = _weaponStats.CritMultiplier; // 2 = x2
-
-            float chance01 = Mathf.Clamp01(chancePercent * 0.01f);
+            float chance01 = Mathf.Clamp01(_weaponStats.CritChance * 0.01f);
 
             if (chance01 > 0f && Random.value < chance01)
             {
-                float safeMult = Mathf.Max(1f, mult);
+                _juice?.OnCrit();
+
+                float safeMult = Mathf.Max(1f, _weaponStats.CritMultiplier);
                 return new DamageRoll(baseDamage * safeMult, true);
             }
 
             return new DamageRoll(baseDamage, false);
         }
+
         private Vector3 RangedMuzzleOrigin()
         {
             var m = GetMuzzle();
@@ -418,6 +420,7 @@ namespace CodeBase.Hero
             fwd.y = 0f; // top-down
             return fwd.sqrMagnitude < 0.0001f ? Vector3.forward : fwd.normalized;
         }
+
         private Transform GetMuzzle()
         {
             var all = transform.root.GetComponentsInChildren<MonoBehaviour>(true);
@@ -426,9 +429,9 @@ namespace CodeBase.Hero
             for (int i = 0; i < all.Length; i++)
                 if (all[i] is IWeaponPresentation p) { pres = p; break; }
 
-            var m = pres?.Muzzle;
-            return m;
+            return pres?.Muzzle;
         }
+
         private Vector3 HeroCenter()
         {
             Transform root = transform.root;

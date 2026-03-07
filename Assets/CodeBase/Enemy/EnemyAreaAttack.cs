@@ -249,14 +249,16 @@ namespace CodeBase.Enemy
 
         private Vector3 SnapToGround(Vector3 p)
         {
+            float GroundLift = Constant.Epsilone;
+            
             Vector3 origin = p + Vector3.up * 3f;
             if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 10f, _cfg.GroundMask, QueryTriggerInteraction.Ignore))
             {
-                p.y = hit.point.y;
+                p.y = hit.point.y + GroundLift;   // ✅ ОЦЕ
                 return p;
             }
 
-            p.y = _hero != null ? _hero.position.y : p.y;
+            p.y = (_hero != null ? _hero.position.y : p.y) + GroundLift; // ✅ і тут
             return p;
         }
 

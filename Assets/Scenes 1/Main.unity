@@ -196,6 +196,7 @@ GameObject:
   - component: {fileID: 330585544}
   - component: {fileID: 330585548}
   - component: {fileID: 330585549}
+  - component: {fileID: 330585550}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -289,9 +290,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b58d531d1b53462194a518776a279503, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.CameraLogic.CameraFollow
-  RotationAngleX: 40
-  DistanceOffset: 24.9
-  OffsetY: 0.6
+  _rotationAngleX: 40
+  _distanceOffset: 30.4
+  _offsetY: 0.6
 --- !u!114 &330585549
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -352,6 +353,23 @@ MonoBehaviour:
   m_BeforeTransparentBundles: []
   m_BeforeStackBundles: []
   m_AfterStackBundles: []
+--- !u!114 &330585550
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cd4de1143414839bb30f9b3152d205e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _critShakeAmp: 0.21
+  _critShakeDur: 0.09
+  _critTimeScale: 0.08
+  _critStopRealSeconds: 0.03
+  _critCooldown: 0.07
 --- !u!1 &369452938
 GameObject:
   m_ObjectHideFlags: 0

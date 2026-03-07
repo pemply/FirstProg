@@ -18,5 +18,9 @@ namespace CodeBase.StaticData
         public GameObject HealFxPrefab;
         [Range(0.1f, 5f)]  public float FxLifetime = 1f;
         public Vector3 FxOffset = new Vector3(0f, 1.5f, 0f);
+        
+        [Header("Heal Popup")]
+        [Range(0.1f, 2f)] public float HealPopupLife = 0.7f;
+        [Range(10f, 250f)] public float HealPopupFloatSpeed = 75f;
     }
 }

@@ -47,7 +47,7 @@ namespace CodeBase.Infrastructure.States
                            services.Single<PoolPrewarmService>()
                         ),
                 [typeof(GameLoopState)] =  new GameLoopState(this,services.Single<IGameFactory>(), _runner,services.Single<IXpService>(), services.Single<RunContextService>(), services.Single<IDifficultyScalingService>() ),
-                [typeof(UpgradeState)] =  new UpgradeState(this, services.Single<IUpgradeService>(),services.Single<IStaticDataService>(), services.Single<RunContextService>(), services.Single<IPersistentProgressService>()),
+                [typeof(UpgradeState)] =  new UpgradeState(this, services.Single<IUpgradeService>(),services.Single<IStaticDataService>(), services.Single<RunContextService>(), services.Single<IPersistentProgressService>(), services.Single<IXpService>()),
                 [typeof(GameOverState)] =  new GameOverState(this, services.Single<IGameFactory>()),
                 
             };

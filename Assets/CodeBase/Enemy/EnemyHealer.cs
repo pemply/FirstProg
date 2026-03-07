@@ -25,22 +25,30 @@ namespace CodeBase.Enemy
 
         [Header("Layers")]
         [SerializeField] private LayerMask _allyMask;
-
+        private IDamagePopupService _popups;
         private Transform _hero;
         private NavMeshAgent _agent;
 
         private float _cd;
         private float _retargetTimer;
-
+        private float _healPopupLife = 0.7f;
+        private float _healPopupFloatSpeed = 75f;
         private IHealth _currentTarget;
         private readonly Collider[] _hits = new Collider[48];
 
-        public void Construct(Transform hero) => _hero = hero;
+        public void Construct(Transform hero, IDamagePopupService popups)
+        {
+            _hero = hero;
+            _popups = popups;
+
+            if (_popups == null)
+                Debug.LogError("[EnemyHealer] popups service is NULL (not injected)", this);
+        }
 
         public void SetConfig(HealerConfig cfg)
         {
             if (cfg == null) return;
-
+         
             _cooldown = cfg.Cooldown;
             _healAmount = cfg.HealAmount;
             _healRadius = cfg.HealRadius;
@@ -50,6 +58,9 @@ namespace CodeBase.Enemy
             _healFxPrefab = cfg.HealFxPrefab;
             _fxLifetime = cfg.FxLifetime;
             _fxOffset = cfg.FxOffset;
+            
+            _healPopupLife = cfg.HealPopupLife;
+            _healPopupFloatSpeed = cfg.HealPopupFloatSpeed;
         }
 
         private void Awake()
@@ -69,9 +80,8 @@ namespace CodeBase.Enemy
                 }
                 return;
             }
-
             if (_hero == null) return;
-            // 1) ретаргет раз в 0.25с (щоб не дергалось)
+            // 1) ретаргет раз в 0.25с 
             _retargetTimer -= Time.deltaTime;
             if (_retargetTimer <= 0f)
             {
@@ -108,12 +118,24 @@ namespace CodeBase.Enemy
             if (!IsInRange(_currentTarget, _healRadius))
                 return;
 
+            float before = _currentTarget.currentHealth;
+
             _currentTarget.Heal(_healAmount);
+
+            float healed = _currentTarget.currentHealth - before;
+            if (healed > 0.01f && _popups != null)
+            {
+                int healInt = Mathf.CeilToInt(healed);
+                var mb = (MonoBehaviour)_currentTarget;
+
+                // позиція для тексту (можеш лишити _fxOffset або зробити окремий)
+                Vector3 worldPos = mb.transform.position + _fxOffset;
+                _popups.SpawnHeal(worldPos, healInt, _healPopupLife, _healPopupFloatSpeed);
+            }
+
             PlayHealFx(_currentTarget);
 
             _cd = _cooldown;
-            if (GetComponent<EnemyHealth>().IsDead)
-                Debug.LogError("HEALER MOVES WHILE DEAD", this);
         }
 
         private IHealth FindMostDamagedAlly(bool ignoreHealers)

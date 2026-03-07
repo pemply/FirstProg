@@ -13,12 +13,22 @@ MonoBehaviour:
   m_Name: AreaAttackConfig
   m_EditorClassIdentifier: 
   Damage: 35.6
-  Cooldown: 0.98
-  Windup: 1.04
+  Cooldown: 0
   AoERadius: 7.73
   TelegraphPrefab: {fileID: 1830188523380823483, guid: 94aa2450d32f0c2488a93bf418bed6e2, type: 3}
+  GrenadePrefab: {fileID: 186104, guid: 2e939735c3106744498641b91530a8ee, type: 3}
+  GrenadeFlightTime: 0.15
+  GrenadeArcHeight: 1.5
+  ExplosionPrefab: {fileID: 389972561583142955, guid: a6a02baceacd0a34892152a14a057b79, type: 3}
   SensorRadius: 30
+  SpawnForwardOffset: 0.25
+  SpawnUpOffset: 0.1
+  GroundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   ForwardLead: 1.5
   SideOffset: 1
   RandomJitter: 1.18
   MinDistanceFromHeroMult: 0.36
+  ThrowSpeed: 1.71
+  ExplosionVfxBaseRadius: 2.04

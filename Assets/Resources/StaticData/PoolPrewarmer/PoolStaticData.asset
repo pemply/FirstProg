@@ -19,3 +19,4 @@ MonoBehaviour:
   ProjectileMuzzlePrefab: {fileID: 3875329135514961720, guid: 09e753e00edbb714ebf549c2dd326f01, type: 3}
   SwordSlashFxPrefab: {fileID: 6131268248031804023, guid: 58eb57a8db9362b49a2c9d078230ae67, type: 3}
   KamikazeExplosionPrefab: {fileID: 389972561583142955, guid: a6a02baceacd0a34892152a14a057b79, type: 3}
+  RangerGrenadePrefab: {fileID: 186104, guid: 2e939735c3106744498641b91530a8ee, type: 3}

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using CodeBase.GameLogic.Upgrade;
 using CodeBase.Infrastructure.Services.PersistentProgress;
+using CodeBase.Infrastructure.Services.Progress;
 using CodeBase.Infrastructure.Services.RunTime;
 using CodeBase.Infrastructure.States.BetweenStates;
 using CodeBase.StaticData;
@@ -16,22 +17,27 @@ namespace CodeBase.Infrastructure.States
         private readonly IStaticDataService _staticData;
         private readonly RunContextService _run;
         private readonly IPersistentProgressService _progress;
+        private readonly IXpService _xp;
         public UpgradeState(
             GameStateMachine stateMachine,
             IUpgradeService upgrades,
             IStaticDataService staticData,
-            RunContextService run, IPersistentProgressService progress)
+            RunContextService run,
+            IPersistentProgressService progress,
+            IXpService xp)
         {
             _stateMachine = stateMachine;
             _upgrades = upgrades;
             _staticData = staticData;
             _run = run;
             _progress = progress;
+            _xp = xp;
         }
         
 
         public void Enter(UpgradePayload payload)
         {
+            CombatJuice.GamePause.IsHardPaused = true;
             Time.timeScale = 0f;
 
             var hud = payload.Loop.Hud;
@@ -61,12 +67,13 @@ namespace CodeBase.Infrastructure.States
                 var roll = rolls[index];
                 if (roll.Config != null)
                 {
-                    // якщо це "GetWeapon" — беремо previewId який уже в roll
                     if (roll.Config.Type == UpgradeType.GetSecondaryWeapon)
                         _run.PendingWeaponId = roll.WeaponPreviewId;
 
                     _upgrades.Apply(roll);
                 }
+
+                _xp.ConfirmLevelUp();
 
                 window.Hide();
                 Resume(payload.WaveIndex);
@@ -77,6 +84,7 @@ namespace CodeBase.Infrastructure.States
 
         private void Resume(int waveIndex)
         {
+            CombatJuice.GamePause.IsHardPaused = false;
             Time.timeScale = 1f;
 
             _stateMachine.Enter<GameLoopState, ResumeWavesPayload>(

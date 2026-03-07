@@ -47,7 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _visual: {fileID: 7192326402787578176}
   _appearTime: 0.3
-  _pulseSpeed: 31.7
+  _pulseSpeed: 8
   _minScaleMult: 0.92
   _maxScaleMult: 1.05
 --- !u!1 &5449097615950225452
@@ -115,7 +115,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 045f1232f834623409dcf4ecbc5878f9, type: 2}
+  - {fileID: 2100000, guid: 0d792532a3c70f847bf9893ec8ec21e0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
