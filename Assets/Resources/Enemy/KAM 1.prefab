@@ -159,6 +159,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4240258789033990720, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
+      propertyPath: _pushDuration
+      value: 0.65
+      objectReference: {fileID: 0}
     - target: {fileID: 5519325962627465573, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}
       propertyPath: _agent
       value: 
@@ -248,9 +252,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   EffectiveDistance: 0.2
   Damage: 10
+  ExplosionRadius: 1.5
   FuseDelay: 0.6
-  RadiusPadding: 0.08
   BlinkSpeed: 12
+  DetonatePadding: 0.08
 --- !u!4 &5652634304973845514 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1411931353250035409, guid: cc581ef7c7155ca47bf266be6657951a, type: 3}

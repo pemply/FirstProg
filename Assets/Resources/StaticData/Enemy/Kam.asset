@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Kam
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.MonsterStaticData
   MonsterTypeId: 2
-  Hp: 6
-  Damage: 14.8
+  Hp: 5
+  Damage: 4.6
   MaxLoot: 0
   EffectiveDistance: 0.77
   Cleavage: 5

@@ -59,6 +59,7 @@ namespace CodeBase.Infrastructure.States
             // ⭐ ОЦЕ ГОЛОВНЕ: робимо "рол" значень + рідкість для UI і Apply
             float luck = _progress.Progress.heroStats.Luck;
             Debug.Log($"[UPGRADE] Hero Luck = {luck}");
+            
             var rolls = UpgradeRoller.Roll3(options, _staticData.RarityChances, luck);
 
 

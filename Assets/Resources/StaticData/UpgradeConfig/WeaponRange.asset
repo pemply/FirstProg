@@ -18,17 +18,17 @@ MonoBehaviour:
   TitleOverride: 
   UsesInt: 0
   CommonF:
-    Min: 1.78
-    Max: 1.72
+    Min: 0.78
+    Max: 1.21
   RareF:
-    Min: 1.83
-    Max: 1.54
+    Min: 1.51
+    Max: 2.47
   EpicF:
-    Min: 1.91
-    Max: 2.15
+    Min: 2.5
+    Max: 3.13
   LegendaryF:
-    Min: 2.02
-    Max: 3.15
+    Min: 3.18
+    Max: 4.15
   CommonI:
     Min: 0
     Max: 0

@@ -19,15 +19,15 @@ MonoBehaviour:
   UsesInt: 0
   CommonF:
     Min: 1
-    Max: 4
+    Max: 2
   RareF:
-    Min: 5
-    Max: 10
+    Min: 3
+    Max: 4
   EpicF:
-    Min: 11
-    Max: 12
+    Min: 5
+    Max: 6
   LegendaryF:
-    Min: 13
+    Min: 10
     Max: 14
   CommonI:
     Min: 0

@@ -16,7 +16,7 @@ MonoBehaviour:
   Type: 9
   MaxPicks: 0
   TitleOverride: 
-  UsesInt: 0
+  UsesInt: 1
   CommonF:
     Min: 1000
     Max: 1000
@@ -33,11 +33,11 @@ MonoBehaviour:
     Min: 10
     Max: 20
   RareI:
-    Min: 30
-    Max: 40
+    Min: 18
+    Max: 25
   EpicI:
-    Min: 50
-    Max: 60
+    Min: 32
+    Max: 47
   LegendaryI:
-    Min: 70
+    Min: 55
     Max: 100

@@ -10,7 +10,7 @@
         public const string EliteConfigPath = "StaticData/Enemy/Elite/elite";
         public const string PillarSpawnerPath = "SceneObjPref/sapwnerPilar"; 
         public const string GameStartConfig = "StaticData/GameStartWeapon/GameStartConfig"; 
-        public const string ChanceRarityUpg = "StaticData/ChanceRarityUpg"; 
+        public const string ChanceRarityUpg = "StaticData/ChanceRarityUpg/New Upgrade Rarity Chances"; 
         public const string WeaponConfig = "StaticData/Weapon"; 
         public const string UpgradeConfig = "StaticData/UpgradeConfig"; 
         public const string HeroesConfig = "StaticData/Heroes"; 

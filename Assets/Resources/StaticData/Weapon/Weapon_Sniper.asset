@@ -16,7 +16,7 @@ MonoBehaviour:
   BaseStats:
     BaseCooldown: 1.3
     AttackSpeed: 0.29
-    Damage: 5.07
+    Damage: 2
     Range: 17.43
     HitWidth: 0.74
     Pierce: 2

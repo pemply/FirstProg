@@ -498,7 +498,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18d216cab87740bab24fbd74b938fba8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.Enemy.EnemyKnockback
-  _pushDuration: 0.12
+  _pushDuration: 0.15
   _maxDistance: 10
 --- !u!114 &8979026963889873829
 MonoBehaviour:
@@ -516,6 +516,7 @@ MonoBehaviour:
   _agent: {fileID: 0}
   _explosionVfxPrefab: {fileID: 0}
   _explosionFallbackLife: 2
+  _explosionVfxBaseRadius: 1
 --- !u!114 &2453179040269729997
 MonoBehaviour:
   m_ObjectHideFlags: 0

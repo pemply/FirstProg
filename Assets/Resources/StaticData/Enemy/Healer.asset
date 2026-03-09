@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Healer
   m_EditorClassIdentifier: 
   MonsterTypeId: 4
-  Hp: 13
+  Hp: 8
   Damage: 1
   MaxLoot: 0
   EffectiveDistance: 5

@@ -34,16 +34,18 @@ namespace CodeBase.StaticData
                 UpgradeType.Hp => "HP",
                 UpgradeType.WeaponDamage => "Damage",
                 UpgradeType.WeaponCooldown => "Cooldown",
-                UpgradeType.PickupRadius => "Pickup Radius",
-                UpgradeType.KnockbackChance => "Knockback Chance",
+                UpgradeType.PickupRadius => "Pickup",
+                UpgradeType.KnockbackChance => "KB Chance",
                 UpgradeType.Knockback => "Knockback",
                 UpgradeType.WeaponPierce => "Pierce",
                 UpgradeType.WeaponRange => "Range",
                 UpgradeType.WeaponWidth => "Width",
-                UpgradeType.GetSecondaryWeapon => "Get Weapon",
+                UpgradeType.GetSecondaryWeapon => "Weapon",
                 UpgradeType.Luck => "Luck",
-                UpgradeType.RegenHp => "RegenHp",
-
+                UpgradeType.RegenHp => "Regen",
+                UpgradeType.AttackSpeed => "Atk Speed",
+                UpgradeType.CritChancePercent => "Crit Chance",
+                UpgradeType.CritMultiplier => "Crit Damage",
                 _ => Type.ToString()
             };
         }

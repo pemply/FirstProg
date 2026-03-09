@@ -30,14 +30,14 @@ MonoBehaviour:
     Min: 0
     Max: 0
   CommonI:
-    Min: 368
-    Max: 868
+    Min: 4
+    Max: 8
   RareI:
-    Min: 526
-    Max: 902
+    Min: 7
+    Max: 10
   EpicI:
-    Min: 919
-    Max: 954
+    Min: 15
+    Max: 20
   LegendaryI:
-    Min: 794
-    Max: 958
+    Min: 30
+    Max: 40

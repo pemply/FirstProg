@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: DifficultyConfig
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.DifficultyConfig
   FirstUpgradeAfterSeconds: 5.08
-  UpgradeEverySeconds: 3.1
+  UpgradeEverySeconds: 11.42
   MaxTier: 200
-  HpStep: 0
-  DmgStep: 1
-  XpStep: 2.3
+  HpStep: 1.64
+  DmgStep: 1.03
+  XpStep: 1
   BaseHpMult: 1
   BaseDmgMult: 1
   BaseXpMult: 1
