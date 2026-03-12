@@ -23,8 +23,10 @@ namespace CodeBase.Enemy
         private static readonly int DieHash      = Animator.StringToHash("Die");
         private static readonly int ExplodeHash  = Animator.StringToHash("Explode");
         private static readonly int AttackHash   = Animator.StringToHash("Attack");
+        private static readonly int AttackSpeedHash = Animator.StringToHash("AttackSpeed");
         private static readonly int ThrowHash = Animator.StringToHash("Throw");
         private static readonly int ThrowSpeedHash = Animator.StringToHash("ThrowSpeed");
+  
         private bool _finished;
         private HashSet<int> _paramHashes;
 
@@ -98,9 +100,14 @@ namespace CodeBase.Enemy
                    && _agent.isOnNavMesh;
         }
 
-        public void PlayAttack()
+        public void PlayAttack(float speed = 1f)
         {
-            if (_finished) return;
+            if (_finished || _animator == null) 
+                return;
+
+            if (HasParam(AttackSpeedHash))
+                _animator.SetFloat(AttackSpeedHash, Mathf.Max(0.1f, speed));
+
             SetTriggerSafe(AttackHash);
         }
 
@@ -177,7 +184,14 @@ namespace CodeBase.Enemy
 
             SetBoolSafe(IsMovingHash, false);
         }
+        public void ResetAttackSpeed()
+        {
+            if (_animator == null) 
+                return;
 
+            if (HasParam(AttackSpeedHash))
+                _animator.SetFloat(AttackSpeedHash, 1f);
+        }
         private void SpawnExplosionVfx(float radius)
         {
             if (_explosionVfxPrefab == null)

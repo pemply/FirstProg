@@ -42,10 +42,10 @@ namespace CodeBase.StaticData
             Pierce = 0,
 
             Knockback = 0f,
-            KnockbackChance = 0.05f,
+            KnockbackChance = 5f,
             Shape = AttackShape.Cone,
 
-             CritChance = 0.1f,
+             CritChance = 5f,
              CritMultiplier = 1f
         };
     }

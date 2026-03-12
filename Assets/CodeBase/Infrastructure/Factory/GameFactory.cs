@@ -123,6 +123,9 @@ namespace CodeBase.Infrastructure.Factory
         public GameObject CreateMonster(MonsterTypeId monsterTypeId, Transform parent)
         {
             GameObject monster = _monsterFactory.CreateMonster(monsterTypeId, parent, HeroTransform);
+            if (monster == null)
+                return null;
+
             RegisterProgressWatchers(monster);
             return monster;
         }

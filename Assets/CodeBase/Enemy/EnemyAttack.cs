@@ -12,9 +12,10 @@ namespace CodeBase.Enemy
         public float AttackColdown = 3f;
         public float EffectiveDistance = 0.5f;
         public float Damage = 10f;
+        public float AttackAnimSpeed = 1f;
 
         [Header("Hit Filter")]
-        [SerializeField] private LayerMask _heroMask; // ✅ постав HeroHurtbox
+        [SerializeField] private LayerMask _heroMask;
 
         public bool IsAttacking => _isAttacking;
 
@@ -25,6 +26,7 @@ namespace CodeBase.Enemy
         private EnemyAnimator _anim;
 
         private float _attackCooldown;
+        private float _attackTimer;
         private bool _isAttacking;
         private bool _attackIsActive;
 
@@ -57,6 +59,13 @@ namespace CodeBase.Enemy
             if (_attackCooldown > 0f)
                 _attackCooldown -= Time.deltaTime;
 
+            if (_isAttacking)
+            {
+                _attackTimer -= Time.deltaTime;
+                if (_attackTimer <= 0f)
+                    ForceFinishAttack();
+            }
+
             if (CanAttack())
                 StartAttack();
         }
@@ -68,10 +77,9 @@ namespace CodeBase.Enemy
             if (_attackCooldown > 0f) return false;
             if (_heroTransform == null || _heroHealth == null) return false;
 
-            return HitHero(); // ✅ одна логіка
+            return HitHero();
         }
 
-        // Animation Event
         public void OnAttack()
         {
             if (_heroHealth == null || _heroTransform == null)
@@ -81,16 +89,22 @@ namespace CodeBase.Enemy
                 _heroHealth.TakeDamage(Damage);
         }
 
-        // Animation Event
         public void OnAttackEnded()
         {
-            _attackCooldown = AttackColdown;
+            ForceFinishAttack();
+        }
+
+        private void ForceFinishAttack()
+        {
             _isAttacking = false;
+            _attackTimer = 0f;
+            _attackCooldown = AttackColdown;
+
+            _anim?.ResetAttackSpeed();
 
             if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
                 _agent.isStopped = false;
         }
-
         private bool HitHero()
         {
             Vector3 p = StartPoint();
@@ -100,14 +114,13 @@ namespace CodeBase.Enemy
                 Cleavage,
                 _hits,
                 _heroMask,
-                QueryTriggerInteraction.Ignore); // ✅ ігноримо trigger-и
+                QueryTriggerInteraction.Ignore);
 
             for (int i = 0; i < hitCount; i++)
             {
                 Collider c = _hits[i];
                 if (c == null) continue;
 
-                // hurtbox — дитина героя, тому IHealth знайдеться в parent
                 if (c.GetComponentInParent<IHealth>() == _heroHealth)
                     return true;
             }
@@ -145,13 +158,12 @@ namespace CodeBase.Enemy
                 transform.rotation = Quaternion.LookRotation(dir);
 
             if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
-            {
                 _agent.isStopped = true;
-                _agent.ResetPath();
-            }
 
             _isAttacking = true;
-            _anim?.PlayAttack();
+            _attackTimer = Mathf.Max(0.15f, 1f / Mathf.Max(0.05f, AttackAnimSpeed));
+
+            _anim?.PlayAttack(AttackAnimSpeed);
         }
 
         public void EnableAttack() => _attackIsActive = true;
@@ -160,6 +172,7 @@ namespace CodeBase.Enemy
         public void ResetForReuse()
         {
             _attackCooldown = 0f;
+            _attackTimer = 0f;
             _isAttacking = false;
             _attackIsActive = false;
             enabled = true;

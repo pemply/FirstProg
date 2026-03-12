@@ -16,12 +16,12 @@ MonoBehaviour:
   BaseStats:
     BaseCooldown: 1.14
     AttackSpeed: 1.4
-    Damage: 3
+    Damage: 5
     Range: 2
     HitWidth: 1
     Pierce: 1
-    Knockback: 0.56
-    KnockbackChance: 0.05
+    Knockback: 3
+    KnockbackChance: 5
     Shape: 1
     CritChance: 0.1
     CritMultiplier: 1
@@ -32,7 +32,6 @@ MonoBehaviour:
   PersistentFxOffset: {x: 0, y: 0, z: 0}
   AttackFxPrefab: {fileID: 6131268248031804023, guid: 58eb57a8db9362b49a2c9d078230ae67, type: 3}
   AttackFxOffset: {x: 0, y: 0, z: 0}
-  AttackFxLifetime: 2.48
   AttackFxBaseRange: 2
   AttackFxBaseWidth: 1
   AttackFxScaleMult: 1

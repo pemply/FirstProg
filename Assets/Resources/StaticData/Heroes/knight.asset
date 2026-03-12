@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b2c452c8cae457198f4916d2c2e9f58, type: 3}
   m_Name: knight
   m_EditorClassIdentifier: 
-  CritChanceBonusPercent: 10
+  CritChanceBonusPercent: 0
   CritMultBonus: 5.27
   Id: 2
   Title: 
   StartWeapon: 1
-  MoveSpeed: 15
-  MaxHp: 200
+  MoveSpeed: 10
+  MaxHp: 50
   PickupRadius: 2
   DamageMultiplier: 1
   RegenHpPerSec: 0.4

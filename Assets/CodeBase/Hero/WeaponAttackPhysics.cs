@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeBase.Enemy;
 using CodeBase.GameLogic;
 using CodeBase.Hero;
 using CodeBase.Logic;
@@ -126,7 +127,12 @@ namespace CodeBase.Combat
                 if (col == null) continue;
                 if (col.transform.root == selfRoot) continue;
 
-                if (TryHit(col, stats.Damage, DamageModifier))
+                Vector3 dir = col.transform.position - origin;
+                dir.y = 0f;
+                if (dir.sqrMagnitude < Constant.Epsilone)
+                    dir = Vector3.forward;
+
+                if (TryHit(col, stats, dir.normalized, DamageModifier))
                     hitAny = true;
             }
 
@@ -163,7 +169,7 @@ namespace CodeBase.Combat
                 if (Vector3.Dot(fwd, to.normalized) < cos)
                     continue;
 
-                if (!TryHit(col, stats.Damage, DamageModifier))
+                if (!TryHit(col, stats, to.normalized, DamageModifier))
                     continue;
 
                 hitCount++;
@@ -184,7 +190,7 @@ namespace CodeBase.Combat
 
             Vector3 dir = target.position - origin;
             dir.y = 0f;
-            if (dir.sqrMagnitude < 0.0001f)
+            if (dir.sqrMagnitude < Constant.Epsilone) 
                 dir = selfRoot != null ? selfRoot.forward : Vector3.forward;
 
             projectiles.Spawn(weaponId, origin, dir.normalized, stats, selfRoot); // ✅ ownerRoot
@@ -205,7 +211,7 @@ namespace CodeBase.Combat
             return true;
         }
 
-        private bool TryHit(Collider col, float baseDamage, Func<float, DamageRoll> damageModifier)
+        private bool TryHit(Collider col, WeaponStats stats, Vector3 hitDirection, Func<float, DamageRoll> damageModifier)
         {
             IHealth health = col.GetComponentInParent<IHealth>();
             if (health == null) return false;
@@ -213,22 +219,55 @@ namespace CodeBase.Combat
             if (!RegisterHit(health))
                 return false;
 
-            float dmg = baseDamage;
+            float dmg = stats.Damage;
             bool isCrit = false;
 
             if (damageModifier != null)
             {
-                var roll = damageModifier(baseDamage);
+                var roll = damageModifier(stats.Damage);
                 dmg = roll.Damage;
                 isCrit = roll.IsCrit;
             }
 
             health.TakeDamage(dmg);
 
-            // ✅ замість static Instance
+            TryApplyKnockback(col, stats, hitDirection);
+
             _popups?.Spawn(col.bounds.center, Mathf.RoundToInt(dmg), isCrit);
 
             return true;
+        }
+        private void TryApplyKnockback(Collider col, WeaponStats stats, Vector3 hitDirection)
+        {
+            Debug.Log($"[KB TEST] entered chance={stats.KnockbackChance}");
+
+            if (stats.Knockback <= 0f)
+                return;
+
+            float chancePercent = Mathf.Clamp(stats.KnockbackChance, 0f, 100f);
+            float roll = UnityEngine.Random.Range(0f, 100f);
+
+            Debug.Log($"[KB TEST] roll={roll} chance={chancePercent}");
+
+            if (roll >= chancePercent)
+            {
+                Debug.Log("[KB TEST] MISS");
+                return;
+            }
+
+            Debug.Log("[KB TEST] SUCCESS");
+
+            EnemyKnockback knockback = col.GetComponentInParent<EnemyKnockback>();
+            if (knockback == null)
+                return;
+
+            Vector3 dir = hitDirection;
+            dir.y = 0f;
+
+            if (dir.sqrMagnitude < 0.0001f)
+                return;
+
+            knockback.Push(dir.normalized, stats.Knockback);
         }
     }
 }

@@ -34,7 +34,7 @@ public class DamagePopupView : MonoBehaviour, IPoolable
     {
         _rt = transform as RectTransform;
         if (_text == null) _text = GetComponent<TMP_Text>();
-        _baseScale = (_rt != null ? _rt.localScale : Vector3.one) * 0.4f;    }
+        _baseScale = (_rt != null ? _rt.localScale : Vector3.one) * 0.8f;    }
 
     private void EnsurePooled()
     {

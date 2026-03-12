@@ -13,14 +13,15 @@ MonoBehaviour:
   m_Name: Tank
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.MonsterStaticData
   MonsterTypeId: 1
-  Hp: 9
-  Damage: 2.1
+  Hp: 60
+  Damage: 18
   MaxLoot: 0
   EffectiveDistance: 0.53
   Cleavage: 0.5
-  MoveSpeed: 5.96
+  MoveSpeed: 5.5
   PrefabReference: {fileID: 5190756777425280038, guid: 4c60ef41664aa044292a60606079e04e, type: 3}
-  AttackCooldown: 0.31
+  AttackCooldown: 0.9
+  AnimAttackSpeed: 0.68
   XpReward: 20
   Kamikaze: {fileID: 0}
   AreaAttack: {fileID: 0}

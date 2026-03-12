@@ -13,14 +13,15 @@ MonoBehaviour:
   m_Name: CAstRAnge
   m_EditorClassIdentifier: 
   MonsterTypeId: 3
-  Hp: 8
-  Damage: 3.4
+  Hp: 30
+  Damage: 1
   MaxLoot: 0
   EffectiveDistance: 0.5
   Cleavage: 0.5
-  MoveSpeed: 4.91
+  MoveSpeed: 7.5
   PrefabReference: {fileID: 7111108049148385258, guid: 1ffffc29ed14fcc4891cc73e59c86768, type: 3}
   AttackCooldown: 0.77
+  AnimAttackSpeed: 0
   XpReward: 10
   Kamikaze: {fileID: 0}
   AreaAttack: {fileID: 11400000, guid: 0bf134de149b3624abaf2a1c1440b673, type: 2}

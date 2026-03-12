@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6160d626ea794fefbbcd05c02ba57919, type: 3}
   m_Name: AreaAttackConfig
   m_EditorClassIdentifier: 
-  Damage: 6
-  Cooldown: 0.27
+  Damage: 8
+  Cooldown: 1.85
   AoERadius: 7.73
   TelegraphPrefab: {fileID: 1830188523380823483, guid: 94aa2450d32f0c2488a93bf418bed6e2, type: 3}
   GrenadePrefab: {fileID: 186104, guid: 2e939735c3106744498641b91530a8ee, type: 3}

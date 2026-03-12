@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b2c452c8cae457198f4916d2c2e9f58, type: 3}
   m_Name: AuraHero
   m_EditorClassIdentifier: 
-  CritChanceBonusPercent: 10
+  CritChanceBonusPercent: 0
   CritMultBonus: 0
   Id: 1
   Title: 
   StartWeapon: 3
-  MoveSpeed: 15
+  MoveSpeed: 10
   MaxHp: 100.2
   PickupRadius: 2
   DamageMultiplier: 1

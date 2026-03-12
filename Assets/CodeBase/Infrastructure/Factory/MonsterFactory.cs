@@ -38,8 +38,13 @@ namespace CodeBase.Infrastructure.Factory
             Vector3 spawnPos = parent != null ? parent.position : Vector3.zero;
             Quaternion spawnRot = parent != null ? parent.rotation : Quaternion.identity;
 
-            GameObject monster = _pool.Get(monsterData.PrefabReference, spawnPos, spawnRot, parent);
+            if (!TryGetValidSpawnPoint(spawnPos, NavMesh.AllAreas, out spawnPos))
+            {
+                Debug.LogWarning($"[MonsterFactory] Invalid spawn point: {spawnPos}");
+                return null;
+            }
 
+            GameObject monster = _pool.Get(monsterData.PrefabReference, spawnPos, spawnRot, null);
             monster.transform.localScale = monsterData.PrefabReference.transform.localScale;
 
             ResetPooledMonster(monster);
@@ -67,7 +72,12 @@ namespace CodeBase.Infrastructure.Factory
 
             var agent = monster.GetComponent<NavMeshAgent>();
             if (agent != null)
+            {
                 agent.speed = monsterData.MoveSpeed;
+
+                if (TryGetSpawnOnNavMesh(monster.transform.position, agent.areaMask, out Vector3 fixedSpawn))
+                    agent.Warp(fixedSpawn);
+            }
             
             // ATTACK COMPONENTS
 
@@ -90,6 +100,7 @@ namespace CodeBase.Infrastructure.Factory
             {
                 baseAttack.Construct(heroTransform);
                 baseAttack.Damage = dmg;
+                baseAttack.AttackAnimSpeed = monsterData.AnimAttackSpeed;
                 baseAttack.AttackColdown = monsterData.AttackCooldown;
                 baseAttack.Cleavage = monsterData.Cleavage;
                 baseAttack.EffectiveDistance = monsterData.EffectiveDistance;
@@ -210,5 +221,33 @@ namespace CodeBase.Infrastructure.Factory
 
             return hp;
         }
+        private bool TryGetSpawnOnNavMesh(Vector3 desiredPos, int areaMask, out Vector3 result)
+        {
+            if (NavMesh.SamplePosition(desiredPos, out NavMeshHit hit, 1.5f, areaMask))
+            {
+                result = hit.position;
+                return true;
+            }
+
+            result = desiredPos;
+            return false;
+        }
+        private bool TryGetValidSpawnPoint(Vector3 desiredPos, int areaMask, out Vector3 result)
+        {
+            result = desiredPos;
+
+            if (!NavMesh.SamplePosition(desiredPos, out NavMeshHit hit, 1.5f, areaMask))
+                return false;
+
+            result = hit.position;
+
+            int obstacleMask = LayerMask.GetMask("Obstacle");
+
+            if (Physics.CheckSphere(result, 0.5f, obstacleMask, QueryTriggerInteraction.Ignore))
+                return false;
+
+            return true;
+        }
     }
+    
 }

@@ -14,25 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.StaticData.WeaponConfig
   WeaponId: 2
   BaseStats:
-    BaseCooldown: 1.3
-    AttackSpeed: 0.29
-    Damage: 2
+    BaseCooldown: 0.57
+    AttackSpeed: 0.79
+    Damage: 5
     Range: 17.43
     HitWidth: 0.74
     Pierce: 2
-    Knockback: 1
-    KnockbackChance: 0.05
+    Knockback: 2
+    KnockbackChance: 10
     Shape: 3
-    CritChance: 5
+    CritChance: 10
     CritMultiplier: 2
   ViewPrefab: {fileID: 167092, guid: 79587704daf73b149a7063da70f598cc, type: 3}
   ProjectilePrefab: {fileID: 8806434113611817411, guid: 2c3fa41da152f3443ab33b2b55ce5a93, type: 3}
-  ProjectileSpeed: 139.9
+  ProjectileSpeed: 100.4
   PersistentFxPrefab: {fileID: 0}
   PersistentFxOffset: {x: 0, y: 0, z: 0}
   AttackFxPrefab: {fileID: 3875329135514961720, guid: 09e753e00edbb714ebf549c2dd326f01, type: 3}
   AttackFxOffset: {x: 0, y: 1, z: 0.8}
-  AttackFxLifetime: 0.72
   AttackFxBaseRange: 1
   AttackFxBaseWidth: 1
   AttackFxScaleMult: 1

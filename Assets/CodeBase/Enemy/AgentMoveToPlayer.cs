@@ -1,40 +1,35 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.AI;
 
 namespace CodeBase.Enemy
 {
     public class AgentMoveToPlayer : MonoBehaviour
     {
-        public NavMeshAgent Agent;
-
-        [SerializeField] private EnemyAttack _attack;
-        [SerializeField] private Animator _animator;
+        private const float MinStopDistance = 0.1f;
+        private const float MinAttackValue = 0.05f;
+        private const float NavMeshSampleRadius = 2f;
+        private const float DefaultHeroRadius = 0.3f;
 
         private static readonly int SpeedHash = Animator.StringToHash("Speed");
 
-        [Header("Tuning")]
-        [SerializeField] private float _stopPadding = .5f; // маленький запас, щоб не "стопало зарано"
+        [field: SerializeField] public NavMeshAgent Agent { get; private set; }
+
+        [SerializeField] private EnemyAttack _attack;
+        [SerializeField] private Animator _animator;
+        [SerializeField] private EnemySeparation _separation;
+
+        [Header("Movement")]
+        [SerializeField] private float _stopPadding = 0.5f;
+        [SerializeField] private float _moveTargetDistance = 1.25f;
 
         private Transform _heroTransform;
-        private CharacterController _heroCC;
-        private float _heroRadius = 0.3f; // fallback
-
-        // ✅ кеш параметрів аніматора, щоб не було "Hash ... does not exist"
-        private HashSet<int> _animParams;
+        private CharacterController _heroController;
+        private float _heroRadius = DefaultHeroRadius;
 
         private void Awake()
         {
-            if (_animator == null)
-                _animator = GetComponentInChildren<Animator>(true);
-
-            if (_attack == null)
-                _attack = GetComponent<EnemyAttack>();
-
-            if (Agent == null)
-                Agent = GetComponent<NavMeshAgent>();
-
-            CacheAnimatorParams();
+            CacheRefs();
+            _separation = FindFirstObjectByType<EnemySeparation>();
         }
 
         private void OnEnable()
@@ -42,138 +37,200 @@ namespace CodeBase.Enemy
             if (Agent == null)
                 Agent = GetComponent<NavMeshAgent>();
 
-            if (Agent == null) return;
+            if (Agent == null)
+                return;
 
-            // ✅ важливо для пула: скинути стан з минулого життя
+            Agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+            Agent.avoidancePriority = Random.Range(20, 80);
+
             if (!Agent.enabled)
                 Agent.enabled = true;
 
             Agent.isStopped = false;
             Agent.ResetPath();
 
-            // ✅ якщо виліз трохи повз NavMesh — варп на найближчу точку
-            if (!Agent.isOnNavMesh)
-            {
-                if (NavMesh.SamplePosition(transform.position, out var hit, 2f, NavMesh.AllAreas))
-                    Agent.Warp(hit.position);
-            }
+            TryWarpToNavMesh();
         }
-
-        private void CacheAnimatorParams()
-        {
-            if (_animator == null)
-            {
-                _animParams = null;
-                return;
-            }
-
-            var ps = _animator.parameters;
-            _animParams = new HashSet<int>(ps != null ? ps.Length : 0);
-
-            if (ps != null)
-            {
-                for (int i = 0; i < ps.Length; i++)
-                    _animParams.Add(ps[i].nameHash);
-            }
-        }
-
-        private bool HasParam(int hash) =>
-            _animator != null && _animParams != null && _animParams.Contains(hash);
 
         public void Construct(Transform heroTransform)
         {
             _heroTransform = heroTransform;
+            _heroController = null;
 
-            _heroCC = null;
-            if (heroTransform != null)
-                _heroCC = heroTransform.GetComponent<CharacterController>() ??
-                          heroTransform.GetComponentInParent<CharacterController>();
+            if (_heroTransform != null)
+            {
+                _heroController = _heroTransform.GetComponent<CharacterController>() ??
+                                  _heroTransform.GetComponentInParent<CharacterController>();
+            }
 
-            _heroRadius = _heroCC != null ? _heroCC.radius : 0.3f;
+            _heroRadius = _heroController != null ? _heroController.radius : DefaultHeroRadius;
         }
 
         private void Update()
         {
-            if (_heroTransform == null) return;
-            if (Agent == null || !Agent.enabled) return;
+            if (!CanMove())
+                return;
 
-            // ✅ якщо з якихось причин агент не на NavMesh (пул/спавн) — спробувати виправити
-            if (!Agent.isOnNavMesh)
-            {
-                if (NavMesh.SamplePosition(transform.position, out var hit, 2f, NavMesh.AllAreas))
-                    Agent.Warp(hit.position);
-                else
-                    return;
-            }
-
-            // якщо зараз атакує — не рухаємось
-            if (_attack != null && _attack.IsAttacking)
+            if (IsAttacking())
             {
                 StopAgent();
                 SetSpeed(0f);
                 return;
             }
 
-            float stopDist = 0.1f;
+            float stopDistance = CalculateStopDistance();
+            float distanceToHero = FlatDistance(transform.position, _heroTransform.position);
+            bool shouldMove = distanceToHero > stopDistance;
 
-            if (_attack != null)
-            {
-                float enemyR = Mathf.Max(0f, Agent.radius);
-
-                float reach = Mathf.Max(0.05f, _attack.EffectiveDistance);
-                float hitR  = Mathf.Max(0.05f, _attack.Cleavage);
-
-                stopDist = reach + enemyR + _heroRadius - hitR + _stopPadding;
-                stopDist = Mathf.Max(0.1f, stopDist);
-            }
-
-            Vector3 a = Agent.transform.position; a.y = 0f;
-            Vector3 b = _heroTransform.position;  b.y = 0f;
-            float dist = Vector3.Distance(a, b);
-
-            bool move = dist > stopDist;
-
-            if (move)
-            {
-                // ✅ важливо: якщо десь раніше його стопнули (смерть/стун/атака) — розстопорити
-                Agent.isStopped = false;
-
-                Vector3 target = _heroTransform.position;
-
-                if (NavMesh.SamplePosition(target, out var hit, 2f, NavMesh.AllAreas))
-                    Agent.SetDestination(hit.position);
-                else
-                    Agent.SetDestination(target);
-            }
+            if (shouldMove)
+                MoveTowardsHero();
             else
-            {
                 StopAgent();
+
+            UpdateAnimatorSpeed(shouldMove);
+        }
+
+        private void CacheRefs()
+        {
+            if (_animator == null)
+                _animator = GetComponentInChildren<Animator>(true);
+
+            if (_attack == null)
+                _attack = GetComponent<EnemyAttack>();
+
+            if (_separation == null)
+                _separation = GetComponent<EnemySeparation>();
+
+            if (Agent == null)
+                Agent = GetComponent<NavMeshAgent>();
+        }
+
+        private bool CanMove()
+        {
+            if (_heroTransform == null)
+                return false;
+
+            if (Agent == null || !Agent.enabled)
+                return false;
+
+            if (Agent.isOnNavMesh)
+                return true;
+
+            return TryWarpToNavMesh();
+        }
+
+        private bool TryWarpToNavMesh()
+        {
+            if (Agent == null)
+                return false;
+
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, NavMeshSampleRadius, NavMesh.AllAreas))
+            {
+                Agent.Warp(hit.position);
+                return true;
             }
 
-            float speed01 = (Agent.speed <= 0.001f) ? 0f : Mathf.Clamp01(Agent.velocity.magnitude / Agent.speed);
-            SetSpeed(move ? speed01 : 0f);
+            return false;
+        }
+
+        private bool IsAttacking() =>
+            _attack != null && _attack.IsAttacking;
+
+        private float CalculateStopDistance()
+        {
+            if (_attack == null || Agent == null)
+                return MinStopDistance;
+
+            float enemyRadius = Mathf.Max(0f, Agent.radius);
+            float reach = Mathf.Max(MinAttackValue, _attack.EffectiveDistance);
+            float hitRadius = Mathf.Max(MinAttackValue, _attack.Cleavage);
+
+            float stopDistance = reach + enemyRadius + _heroRadius - hitRadius + _stopPadding;
+            return Mathf.Max(MinStopDistance, stopDistance);
+        }
+
+        private void MoveTowardsHero()
+        {
+            Vector3 toHero = _heroTransform.position - transform.position;
+            toHero.y = 0f;
+            if (toHero.sqrMagnitude > 0.0001f)
+                toHero.Normalize();
+
+            Vector3 offset = _separation != null
+                ? _separation.GetMoveOffset(transform.root, transform.position, _heroTransform.position)
+                : Vector3.zero;
+            Debug.DrawRay(transform.position + Vector3.up * 0.2f, toHero * 1.5f, Color.blue, 0f, false);
+            Debug.DrawRay(transform.position + Vector3.up * 0.25f, offset * 2f, Color.red, 0f, false);
+            
+            
+            Agent.isStopped = false;
+
+            Vector3 moveDirection = GetMoveDirection();
+            if (moveDirection.sqrMagnitude < 0.0001f)
+                moveDirection = transform.forward;
+
+            Vector3 desiredTarget = transform.position + moveDirection * _moveTargetDistance;
+
+            if (NavMesh.SamplePosition(desiredTarget, out NavMeshHit hit, NavMeshSampleRadius, NavMesh.AllAreas))
+                Agent.SetDestination(hit.position);
+            else
+                Agent.SetDestination(desiredTarget);
+        }
+
+        private Vector3 GetMoveDirection()
+        {
+            Vector3 toHero = _heroTransform.position - transform.position;
+            toHero.y = 0f;
+
+            if (toHero.sqrMagnitude > 0.0001f)
+                toHero.Normalize();
+
+            Vector3 offset = _separation != null
+                ? _separation.GetMoveOffset(transform.root, transform.position, _heroTransform.position)
+                : Vector3.zero;
+
+            Vector3 jitter = Random.insideUnitSphere * 0.05f;
+            jitter.y = 0f;
+
+            Vector3 result = toHero + offset + jitter;
+            result.y = 0f;
+
+            return result.sqrMagnitude > 0.0001f ? result.normalized : Vector3.zero;
         }
 
         private void StopAgent()
         {
-            if (Agent == null) return;
-
-            // ✅ щоб не було "завис у stopped=false/true" станах
+            if (Agent == null)
+                return;
             Agent.isStopped = true;
-
-            if (Agent.hasPath)
-                Agent.ResetPath();
-
+            
             Agent.velocity = Vector3.zero;
         }
 
-        private void SetSpeed(float v)
+        private void UpdateAnimatorSpeed(bool isMoving)
         {
-            // ✅ якщо нема параметра Speed — просто мовчки нічого не робимо
-            if (!HasParam(SpeedHash))
+            if (_animator == null)
                 return;
 
-            _animator.SetFloat(SpeedHash, v);
+            float speed01 = 0f;
+
+            if (isMoving && Agent != null && Agent.speed > 0.001f)
+                speed01 = Mathf.Clamp01(Agent.velocity.magnitude / Agent.speed);
+
+            _animator.SetFloat(SpeedHash, speed01);
+        }
+
+        private void SetSpeed(float value)
+        {
+            if (_animator != null)
+                _animator.SetFloat(SpeedHash, value);
+        }
+
+        private static float FlatDistance(Vector3 a, Vector3 b)
+        {
+            a.y = 0f;
+            b.y = 0f;
+            return Vector3.Distance(a, b);
         }
     }
 }

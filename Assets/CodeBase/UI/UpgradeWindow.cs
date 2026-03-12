@@ -19,9 +19,9 @@ namespace CodeBase.UI
             _onPick = onPick;
             gameObject.SetActive(true);
 
-            SetCard(_card1, choices, 0);
-            SetCard(_card2, choices, 1);
-            SetCard(_card3, choices, 2);
+            SetCard(_card1, choices, 0, 0f);
+            SetCard(_card2, choices, 1, 0.1f);
+            SetCard(_card3, choices, 2, 0.2f);
         }
 
         public void Hide()
@@ -30,7 +30,7 @@ namespace CodeBase.UI
             _onPick = null;
         }
 
-        private void SetCard(UpgradeCardView card, UpgradeRoll[] choices, int index)
+        private void SetCard(UpgradeCardView card, UpgradeRoll[] choices, int index, float appearDelay)
         {
             if (card == null)
                 return;
@@ -43,7 +43,7 @@ namespace CodeBase.UI
                 return;
             }
 
-            card.SetData(roll, _visuals, () => _onPick?.Invoke(index));
+            card.SetData(roll, _visuals, () => _onPick?.Invoke(index), appearDelay);
         }
     }
 }

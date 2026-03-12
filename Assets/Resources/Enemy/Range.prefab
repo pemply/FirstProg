@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 782236741801506944, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
       propertyPath: _pushDuration
-      value: 0.88
+      value: 0.25
       objectReference: {fileID: 0}
     - target: {fileID: 5923526240835111159, guid: 0082b9003616bb54ea4f0866db4df42b, type: 3}
       propertyPath: _animator

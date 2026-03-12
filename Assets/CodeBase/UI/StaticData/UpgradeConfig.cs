@@ -35,7 +35,7 @@ namespace CodeBase.StaticData
                 UpgradeType.WeaponDamage => "Damage",
                 UpgradeType.WeaponCooldown => "Cooldown",
                 UpgradeType.PickupRadius => "Pickup",
-                UpgradeType.KnockbackChance => "KB Chance",
+                UpgradeType.KnockbackChancePercent => "KB Chance",
                 UpgradeType.Knockback => "Knockback",
                 UpgradeType.WeaponPierce => "Pierce",
                 UpgradeType.WeaponRange => "Range",

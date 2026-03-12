@@ -22,8 +22,8 @@ namespace CodeBase.Enemy
 
         private float _cd;
         private bool _casting;
-        private bool _canAttack;
-
+        private bool _canAttack; 
+        private float _telegraphYOffset = 0.01f;
         private Vector3 _target;
         private GameObject _tele;
         private PooledObject _telePooled;
@@ -158,9 +158,11 @@ namespace CodeBase.Enemy
             DespawnTelegraph();
             if (_cfg.TelegraphPrefab == null) return;
 
+            Vector3 telePos = pos + Vector3.up * _telegraphYOffset;
+
             _tele = _pool != null
-                ? _pool.Get(_cfg.TelegraphPrefab, pos, Quaternion.identity)
-                : Instantiate(_cfg.TelegraphPrefab, pos, Quaternion.identity);
+                ? _pool.Get(_cfg.TelegraphPrefab, telePos, Quaternion.identity)
+                : Instantiate(_cfg.TelegraphPrefab, telePos, Quaternion.identity);
 
             _telePooled = _tele != null ? _tele.GetComponent<PooledObject>() : null;
             _tele?.GetComponent<AoETelegraph>()?.Setup(_cfg.AoERadius);

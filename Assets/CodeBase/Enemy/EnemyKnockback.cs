@@ -59,12 +59,27 @@ namespace CodeBase.Enemy
             if (CanUseAgentForStopResume())
                 _agent.isStopped = true;
 
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f)
+            {
+                if (CanUseAgentForStopResume())
+                    _agent.isStopped = false;
+
+                _routine = null;
+                yield break;
+            }
+
+            dir.Normalize();
+
             float dist = Mathf.Clamp(power, 0f, _maxDistance);
             Vector3 start = transform.position;
             Vector3 target = start + dir * dist;
 
-            if (NavMesh.SamplePosition(target, out var hit, 1f, NavMesh.AllAreas))
-                target = hit.position;
+            // не даємо штовхати крізь navmesh-перешкоди
+            if (NavMesh.Raycast(start, target, out var navHit, NavMesh.AllAreas))
+                target = navHit.position;
+            else if (NavMesh.SamplePosition(target, out var sampleHit, 1f, NavMesh.AllAreas))
+                target = sampleHit.position;
 
             float t = 0f;
             while (t < _pushDuration)
@@ -73,7 +88,7 @@ namespace CodeBase.Enemy
                     yield break;
 
                 t += Time.deltaTime;
-                float k = t / _pushDuration;
+                float k = Mathf.Clamp01(t / _pushDuration);
 
                 Vector3 p = Vector3.Lerp(start, target, k);
 
@@ -85,7 +100,6 @@ namespace CodeBase.Enemy
                 yield return null;
             }
 
-            // ✅ ОЦЕ головне: resume тільки якщо агент валідний
             if (CanUseAgentForStopResume())
                 _agent.isStopped = false;
 

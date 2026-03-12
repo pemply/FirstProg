@@ -29,6 +29,8 @@ namespace CodeBase.StaticData
         
         [Range(0,5f)]
         public float AttackCooldown;
+        [Range(0,5f)]
+        public float AnimAttackSpeed;
         
         [Range(0, 100)]
         public int XpReward = 10;

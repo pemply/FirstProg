@@ -5,7 +5,7 @@
         Hp,
         PickupRadius,
         Knockback,
-        KnockbackChance,
+        KnockbackChancePercent,
         WeaponDamage,
         WeaponCooldown,
         WeaponRange,

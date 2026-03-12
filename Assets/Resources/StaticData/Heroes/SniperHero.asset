@@ -12,17 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b2c452c8cae457198f4916d2c2e9f58, type: 3}
   m_Name: SniperHero
   m_EditorClassIdentifier: 
-  CritChanceBonusPercent: 10
+  CritChanceBonusPercent: 0
   CritMultBonus: 0
   Id: 3
   Title: 
   StartWeapon: 2
-  MoveSpeed: 15
+  MoveSpeed: 10
   MaxHp: 100.2
   PickupRadius: 2
   DamageMultiplier: 1
   RegenHpPerSec: 0.4
-  Passive: 6
+  Passive: 0
   PassivePercent: 74.9
   Prefab: {fileID: 6337637953038284028, guid: 124b9b966191b0f46a4fdd8802a26178, type: 3}
   Portrait: {fileID: 0}

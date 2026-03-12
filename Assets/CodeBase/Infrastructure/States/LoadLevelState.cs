@@ -99,7 +99,6 @@ namespace CodeBase.Infrastructure.States
             // 3) Тепер створюємо героя (WeaponStatsApplier вже отримає damagePopups)
             GameObject hero = CreateHero();
             ApplyHeroMoveSpeed(hero);
-            Debug.Log($"[HERO] spawned id={hero.transform.GetInstanceID()} pos={hero.transform.position}");
             InitProgressReaders();
             BindHudToHero(hud, hero);
             CameraFollow(hero);
@@ -149,7 +148,7 @@ namespace CodeBase.Infrastructure.States
         {
             HeroHealth heroHealth = hero.GetComponentInChildren<HeroHealth>();
             ActorUI actorUI = hud.GetComponentInChildren<ActorUI>(true);
-
+          
             if (heroHealth != null && actorUI != null)
                 actorUI.Construct(heroHealth);
         }

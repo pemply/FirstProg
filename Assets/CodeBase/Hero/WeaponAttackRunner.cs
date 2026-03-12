@@ -135,6 +135,8 @@ namespace CodeBase.Hero
             _weaponStats = stats;
             _hasStats = true;
 
+            Debug.Log($"[WeaponAttackRunner] weapon={_weaponId} knockback={_weaponStats.Knockback} chance={_weaponStats.KnockbackChance}");
+
             _attackInProgress = false;
 
             if (_sensor != null)
@@ -142,7 +144,6 @@ namespace CodeBase.Hero
 
             _auraFx.ApplyStats(stats);
         }
-
         public void SetAsAnimationDriver(bool isDriver)
         {
             _isAnimationDriver = isDriver;

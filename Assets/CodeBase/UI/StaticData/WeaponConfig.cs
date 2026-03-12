@@ -21,7 +21,6 @@ namespace CodeBase.StaticData
 
         public GameObject AttackFxPrefab;
         public Vector3 AttackFxOffset;
-        public float AttackFxLifetime = 0.6f;
 
         [Header("Attack FX Scale")]
         public float AttackFxBaseRange = 1f;

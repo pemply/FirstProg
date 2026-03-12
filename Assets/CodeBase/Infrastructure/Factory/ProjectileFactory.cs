@@ -56,11 +56,13 @@ namespace CodeBase.Infrastructure.Factory
                 speed: cfg.ProjectileSpeed,
                 enemyMask: _enemyMask,
                 pierce: stats.Pierce,
+                knockback: stats.Knockback,
+                knockbackChance: stats.KnockbackChance,
                 damagePopups: _damagePopups,
-                impactFx: cfg.ProjectileImpactPrefab,   // ✅ з WeaponConfig
-                muzzleFx: cfg.ProjectileMuzzlePrefab,   // ✅ з WeaponConfig
+                impactFx: cfg.ProjectileImpactPrefab,
+                muzzleFx: cfg.ProjectileMuzzlePrefab,
                 ownerRoot: ownerRoot,
-                pool: _pool                               // ✅ щоб FX теж були в пулі
+                pool: _pool
             );
         }
     }

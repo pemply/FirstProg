@@ -545,7 +545,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2860288828164526997}
-  - {fileID: 7095796044789910506}
+  - {fileID: 5838784004909864411}
   - {fileID: 354325815126748629}
   - {fileID: 4974312416234628733}
   - {fileID: 4064277089195648400}
@@ -633,7 +633,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48b2bb05d9fa4929885ff324584777f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.UI.ActorUI
-  _hpBar: {fileID: 6371896279949057324}
+  _hpBar: {fileID: 7715605275533542173}
 --- !u!114 &8583852351501009735
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3281,7 +3281,7 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 22409286, guid: 3ff88965498c641499347051fbee2c43, type: 3}
   m_PrefabInstance: {fileID: 4064277089209423318}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &5540568065616647869
+--- !u!1001 &9194906482632919180
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -3289,10 +3289,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1198110311400335403}
     m_Modifications:
-    - target: {fileID: 1479864193930431377, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
-      propertyPath: _fillImage
-      value: 
-      objectReference: {fileID: 9215531112271323006}
     - target: {fileID: 3358939461028617559, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -3355,11 +3351,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3358939461028617559, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 5
+      value: 42.7
       objectReference: {fileID: 0}
     - target: {fileID: 3358939461028617559, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -35
+      value: -28.349976
       objectReference: {fileID: 0}
     - target: {fileID: 3358939461028617559, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -3374,32 +3370,43 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3674983426425489859, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: -1408908080, guid: 5a846414399d73b45b8b67aceb880891, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3674983426425489859, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_FillAmount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4454543239577575639, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 300
+      objectReference: {fileID: 0}
+    - target: {fileID: 4454543239577575639, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+      propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5660546764491157591, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: -373079313, guid: 5a846414399d73b45b8b67aceb880891, type: 3}
+    - target: {fileID: 4454543239577575639, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7201434704814826491, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
       propertyPath: m_Name
-      value: HpBar
+      value: 'HpBar '
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 8999450239966001541, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
-    m_RemovedGameObjects:
-    - {fileID: 5910235239652182941, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
---- !u!114 &6371896279949057324 stripped
+--- !u!224 &5838784004909864411 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 3358939461028617559, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
+  m_PrefabInstance: {fileID: 9194906482632919180}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7715605275533542173 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1479864193930431377, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
-  m_PrefabInstance: {fileID: 5540568065616647869}
+  m_PrefabInstance: {fileID: 9194906482632919180}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
@@ -3407,19 +3414,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74370bc57a1042e597df303d38c2668e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeBase.UI.HpBar
---- !u!224 &7095796044789910506 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 3358939461028617559, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
-  m_PrefabInstance: {fileID: 5540568065616647869}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &9215531112271323006 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3674983426425489859, guid: db06c8e466c8c024ebb84921a14189cb, type: 3}
-  m_PrefabInstance: {fileID: 5540568065616647869}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

@@ -41,7 +41,7 @@ namespace CodeBase.StaticData
                 [UpgradeType.WeaponWidth] = ApplyWeaponWidth,
                 [UpgradeType.WeaponPierce] = ApplyWeaponPierce,
                 [UpgradeType.Knockback] = ApplyKnockback,
-                [UpgradeType.KnockbackChance] = ApplyKnockbackChance,
+                [UpgradeType.KnockbackChancePercent] = ApplyKnockbackChance,
                 [UpgradeType.Luck] = ApplyLuck,
                 [UpgradeType.AttackSpeed] = ApplyWeaponAttackSpeed,
                 [UpgradeType.RegenHp] = ApplyRegenHp,
@@ -166,8 +166,8 @@ namespace CodeBase.StaticData
         private void ApplyKnockbackChance(UpgradeRoll roll) =>
             MutateAllWeapons(s =>
             {
-                float add = roll.FloatValue / 100f;
-                s.KnockbackChance = Mathf.Clamp01(s.KnockbackChance + add);
+                float add = RollValue(roll);
+                s.KnockbackChance = Mathf.Clamp(s.KnockbackChance + add, 0f, 100f);
                 return s;
             });
 
